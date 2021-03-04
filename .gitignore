@@ -1,0 +1,7 @@
+__pycache__
+.vscode/
+.vs
+_ReSharper.Caches
+mikecore.egg-info/
+/testdata/testtmp
+/packages

@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{c607bdb9-7993-4682-a07a-98fe91636903}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>tests\test_run_all.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId />
+    <Name>MIKECore-Python</Name>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="mikecore\Dfs123File.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="mikecore\DfsBuilder.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="mikecore\DfsDLL.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="mikecore\DfsFactory.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="mikecore\DfsFileFactory.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="mikecore\DfsuBuilder.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="mikecore\DfsuFile.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="mikecore\eum.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="mikecore\Projections.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="mikecore\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="mikecore\DfsFile.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="setup.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="miketools\Dfs0ToAscii.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="miketools\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\examples_dfs0.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\examples_dfs2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\examples_dfsu.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\Test.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_dfs_basic.py" />
+    <Compile Include="tests\test_dfs_custom_block.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_dfs_spatial_axis.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_dfs_static_item.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_dfs0.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_dfs2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_dfsu2D.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_dfsu_file.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_eum.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_miketools.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_projections.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_run_all.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_util.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\__init__.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="mikecore\" />
+    <Folder Include="miketools\" />
+    <Folder Include="tests\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="LICENSE" />
+    <Content Include="README.md" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>
