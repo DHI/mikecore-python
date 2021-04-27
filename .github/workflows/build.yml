@@ -4,7 +4,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - name: Create packages directory
       run: mkdir packages
@@ -17,4 +17,4 @@ jobs:
       run: |
        nuget install DHI.DFS -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
        nuget install DHI.Projections -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
-       nuget install DHI.MikeCore.Linux.rhel7 -OutputDirectory packages
+       nuget install DHI.MikeCore.Linux.rhel7 -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
