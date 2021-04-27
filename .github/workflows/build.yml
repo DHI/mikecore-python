@@ -5,6 +5,10 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+        
     steps:
     - name: Create packages directory
       run: mkdir packages
