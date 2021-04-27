@@ -1,6 +1,6 @@
 name: Build package
 on:
-  push,  pull_request
+  push
 
 jobs:
   build:
