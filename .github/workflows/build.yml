@@ -25,7 +25,7 @@ jobs:
     
     - name: Install packages into directory
       shell: cmd
-      run: .\InstallPackages.bat
+      run: .\BuildNativeBin.bat
     
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
