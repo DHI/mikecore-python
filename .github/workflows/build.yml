@@ -23,6 +23,10 @@ jobs:
        nuget install DHI.Projections -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
        # unlisted package nuget install DHI.MikeCore.Linux.rhel7 -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
     
+    - name: Install packages into directory
+      shell: cmd
+      run: .\InstallPackages.bat
+    
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
