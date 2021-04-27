@@ -15,6 +15,6 @@ jobs:
         nuget-version: '5.x'
     - name: Install nuget packages
       run: |
-       nuget install DHI.DFS 19.0.0 -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
-       nuget install DHI.Projections 19.0.0 -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
-       nuget install DHI.MikeCore.Linux.rhel7 19.0.0 -OutputDirectory packages
+       nuget install DHI.DFS -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
+       nuget install DHI.Projections -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
+       nuget install DHI.MikeCore.Linux.rhel7 -OutputDirectory packages
