@@ -1,10 +1,19 @@
-runs-on: ubuntu-latest
-steps:
-- run: mkdir packages
-- uses: actions/checkout@master
-- uses: nuget/setup-nuget@v1
-  with:
-    nuget-version: '5.x'
-- run: nuget install DHI.DFS 19.0.0 -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
-- run: nuget install DHI.Projections 19.0.0 -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
-- run: nuget install DHI.MikeCore.Linux.rhel7 19.0.0 -OutputDirectory packages
+name: Build package
+on:
+  push,  pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create packages directory
+      run: mkdir packages
+    - uses: actions/checkout@v2
+    - name: Get nuget packages
+      uses: nuget/setup-nuget@v1
+      with:
+        nuget-version: '5.x'
+      run: |
+       nuget install DHI.DFS 19.0.0 -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
+       nuget install DHI.Projections 19.0.0 -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
+       nuget install DHI.MikeCore.Linux.rhel7 19.0.0 -OutputDirectory packages
