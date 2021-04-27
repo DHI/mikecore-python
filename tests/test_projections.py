@@ -114,11 +114,11 @@ class CartographyTests(unittest.TestCase):
       Assert.AreEqual(ProjectionStrings.Utm33Dhi, cart.ProjectionString);
 
     def test_CartographyTest(self):
-      self.test_CheckUTM33Zone(ProjectionStrings.Utm33N);
-      self.test_CheckUTM33Zone("UTM-33");
+      self._CheckUTM33Zone(ProjectionStrings.Utm33N);
+      self._CheckUTM33Zone("UTM-33");
 
-    def test_CheckUTM33Zone(self, utm33String):
-
+    def _CheckUTM33Zone(self, utm33String):
+       
       ###############################/
       # First check - same as using MzMapProj (default origin and orientation)
       cart = Cartography(utm33String);
