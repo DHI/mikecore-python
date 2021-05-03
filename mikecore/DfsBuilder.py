@@ -247,11 +247,11 @@ class DfsBuilder():
 
         errors = []
         if (not self.isSetDataType):
-            errors.Add("DataType has not been set.")
+            errors.append("DataType has not been set.")
         if (not self.isSetProjection):
-            errors.Add("Projection information has not been set.")
+            errors.append("Projection information has not been set.")
         if (not self.isSetTemporalAxis):
-            errors.Add("Temporal axis has not been set.")
+            errors.append("Temporal axis has not been set.")
 
         fileIsCompressed = self.FileInfo.IsFileCompressed
 
@@ -262,13 +262,13 @@ class DfsBuilder():
                 errors.append("Custom block without data (count is zero) is invalid");
 
         if (len(self.DynamicItems) == 0):
-            errors.Add("No dynamic items defined")
+            errors.append("No dynamic items defined")
 
         for itemInfo in self.DynamicItems:
             if (itemInfo.Name == None or itemInfo.Name == ""):
-                errors.Add("Name of dynamic item number {} is null or empty".format(i + 1));
+                errors.append("Name of dynamic item number {} is null or empty".format(i + 1));
             if (itemInfo.SpatialAxis == None):
-                errors.Add("Spatial axis of dynamic item number {} can not be null".format(i+1));
+                errors.append("Spatial axis of dynamic item number {} can not be null".format(i+1));
                 continue;
 
             if (fileIsCompressed):
@@ -597,7 +597,7 @@ class DfsAbstractItemBuilder:
     def Validate(self):
         errors = []
         if (not self.isSetNameQuantityDataType):
-            errors.Add("Name, Quantity and DataType has not been set.");
+            errors.append("Name, Quantity and DataType has not been set.");
         if (not self.isSetSpatialAxis):
             errors.append("Spatial axis has not been set.");
 

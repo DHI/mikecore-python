@@ -7,6 +7,9 @@ from mikecore.eum import *
 from mikecore.DfsDLL import DfsDLL
 from typing import Union
 
+class NotSupportedException(Exception):
+    pass
+
 class DfsFileMode(Enum):
     Read = 0
     Edit = 1
