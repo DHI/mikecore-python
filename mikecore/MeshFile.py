@@ -1,10 +1,10 @@
 import os.path
-from enum import Enum
-import datetime
-import ctypes
+#from enum import Enum
+#import datetime
+#import ctypes
 import numpy as np
 from mikecore.eum import *
-from mikecore.DfsDLL import DfsDLL
+#from mikecore.DfsDLL import DfsDLL
 from typing import Union, List
 import re
 
@@ -223,7 +223,7 @@ class MeshFile:
         and triangular elements specifies the last node as zero.
         """
         with open(filename ,'r') as reader:
-            separator = [' ', '\t']
+            separator = ' '#[' ', '\t']
             
             # read header line
             line = reader.readline().lstrip()
@@ -238,23 +238,25 @@ class MeshFile:
 
             # First try match the 2012 header line format
             match = header2012(line)
-            if match.Success:
-                itemType = eumItem(int(match.Groups[0].Value))
-                itemUnit = eumUnit(int(match.Groups[1].Value))
-                #(eumItem)Int32.Parse(match.Groups[1].Value)
-                #itemUnit = (eumUnit)Int32.Parse(match.Groups[2].Value)
+            if match:
+                groups = match.groups()
+                itemType = eumItem(int(groups[0]))
+                itemUnit = eumUnit(int(groups[1]))
+                #(eumItem)Int32.Parse(groups[1]g)
+                #itemUnit = (eumUnit)Int32.Parse(groups[2])
                 
                 self._eumQuantity = eumQuantity(itemType, itemUnit)
-                noNodes = int(match.Groups[2].Value)
-                proj = match.Groups[3].Value                
+                noNodes = int(groups[2])
+                proj = groups[3]                
 
             # If not successfull, try match the 2011 header line format
             if proj == None:
                 match = header2011(line)    
-                if match.Success:
+                if match:
                     self._eumQuantity = eumQuantity(eumItem.eumIBathymetry, eumUnit.eumUmeter)
-                    noNodes = int(match.Groups[0].Value)
-                    proj = match.Groups[1].Value    
+                    groups = match.groups()
+                    noNodes = int(groups[0])
+                    proj = groups[1]    
             
             if proj == None:
                 raise IOError("Can not load mesh file (failed reading mesh file header line): {0}".format(filename))
@@ -306,8 +308,8 @@ class MeshFile:
                 pass # TODO?? Do we care?
             
             # Allocate memory for elements
-            self._elementIds = np.zeros(noNodes, dtype=int)
-            self._elementType = np.zeros(noNodes, dtype=int)
+            self._elementIds = np.zeros(noElements, dtype=int)
+            self._elementType = np.zeros(noElements, dtype=int)
             self._connectivity = [] #new int[noElements][]
 
             # Temporary (reused) list of nodes in one element
@@ -324,7 +326,8 @@ class MeshFile:
                     if line is None:
                         raise IOError("Unexpected end of file") # used as inner exception
 
-                    strings = re.split(r' |\t',line)
+                    #strings = re.split(r" +",line)
+                    strings = line.split(separator)
                     self._elementIds[i] = int(strings[0])
                     noNodesInElmt = len(strings) - 1
                     for j in range(noNodesInElmt):
@@ -423,7 +426,7 @@ class MeshFile:
 
         # tw.Close()
 
-    def Create(self, eumQuantity: eumQuantity, wktString: str, nodeIds: List[int], x: List[float], y: List[float], z: List[float], nodeCode: List[int], elmtIds: List[int], elmtTypes: List[int], connectivity) -> MeshFile:
+    def Create(self, eumQuantity: eumQuantity, wktString: str, nodeIds: List[int], x: List[float], y: List[float], z: List[float], nodeCode: List[int], elmtIds: List[int], elmtTypes: List[int], connectivity): # -> MeshFile:
 
         res = MeshFile()
         res._eumQuantity = eumQuantity
@@ -444,7 +447,7 @@ class MeshFile:
         return res
 
     @staticmethod
-    def ReadMesh(filename: str) -> MeshFile:
+    def ReadMesh(filename: str):# -> MeshFile:
         """Read the mesh from the provided mesh file"""
 
         if not os.path.exists(filename):
