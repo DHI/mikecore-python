@@ -5,3 +5,7 @@ _ReSharper.Caches
 mikecore.egg-info/
 /testdata/testtmp
 /packages
+/mikecore/bin/
+/bin
+/htmlcov
+/dist
