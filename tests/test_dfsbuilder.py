@@ -32,9 +32,9 @@ def test_validate_empty_builder():
     assert len(errors) > 0
 
 
-def test_empty_title(landuse : DfsBuilder):
+def test_empty_title(landuse : DfsBuilder, tmp_path):
         # Create and get file
-        landuse.CreateFile("notused.dfs2")
+        landuse.CreateFile(str(tmp_path / "notused.dfs2"))
         file = landuse.GetFile()
 
 
@@ -48,32 +48,32 @@ def test_getfile_not_possible_if_not_created(landuse: DfsBuilder):
 
 
 
-def test_getfiletwice_not_allowed(landuse: DfsBuilder):
+def test_getfiletwice_not_allowed(landuse: DfsBuilder, tmp_path):
         builder = landuse
 
         # Create and get file
-        builder.CreateFile("notused.dfs2")
+        builder.CreateFile(str(tmp_path / "notused.dfs2"))
         file = builder.GetFile()
 
         with pytest.raises(Exception):
             builder.GetFile()
 
 
-def test_filetitle_after_create_not_possible(landuse: DfsBuilder):
+def test_filetitle_after_create_not_possible(landuse: DfsBuilder, tmp_path):
         builder = landuse
 
         # Create and get file
-        builder.CreateFile("notused.dfs2")
+        builder.CreateFile(str(tmp_path / "notused.dfs2"))
         file = builder.GetFile()
 
         with pytest.raises(Exception):
             builder.SetFileTitle("too late")
 
-def test_apptitle_after_create_not_possible(landuse: DfsBuilder):
+def test_apptitle_after_create_not_possible(landuse: DfsBuilder, tmp_path):
         builder = landuse
 
         # Create and get file
-        builder.CreateFile("notused.dfs2")
+        builder.CreateFile(str(tmp_path / "notused.dfs2"))
         file = builder.GetFile()
 
         with pytest.raises(Exception):
