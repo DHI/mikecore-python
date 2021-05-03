@@ -10,6 +10,9 @@ from typing import Union
 class NotSupportedException(Exception):
     pass
 
+class ArgumentNullException(Exception):
+    pass
+
 class DfsFileMode(Enum):
     Read = 0
     Edit = 1
@@ -544,14 +547,14 @@ class DfsFileInfo:
     def SetEncodingKey(self, xKey, yKey, zKey):
         if xKey == None:
             raise ArgumentNullException("xKey")
-        if yKey == null:
+        if yKey == None:
             raise ArgumentNullException("yKey")
-        if zKey == null:
+        if zKey == None:
             raise ArgumentNullException("zKey")
 
         encodeKeySize = len(xKey)
         if encodeKeySize != len(yKey) or encodeKeySize != len(zKey):
-            raise ArgumentException("Encoding key arguments must have same length")
+            raise ValueError("Encoding key arguments must have same length")
 
         self.xKey = xKey
         self.yKey = yKey
@@ -940,7 +943,7 @@ class DfsFile:
                 and itemNumber != self.fpItemNumber  
                 or timestepIndex != self.fpTimeStepIndex 
                 and itemNumber != 1):
-                raise ArgumentOutOfRangeException("itemNumber", "Wrong item number while trying to append item data to file. Item data must be appended in order, and for all items in the time step");
+                raise IndexError("Wrong item number while trying to append item data to file. Item data must be appended in order, and for all items in the time step");
 
         # Position file pointer
         self.__FpFindItemTimeStep(itemNumber, timestepIndex);
