@@ -12,34 +12,34 @@ class MeshTests(unittest.TestCase):
 
         mesh = MeshFile.ReadMesh(filename)
 
-        #Assert.AreEqual(eumItem.eumIBathymetry, mesh.EumQuantity.Item)
-        #Assert.AreEqual(eumUnit.eumUmeter, mesh.EumQuantity.Unit)
+        Assert.AreEqual(eumItem.eumIBathymetry, mesh.EumQuantity.Item)
+        Assert.AreEqual(eumUnit.eumUmeter, mesh.EumQuantity.Unit)
         # Assert.AreEqual("UTM-33", mesh.ProjectionString)
         Assert.AreEqual(2057, mesh.GetNumberOfNodes())
         Assert.AreEqual(3636, mesh.GetNumberOfElements())
 
         # ## 1 359862.97332797921 6206313.7132576201 -1.7859922534795478 1 
-        # Assert.AreEqual(359862.97332797921, mesh.X[0])
-        # Assert.AreEqual(6206313.7132576201, mesh.Y[0])
-        # Assert.AreEqual(-1.7859922534795478, mesh.Z[0])
-        # Assert.AreEqual(1, mesh.Code[0])
-        # Assert.AreEqual(1, mesh.NodeIds[0])
+        Assert.AreEqual(359862.97332797921, mesh.X[0])
+        Assert.AreEqual(6206313.7132576201, mesh.Y[0])
+        Assert.AreEqual(-1.7859922534795478, mesh.Z[0])
+        Assert.AreEqual(1, mesh.Code[0])
+        Assert.AreEqual(1, mesh.NodeIds[0])
 
         # ## 667 352184.12574449758 6173038.637708677 -11.379499679148227 0 
-        # Assert.AreEqual(352184.12574449758, mesh.X[666])
-        # Assert.AreEqual(6173038.637708677, mesh.Y[666])
-        # Assert.AreEqual(-11.379499679148227, mesh.Z[666])
-        # Assert.AreEqual(0, mesh.Code[666])
-        # Assert.AreEqual(667, mesh.NodeIds[666])
+        Assert.AreEqual(352184.12574449758, mesh.X[666])
+        Assert.AreEqual(6173038.637708677, mesh.Y[666])
+        Assert.AreEqual(-11.379499679148227, mesh.Z[666])
+        Assert.AreEqual(0, mesh.Code[666])
+        Assert.AreEqual(667, mesh.NodeIds[666])
 
         # ## 1 667 142 929 
         # Assert.AreEqual(new int[]{667, 142, 929}, mesh.ElementTable[0])
-        # Assert.AreEqual(1, mesh.ElementIds[0])
-        # Assert.AreEqual(21, mesh.ElementType[0])
+        Assert.AreEqual(1, mesh.ElementIds[0])
+        Assert.AreEqual(21, mesh.ElementType[0])
         # ## 3636 1024 2057 1766 
         # Assert.AreEqual(new int[] { 1024, 2057, 1766 }, mesh.ElementTable[3635])
-        # Assert.AreEqual(3636, mesh.ElementIds[3635])
-        # Assert.AreEqual(21, mesh.ElementType[3635])
+        Assert.AreEqual(3636, mesh.ElementIds[3635])
+        Assert.AreEqual(21, mesh.ElementType[3635])
 
     # def test_MeshBuilderTest(self):
     
