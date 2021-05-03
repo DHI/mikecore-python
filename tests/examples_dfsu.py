@@ -380,7 +380,7 @@ class ExamplesDfsu:
       # Check if the layer number exists for 2D element, i.e. if that element
       # in 2D has that number of columnes in the 3D (relevant for sigma-z files)
       # If elementExists[i] is false, write delete value to file
-      elementExists = np.zeros(len(topLayer), dtype=np.bool);
+      elementExists = np.zeros(len(topLayer), dtype=bool);
       numLayersInColumn = topLayer[0] + 1;
       elementExists[0] = (numLayersInColumn - topLayerOffset) > 0;
       for i in range(1,len(topLayer)):
@@ -462,8 +462,8 @@ class ExamplesDfsu:
       # and include all those elements and their surrounding nodes in mesh
 
       # Arrays indicating if element and node in grid is used or not in mesh
-      elmts = np.zeros((xCount, yCount), dtype=np.bool);
-      nodes = np.zeros((xCount + 1, yCount + 1), dtype=np.int);
+      elmts = np.zeros((xCount, yCount), dtype=bool);
+      nodes = np.zeros((xCount + 1, yCount + 1), dtype=int);
 
       # Loop over all elements in 2D grid
       for l in range(yCount):
