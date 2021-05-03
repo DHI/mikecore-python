@@ -1,16 +1,15 @@
-from python:3.7.9-slim-stretch
+FROM python:3.9.4-buster-slim
 
-RUN pip install pytest
+RUN pip install pytest numpy
 
-COPY requirements.txt requirements.txt
+ENV LD_LIBRARY_PATH=/usr/local/lib/python3.9/site-packages/mikecore/bin/linux
 
-RUN pip install -r requirements.txt
+COPY . /tmp/
 
-ENV LD_LIBRARY_PATH=/app/bin/linux
+RUN pip install /tmp/.
 
-COPY . /app
-
-RUN pip install -e /app
+COPY ./testdata /app/testdata
+COPY ./tests /app/tests
 
 WORKDIR /app
 CMD pytest
