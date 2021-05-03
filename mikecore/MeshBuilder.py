@@ -1,5 +1,8 @@
+from typing import List
 from mikecore.DfsuFile import DfsuFile
 from mikecore.eum import eumQuantity, eumItem, eumUnit
+from mikecore.MeshFile import MeshFile
+
 class MeshBuilder:
     Projection = None
     EumQuantity = None
@@ -70,57 +73,57 @@ class MeshBuilder:
     # Validate will return a string of issues from the item builder.
     # When this returns an empty list, the item has been properly build.
     # </summary>
-    public string[] Validate()
-    {
-      return (Validate(false));
-    }
+    # public string[] Validate()
+    # {
+    #   return (Validate(false));
+    # }
 
-    private string[] Validate(bool dieOnError)
-    {
-      List<string> errors = new List<string>();
+    # private string[] Validate(bool dieOnError)
+    # {
+    #   List<string> errors = new List<string>();
 
-      if (!_isSetProjection)
-        errors.Add("Projection has not been set");
-      if (!_isSetNodes)
-        errors.Add("Nodes have not been set");
-      if (!_isSetConnectivity)
-        errors.Add("Elements have not been set");
+    #   if (!_isSetProjection)
+    #     errors.Add("Projection has not been set");
+    #   if (!_isSetNodes)
+    #     errors.Add("Nodes have not been set");
+    #   if (!_isSetConnectivity)
+    #     errors.Add("Elements have not been set");
 
-      ## Check that all nodenumbers are within the range of
-      ## number of nodes.
-      if (_isSetNodes && _isSetConnectivity)
-      {
-        bool check = true;
-        foreach (int[] elmt in _connectivity)
-        {
-          foreach (int nodeNumber in elmt)
-          {
-            if (0 >= nodeNumber || nodeNumber > _x.Length)
-            {
-              check = false;
-              break;
-            }
-          }
-          if (!check)
-            break;
-        }
-        if (!check)
-          errors.Add("At least one element has an invalid node number. Node numbers must be within [1,numberOfNodes]");
-      }
+    #   ## Check that all nodenumbers are within the range of
+    #   ## number of nodes.
+    #   if (_isSetNodes && _isSetConnectivity)
+    #   {
+    #     bool check = true;
+    #     foreach (int[] elmt in _connectivity)
+    #     {
+    #       foreach (int nodeNumber in elmt)
+    #       {
+    #         if (0 >= nodeNumber || nodeNumber > _x.Length)
+    #         {
+    #           check = false;
+    #           break;
+    #         }
+    #       }
+    #       if (!check)
+    #         break;
+    #     }
+    #     if (!check)
+    #       errors.Add("At least one element has an invalid node number. Node numbers must be within [1,numberOfNodes]");
+    #   }
 
-      if (dieOnError && errors.Count > 0)
-      {
-        string msgs = DfsBuilder.ErrorMessage(errors);
-        throw new DfsException(msgs);
-      }
+    #   if (dieOnError && errors.Count > 0)
+    #   {
+    #     string msgs = DfsBuilder.ErrorMessage(errors);
+    #     throw new DfsException(msgs);
+    #   }
 
-      return (errors.ToArray());
-    }
+    #   return (errors.ToArray());
+    # }
 
     ## <summary>
     ## Create and return a new <see cref="MeshFile"/> object
     ## </summary>
-    def MeshFile CreateMesh(self):
+    def CreateMesh(self) -> MeshFile:
         #Validate(true);
 
         ## Creating default eumQuantity in meters

@@ -1,5 +1,6 @@
 import unittest
-from mikecore.MeshFile import *
+from mikecore.MeshFile import MeshFile
+from mikecore.MeshBuilder import MeshBuilder
 from mikecore.eum import *
 from numpy.testing import *
 from tests.test_util import *
@@ -41,11 +42,11 @@ class MeshTests(unittest.TestCase):
         Assert.AreEqual(3636, mesh.ElementIds[3635])
         Assert.AreEqual(21, mesh.ElementType[3635])
 
-    # def test_MeshBuilderTest(self):
+    def test_MeshBuilderTest(self):
     
-    #     builder = MeshBuilder()
-    #     filename = "testdata/Oresund.mesh"
-    #     mesh = MeshFile.ReadMesh(filename)
+        builder = MeshBuilder()
+        filename = "testdata/Oresund.mesh"
+        mesh = MeshFile.ReadMesh(filename)
 
     #     Assert.AreEqual(3, builder.Validate().Length)
     #     builder.SetProjection(mesh.ProjectionString)
