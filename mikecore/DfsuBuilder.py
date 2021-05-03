@@ -185,7 +185,7 @@ class DfsuBuilder:
       if (zUnit != eumUnit.eumUmeter 
           and zUnit != eumUnit.eumUfeet
           and zUnit != eumUnit.eumUUnitUndefined):
-          raise Exception("Currently only meter and feet unit is supported")
+        raise Exception("Currently only meter and feet unit is supported")
       self.__zUnit = zUnit
       #if (EUMWrapper.eumUnitsEqv(eumUnit.eumUmeter, zUnit)):
       #  self.__zUnit = zUnit
