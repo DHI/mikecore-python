@@ -83,5 +83,6 @@ venv.bak/
 _ReSharper.Caches
 /testdata/testtmp
 /packages
-
-bin/
+bin
+/htmlcov
+/dist
