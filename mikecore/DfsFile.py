@@ -1,5 +1,5 @@
 import os.path
-from enum import Enum
+from enum import IntEnum
 import datetime
 import ctypes
 import numpy as np
@@ -13,14 +13,14 @@ class NotSupportedException(Exception):
 class ArgumentNullException(Exception):
     pass
 
-class DfsFileMode(Enum):
+class DfsFileMode(IntEnum):
     Read = 0
     Edit = 1
     Append = 2
     Closed = 3
 
 
-class TimeAxisType(Enum):
+class TimeAxisType(IntEnum):
     Undefined = 0
     TimeEquidistant = 1
     TimeNonEquidistant = 2
@@ -28,7 +28,7 @@ class TimeAxisType(Enum):
     CalendarNonEquidistant = 4
 
 
-class DataValueType(Enum):
+class DataValueType(IntEnum):
     """
     Data value type defines how one value is interpreted in time:
     Instantaneous : Value at current point in time, current time step.
@@ -44,7 +44,7 @@ class DataValueType(Enum):
     MeanStepForward = 4
 
 
-class SpaceAxisType(Enum):
+class SpaceAxisType(IntEnum):
     Undefined = 0
     EqD0 = 1
     EqD1 = 2
@@ -61,7 +61,7 @@ class SpaceAxisType(Enum):
     CurveLinearD3 = 13
 
 
-class DfsSimpleType(Enum):
+class DfsSimpleType(IntEnum):
     Float = 1
     Double = 2
     Byte = 3
@@ -71,7 +71,7 @@ class DfsSimpleType(Enum):
     UShort = 7
 
 
-class ProjectionType(Enum):
+class ProjectionType(IntEnum):
     """
     Projection type, specifies whether file has projection or not. 
     All newer files has a projection defined, though there exists 
@@ -81,7 +81,7 @@ class ProjectionType(Enum):
     Projection = 1
 
 
-class UnitConversionType(Enum):
+class UnitConversionType(IntEnum):
     """
     Type of unit conversion, when reading item
     data and axis.
@@ -95,7 +95,7 @@ class UnitConversionType(Enum):
     FreeConversion = 2
     FirstRegisteredUnitConversion = 3
 
-class StatType(Enum):
+class StatType(IntEnum):
     Undefined = 0
     NoStat = 1
     RegularStat = 2
@@ -573,7 +573,7 @@ class DfsCustomBlock():
         self.Values[key] = value
 
 
-class DfsFilePointerState(Enum):
+class DfsFilePointerState(IntEnum):
     StaticItem = 0
     DynamicItem = 1
     CreatingItems = 2
