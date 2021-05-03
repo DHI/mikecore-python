@@ -1,7 +1,7 @@
-from mikecore.DfsFactory import *
-from mikecore.DfsBuilder import *
-from mikecore.DfsFile import *
-from mikecore.DfsuFile import *
+from mikecore.DfsFactory import DfsFactory
+from mikecore.DfsBuilder import DfsBuilder
+from mikecore.DfsuFile import DfsuFile, DfsuFileType, DfsSimpleType, DataValueType, DfsuUtil
+from mikecore.eum import eumUnit, eumQuantity, eumItem
 import numpy as np
 
   #/ <summary>

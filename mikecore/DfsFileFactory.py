@@ -1,6 +1,6 @@
 from mikecore.DfsFile import DfsFile, DfsParameters, DfsFileMode;
-from mikecore.Dfs123File import *;
-from mikecore.DfsuFile import *;
+from mikecore.Dfs123File import Dfs123File, Dfs2File, Dfs3File
+from mikecore.DfsuFile import DfsuFile
 
 class DfsFileFactory:
     """description of class"""
