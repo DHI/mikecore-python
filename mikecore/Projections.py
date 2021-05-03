@@ -1517,7 +1517,7 @@ class Cartography:
 #/ <summary>
 #/ Side of conversion in reprojection
 #/ </summary>
-class ReprojectorSide(Enum):
+class ReprojectorSide(IntEnum):
   #/ <summary> Source side </summary>
   Source = 0;
   #/ <summary> Target side </summary>
@@ -1527,7 +1527,7 @@ class ReprojectorSide(Enum):
 #/ Type of conversion
 #/ </summary>
 # Must be kept synchronized with enum ETypeOfConversion in MzDatumConverter.h
-class ReprojectorConversionType(Enum):
+class ReprojectorConversionType(IntEnum):
   #/ <summary> Convert from source projection coordinates to target projection coordinates</summary>
   Proj2Proj = 0;
   #/ <summary> Convert from source projection coordinates to target geographic coordinates</summary>

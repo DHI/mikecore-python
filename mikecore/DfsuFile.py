@@ -8,7 +8,7 @@ def CheckForNull(obj):
   if (obj == None):
     raise Exception("File is not a valid dfsu file. It can not be opened");
 
-class DfsuFileType(Enum):
+class DfsuFileType(IntEnum):
 
     # 2D area series
     Dfsu2D = 1,
