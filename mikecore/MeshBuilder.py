@@ -1,3 +1,4 @@
+import numpy as np
 from typing import List
 from mikecore.DfsuFile import DfsuFile
 from mikecore.eum import eumQuantity, eumItem, eumUnit
@@ -212,23 +213,25 @@ class MeshBuilder:
     ## The dfsu file must be a 2D dfsu file.
     ## </para>
     ## </summary>
-    # @staticmethod
-    # def Create(dfsuFile: DfsuFile) -> MeshFile:
+    @staticmethod
+    def Create(dfsuFile: DfsuFile) -> MeshFile:
     
-    #   eumQuantity bathyQuantity;
-    #   if (dfsuFile.ZUnit != eumUnit.eumUUnitUndefined)
-    #     bathyQuantity = new eumQuantity(eumItem.eumIBathymetry, dfsuFile.ZUnit);
-    #   else
-    #     bathyQuantity = new eumQuantity(eumItem.eumIBathymetry, eumUnit.eumUmeter);
+      #eumQuantity bathyQuantity;
+        if dfsuFile.ZUnit != eumUnit.eumUUnitUndefined:
+            bathyQuantity = eumQuantity(eumItem.eumIBathymetry, dfsuFile.ZUnit)
+        else:
+            bathyQuantity = eumQuantity(eumItem.eumIBathymetry, eumUnit.eumUmeter);
       
-    #   res = MeshFile.Create(bathyQuantity, dfsuFile.Projection.WKTString, 
-    #     dfsuFile.NodeIds, 
-    #     dfsuFile.X, 
-    #     dfsuFile.Y, 
-    #     Convert(dfsuFile.Z), 
-    #     dfsuFile.Code, 
-    #     dfsuFile.ElementIds, 
-    #     dfsuFile.ElementType, 
-    #     dfsuFile.ElementTable);
-    #   return res
+        res = MeshFile.Create(bathyQuantity, 
+                              dfsuFile.Projection.WKTString, 
+                              dfsuFile.NodeIds, 
+                              dfsuFile.X, 
+                              dfsuFile.Y, 
+                              dfsuFile.Z, #Convert(dfsuFile.Z), 
+                              dfsuFile.Code, 
+                              dfsuFile.ElementIds, 
+                              dfsuFile.ElementType, 
+                              dfsuFile.ElementTable)
+                                    
+        return res
     
