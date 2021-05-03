@@ -1452,7 +1452,33 @@ class DfsDLLUtil():
             raise NotSupportedException();
 
         if axisType == SpaceAxisType.EqD3:
-            raise NotSupportedException();
+            eumUnitInt = ctypes.c_int32()
+            eumUnitDescr = ctypes.c_char_p()
+            xCount = ctypes.c_int32()
+            x0 = ctypes.c_float()
+            dx = ctypes.c_float()
+            yCount = ctypes.c_int32()
+            y0 = ctypes.c_float()
+            dy = ctypes.c_float()
+            zCount = ctypes.c_int32()
+            z0 = ctypes.c_float()
+            dz = ctypes.c_float()
+            DfsDLL.Wrapper.dfsGetItemAxisEqD3(
+                itemPointer, 
+                ctypes.byref(eumUnitInt), 
+                ctypes.byref(eumUnitDescr), 
+                ctypes.byref(xCount), 
+                ctypes.byref(yCount), 
+                ctypes.byref(zCount), 
+                ctypes.byref(x0), 
+                ctypes.byref(y0), 
+                ctypes.byref(z0), 
+                ctypes.byref(dx), 
+                ctypes.byref(dy),
+                ctypes.byref(dz),
+                )
+            axis = DfsAxisEqD3(eumUnit(eumUnitInt.value), xCount.value, x0.value, dx.value, yCount.value, y0.value, dy.value, zCount.value, z0.value, dz.value)
+            return axis
 
         if axisType == SpaceAxisType.NeqD3:
             raise NotSupportedException();
