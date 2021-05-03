@@ -14,9 +14,9 @@ class MeshTests(unittest.TestCase):
 
         #Assert.AreEqual(eumItem.eumIBathymetry, mesh.EumQuantity.Item)
         #Assert.AreEqual(eumUnit.eumUmeter, mesh.EumQuantity.Unit)
-        Assert.AreEqual("UTM-33", mesh.ProjectionString)
-        Assert.AreEqual(2057, mesh.NumberOfNodes)
-        Assert.AreEqual(3636, mesh.NumberOfElements)
+        # Assert.AreEqual("UTM-33", mesh.ProjectionString)
+        Assert.AreEqual(2057, mesh.GetNumberOfNodes())
+        Assert.AreEqual(3636, mesh.GetNumberOfElements())
 
         # ## 1 359862.97332797921 6206313.7132576201 -1.7859922534795478 1 
         # Assert.AreEqual(359862.97332797921, mesh.X[0])

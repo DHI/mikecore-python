@@ -308,8 +308,8 @@ class MeshFile:
                 pass # TODO?? Do we care?
             
             # Allocate memory for elements
-            self._elementIds = np.zeros(noNodes, dtype=int)
-            self._elementType = np.zeros(noNodes, dtype=int)
+            self._elementIds = np.zeros(noElements, dtype=int)
+            self._elementType = np.zeros(noElements, dtype=int)
             self._connectivity = [] #new int[noElements][]
 
             # Temporary (reused) list of nodes in one element
