@@ -87,7 +87,7 @@ class DfsBuilder():
     def SetApplicationTitle(self, appTitle):
         self.__CheckBuildStage1()
         if (appTitle == None):
-              appTitle = "";
+            appTitle = "";
         self.FileInfo.ApplicationTitle = appTitle;
 
 
@@ -102,7 +102,7 @@ class DfsBuilder():
            or statType is StatType.RegularStat):
             ...
         elif statType is StatType.LargevalStat:
-          statType = StatType.RegularStat;
+            statType = StatType.RegularStat;
 
         self.FileInfo.StatsType = statType;
 
@@ -264,7 +264,7 @@ class DfsBuilder():
         if (len(self.DynamicItems) == 0):
             errors.append("No dynamic items defined")
 
-        for itemInfo in self.DynamicItems:
+        for i, itemInfo in enumerate(self.DynamicItems):
             if (itemInfo.Name == None or itemInfo.Name == ""):
                 errors.append("Name of dynamic item number {} is null or empty".format(i + 1));
             if (itemInfo.SpatialAxis == None):
@@ -625,7 +625,7 @@ class DfsDynamicItemBuilder(DfsAbstractItemBuilder):
         self.isSetDataValueType = True;
 
     def SetAssociatedStaticItem(self, staticItemNumber):
-        if (self.ItemInfo.AssociatedStaticItemNumbers == null):
+        if (self.ItemInfo.AssociatedStaticItemNumbers == None):
             self.ItemInfo.AssociatedStaticItemNumbers = [];
         self.ItemInfo.AssociatedStaticItemNumbers.append(staticItemNumber);
 
@@ -681,7 +681,7 @@ class DfsStaticItemBuilder(DfsAbstractItemBuilder):
         if (not self.isSetData):
             errors.append("Data has not been set.");
         if (self.ItemInfo.Data.size != self.ItemInfo.SpatialAxis.SizeOfData):
-            errors.append("Size of data ({}) does not match spatial axis size ({}).".format(self.ItemInfo.Data.size, ItemInfo.SpatialAxis.SizeOfData));
+            errors.append("Size of data ({}) does not match spatial axis size ({}).".format(self.ItemInfo.Data.size, self.ItemInfo.SpatialAxis.SizeOfData));
 
         return (errors);
 
