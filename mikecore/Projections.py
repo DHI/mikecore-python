@@ -1476,10 +1476,10 @@ class Cartography:
     @staticmethod
     def CreateGeoOrigin(projectionString: str, lonOrigin: float, latOrigin: float, orientation: float = 0, validateProjectionString: bool = True):
       if (projectionString is None or projectionString == ""):
-        raise ArgumentException("Projection string can not be null or empty", "projectionString");
+        raise ValueError("Projection string can not be null or empty")
       if (validateProjectionString):
         if (not MapProjection.IsValid(projectionString)):
-          raise ArgumentException("Not a valid projection string", "projectionString");
+          raise ValueError("Not a valid projection string")
       cart = Cartography(projectionString, lonOrigin, latOrigin, orientation, validateProjectionString=False);
       return cart;
 
@@ -1500,10 +1500,10 @@ class Cartography:
     @staticmethod
     def CreateProjOrigin(projectionString: str, east: float, north: float, orientationProj: float, validateProjectionString: bool = True):
       if (projectionString is None or projectionString == ""):
-        raise ArgumentException("Projection string cannot be null or empty", "projectionString");
+        raise ValueError("Projection string cannot be null or empty")
       if (validateProjectionString):
         if (not MapProjection.IsValid(projectionString)):
-          raise ArgumentException("Not a valid projection string", "projectionString");
+          raise ValueError("Not a valid projection string")
       proj = MapProjection.Create(projectionString, validateProjectionString);
       lonOrigin, latOrigin = proj.Proj2Geo(east, north);
       orientationGeo = proj.Proj2GeoRotation(east, north, orientationProj);
