@@ -13,7 +13,8 @@ def test_timeaxis():
 
 def test_iteminfo():
     dfs = DfsFileFactory.DfsGenericOpen("testdata/TemporalEqCal.dfs0")
-    iinfo1 = dfs.GetItemInfo(1)  # Note 1-based
+    #iinfo1 = dfs.GetItemInfo(1)  # Note 1-based
+    iinfo1 = dfs.ItemInfo[0]
 
     dfs.Close()
     assert iinfo1.Name == "WaterLevel item"
