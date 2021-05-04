@@ -307,13 +307,13 @@ class DfsuFile(object):
 
     def __GetFileName(self):
         return self.FileInfo.FileName
-    def __SetFileName(self, value):
+    def __SetFileName(self, value: str):
         self.FileInfo.FileName = value
     FileName = property(__GetFileName, __SetFileName)
 
     def __GetFileTitle(self):
         return self.FileInfo.FileTitle
-    def __SetFileTitle(self, value):
+    def __SetFileTitle(self, value: str):
         self.FileInfo.FileTitle = value
     FileTitle = property(__GetFileTitle, __SetFileTitle)
 
@@ -331,7 +331,7 @@ class DfsuFile(object):
 
     def __GetProjection(self):
         return self.FileInfo.Projection
-    def __SetProjection(self, value):
+    def __SetProjection(self, value: DfsProjection):
         self.FileInfo.Projection = value
     Projection = property(__GetProjection, __SetProjection)
 
