@@ -26,6 +26,7 @@ class MeshBuilder:
         self.__connectivity = None
 
     def SetProjection(self, projection):
+        """Set the geographical projection"""
         if isinstance(projection, str):
             self.__projectionString = projection
         elif isinstance(projection, DfsProjection):

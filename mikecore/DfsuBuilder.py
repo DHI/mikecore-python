@@ -87,10 +87,13 @@ class DfsuBuilder:
 
     def SetProjection(self, projection):
       """Set the geographical projection"""
-      if (projection is None):
-        raise Exception("projection")
-      self.__dfsProjection = projection
-      self.__isSetProjection = True
+      if isinstance(projection, str):
+        self.__dfsProjection = projection
+      elif isinstance(projection, DfsProjection):
+        self.__dfsProjection = projection.WKTString
+      else:
+        raise TypeError("projection must be str or DfsProjection")
+      self.__isSetProjection = True  
 
     #/ <summary>
     #/ Set the number of sigma layers in a file with a vertical dimension
