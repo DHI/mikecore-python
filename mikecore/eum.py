@@ -1315,7 +1315,6 @@ class eumDLL(object):
             if os.name == "nt":
                 eumDLL.Wrapper = ctypes.CDLL(os.path.join(eumDLL.libfilepath, "eum"))
             else:
-                print(f"eumDLL.libfilepath: {eumDLL.libfilepath}")
                 eumDLL.Wrapper = ctypes.CDLL(os.path.join(eumDLL.libfilepath, "libeum.so"))
 
                 eumDLL.Wrapper.eumSetupLoadLinux.argtypes = [ctypes.c_char_p]

@@ -167,7 +167,7 @@ class DfsuBuilder:
       numberOfNodes = x.size
 
       if (numberOfNodes != y.size or numberOfNodes != z.size or numberOfNodes != code.size):
-          raise Exception(f"All arguments must have same length. Lengths are: x={x.size}, y={y.size}, z={z.size}, code={code.size}")
+          raise Exception("All arguments must have same length. Lengths are: x={x}, y={y}, z={z}", code={code}.format(x=x.size, y=y.size, z=z.size,code =code.size))
 
       if (self.__nodeIds != None and numberOfNodes != self.__nodeIds.size):
         raise Exception("Arguments does not have same length as the number of node ids. These must match")
@@ -219,13 +219,13 @@ class DfsuBuilder:
             for i in range(connectivity.size):
               elmnt = connectivity[i]
               if (3 > elmnt.size or elmnt.size > 4):
-                raise Exception(f"All elements must have 3 or 4 nodes. Element number {i + 1} has {elmnt.size} nodes")
+                raise Exception("All elements must have 3 or 4 nodes. Element number {id} has {size} nodes".format(id=i+1,size=elmnt.size))
       elif self.__dfsuFileType == DfsuFileType.Dfsu3DSigma:
             # Check number of elements
             for i in range(connectivity.size):
               elmnt = connectivity[i]
               if (elmnt.size != 6 and elmnt.size != 8):
-                  raise Exception(f"All elements must have 6 or 8 nodes. Element number {i + 1} has {elmnt.size} nodes")
+                  raise Exception("All elements must have 6 or 8 nodes. Element number {id} has {size} nodes".format(id=i+1,size=elmnt.size))
 
       self.__connectivity = connectivity
       self.__isSetConnectivity = True
@@ -321,7 +321,7 @@ class DfsuBuilder:
             if (minNumberOfLayers < self.__numberOfSigmaLayers):
               errors.append("The minimum number of layers is smaller than the number of sigma layers. Element table is invalid")
       else:
-          raise Exception(f"Dfsu file type {self.__dfsuFileType} not supported")
+          raise Exception("Dfsu file type {} not supported".format(self.__dfsuFileType))
 
 
       if (dieOnError and len(errors) > 0):
