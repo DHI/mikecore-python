@@ -1,13 +1,10 @@
-name: Build package
+name: Build package (Windows)
 on:
   push
 
 jobs:
   build:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        python-version: [3.5,3.6,3.7,3.8,3.9]
         
     steps:
     - name: Create packages directory
@@ -26,10 +23,10 @@ jobs:
       shell: cmd
       run: .\BuildNativeBin.bat
     
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.9
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -41,3 +38,18 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+
+    - name: Build python package
+      run: python setup.py sdist
+
+    - name: Upload python package
+      uses: actions/upload-artifact@v2.2.3
+      with: 
+        name: mikecore
+        path: dist
+      #- name: Publish to pypi
+      #  env:
+      #    TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+      #    TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      #  run: |
+      #    twine upload --skip-existing dist/*
