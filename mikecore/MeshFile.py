@@ -363,7 +363,17 @@ class MeshFile:
                     line = " " + "0"
                 writer.write(line)
 
-    def Create(self, eumQuantity: eumQuantity, wktString: str, nodeIds: List[int], x: List[float], y: List[float], z: List[float], nodeCode: List[int], elmtIds: List[int], elmtTypes: List[int], connectivity) -> "MeshFile":
+    @staticmethod
+    def Create(eumQuantity: eumQuantity, 
+               wktString: str, 
+               nodeIds: List[int], 
+               x: List[float], 
+               y: List[float], 
+               z: List[float], 
+               nodeCode: List[int], 
+               elmtIds: List[int], 
+               elmtTypes: List[int], 
+               connectivity) -> "MeshFile":
 
         res = MeshFile()
         res.EumQuantity = eumQuantity
