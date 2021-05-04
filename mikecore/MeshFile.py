@@ -326,42 +326,46 @@ class MeshFile:
         # All double values are written using the "r" format string in order to assure correct
         # round-tripping (not loosing any decimals when reading again)
 
+        lines = []
+
+        # header line
+        line = str(self.EumQuantity.ItemInt.value) + " "
+        line += str(self.EumQuantity.UnitInt.value) + " " 
+        line += str(len(self.NodeIds)) + " " 
+        line += self.ProjectionString
+        lines.append(line)
+
+        # Node information
+        for i in range(len(self.NodeIds)):
+            line = str(self.NodeIds[i]) + " "
+            line += str(self.X[i]) + " "
+            line += str(self.Y[i]) + " "
+            line += str(self.Z[i]) + " "
+            line += str(self.Code[i]) 
+            lines.append(line)
+    
+        # Element "header"
+        line = str(len(self.ElementIds)) + " "
+        if not self._hasQuads:
+            maxNodesPerElmt, elmtType = 3, 21
+        else:
+            maxNodesPerElmt, elmtType = 4, 25
+        line += str(maxNodesPerElmt) + " " + str(elmtType)
+        lines.append(line)
+
+        # Element information
+        for i in range(len(self.ElementIds)):
+            line = str(self.ElementIds[i])
+            nodes = self.ElementTable[i]
+            for j in range(len(nodes)):
+                line += " " + str(nodes[j])
+            for j in range(len(nodes), maxNodesPerElmt):
+                # fill with zeros
+                line += " " + "0"
+            lines.append(line)
+
         with open(filename, 'w') as writer:
-            # header line
-            line = str(self.EumQuantity.ItemInt) + " "
-            line += str(self.EumQuantity.UnitInt) + " " 
-            line += str(self.NodeIds) + " " 
-            line += self.ProjectionString
-            writer.write(line)
-
-            # Node information
-            for i in range(len(self.NodeIds)):
-                line = str(self.NodeIds[i]) + " "
-                line += str(self.X[i]) + " "
-                line += str(self.Y[i]) + " "
-                line += str(self.Z[i]) + " "
-                line += str(self.Code[i]) 
-                writer.write(line)
-        
-            # Element "header"
-            line = str(len(self.ElementIds)) + " "
-            if not self._hasQuads:
-                maxNodesPerElmt, elmtType = 3, 21
-            else:
-                maxNodesPerElmt, elmtType = 4, 25
-            line += str(maxNodesPerElmt) + " " + str(elmtType)
-            writer.write(line)
-
-            # Element information
-            for i in range(len(self.ElementIds)):
-                line = str(self.ElementIds[i])
-                nodes = self.ElementTable[i]
-                for j in range(len(nodes)):
-                    line = " " + str(nodes[j])
-                for j in range(len(nodes), maxNodesPerElmt):
-                    # fill with zeros
-                    line = " " + "0"
-                writer.write(line)
+            writer.write("\n".join(lines))
 
     @staticmethod
     def Create(eumQuantity: eumQuantity, 
