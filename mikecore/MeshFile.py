@@ -246,11 +246,11 @@ class MeshFile:
                 raise IOError("Can not load mesh file (failed reading mesh file header line): {0}".format(filename))
             
             self.ProjectionString = proj.strip()
-            self.NodeIds = np.zeros(noNodes, dtype=int)
+            self.NodeIds = np.zeros(noNodes, dtype=np.int32)
             self.X = np.zeros(noNodes, dtype=np.float)
             self.Y = np.zeros(noNodes, dtype=np.float)
             self.Z = np.zeros(noNodes, dtype=np.float)
-            self.Code = np.zeros(noNodes, dtype=int)
+            self.Code = np.zeros(noNodes, dtype=np.int32)
 
             # Read nodes
             try:
@@ -287,8 +287,8 @@ class MeshFile:
                 pass # TODO?? Do we care?
             
             # Allocate memory for elements
-            self.ElementIds = np.zeros(noElements, dtype=int)
-            self.ElementType = np.zeros(noElements, dtype=int)
+            self.ElementIds = np.zeros(noElements, dtype=np.int32)
+            self.ElementType = np.zeros(noElements, dtype=np.int32)
             self.ElementTable = []
 
             # Read all elements
@@ -302,7 +302,7 @@ class MeshFile:
 
                     self.ElementIds[i] = int(strings[0])
                     noNodesInElmt = len(strings) - 1
-                    nodesInElement = np.zeros(noNodesInElmt, dtype=int)
+                    nodesInElement = np.zeros(noNodesInElmt, dtype=np.int32)
                     for j in range(noNodesInElmt):
                         nodeNumber = int(strings[j + 1])
                         if (nodeNumber < 0) or (nodeNumber > noNodes): # used as inner exception:

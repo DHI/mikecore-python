@@ -163,7 +163,7 @@ class DfsuBuilder:
       except:
         raise TypeError("z must be array of float")
       try:
-        code = np.array(code, dtype=int)
+        code = np.array(code, dtype=np.int32)
       except:
         raise TypeError("code must be array of int")
 

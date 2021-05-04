@@ -463,7 +463,7 @@ class ExamplesDfsu:
 
       # Arrays indicating if element and node in grid is used or not in mesh
       elmts = np.zeros((xCount, yCount), dtype=bool);
-      nodes = np.zeros((xCount + 1, yCount + 1), dtype=int);
+      nodes = np.zeros((xCount + 1, yCount + 1), dtype=np.int32);
 
       # Loop over all elements in 2D grid
       for l in range(yCount):

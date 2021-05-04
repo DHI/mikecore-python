@@ -54,7 +54,7 @@ class MeshBuilder:
       except:
         raise TypeError("z must be array of float")
       try:
-        code = np.array(code, dtype=int)
+        code = np.array(code, dtype=np.int32)
       except:
         raise TypeError("code must be array of int")
 
@@ -135,8 +135,8 @@ class MeshBuilder:
             self.__elementIds = np.arange(len(self.__connectivity)) + 1
             
         # Creating additional element information
-        elementType = np.zeros(len(self.__connectivity), dtype=int)
-        nodesPerElmt = np.zeros(len(self.__connectivity), dtype=int)
+        elementType = np.zeros(len(self.__connectivity), dtype=np.int32)
+        nodesPerElmt = np.zeros(len(self.__connectivity), dtype=np.int32)
         nodeElmtCount = 0  # total number of nodes listed in the connectivity table
         for i in range(len(elementType)):
             elmtTypeNumber = 0
@@ -156,7 +156,7 @@ class MeshBuilder:
             nodesPerElmt[i] = len(elmt)
             nodeElmtCount += len(elmt)
 
-        connectivityArray = np.zeros(nodeElmtCount, dtype=int)
+        connectivityArray = np.zeros(nodeElmtCount, dtype=np.int32)
         k = 0
         for i in range(len(elementType)):
             elmt = self.__connectivity[i]

@@ -302,11 +302,11 @@ class DfsBuilder():
 
     def ErrorMessage(self, errors):
         if (len(errors) == 1):
-            return (errors[0]);
-        msgs = "Several issues:";
+            return (errors[0])
+        msgs = "Several issues:"
         for err in errors:
-            msgs += "\n  " + err;
-        return (msgs);
+            msgs += "\n  " + err
+        return (msgs)
 
 
     def CreateFile(self, filename):

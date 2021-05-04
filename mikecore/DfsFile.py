@@ -1235,8 +1235,8 @@ class DfsDLLUtil():
         elif (arrayData.dtype == np.int8):
             datatype = DfsSimpleType.Byte
         else:
-            raise Exception("Date type not supported: "+arrayData.dtype);
-        return datatype;
+            raise Exception("Date type not supported: {0}".format(arrayData.dtype))
+        return datatype
 
 
     def GetProjection(headerPointer):
