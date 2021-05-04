@@ -240,9 +240,9 @@ class MeshFile:
             
             self.ProjectionString = proj.strip()
             self.NodeIds = np.zeros(noNodes, dtype=np.int32)
-            self.X = np.zeros(noNodes, dtype=np.float)
-            self.Y = np.zeros(noNodes, dtype=np.float)
-            self.Z = np.zeros(noNodes, dtype=np.float)
+            self.X = np.zeros(noNodes, dtype=np.float64)
+            self.Y = np.zeros(noNodes, dtype=np.float64)
+            self.Z = np.zeros(noNodes, dtype=np.float64) # TODO or np.float32 ?
             self.Code = np.zeros(noNodes, dtype=np.int32)
 
             # Read nodes

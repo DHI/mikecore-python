@@ -536,7 +536,7 @@ class ExamplesDfsu:
           if (elmts[k, l]):
             # For this element, add the four surrounding nodes,
             # counter-clockwise order
-            newNodes = np.zeros(4, dtype=np.int);
+            newNodes = np.zeros(4, dtype=np.int32);
             newNodes[0] = nodes[k  , l  ];
             newNodes[1] = nodes[k+1, l  ];
             newNodes[2] = nodes[k+1, l+1];
@@ -625,7 +625,7 @@ class ExamplesDfsu:
       # Loop over all elements, and all its nodes: If one node is inside
       # region, element (and nodes) are to be included in new mesh
       elmtsIncluded = [];
-      nodesIncluded = np.zeros(dfsu.NumberOfNodes, dtype=np.bool);
+      nodesIncluded = np.zeros(dfsu.NumberOfNodes, dtype=bool);
       for i in range(dfsu.NumberOfElements):
         # Nodes of element
         nodes = dfsu.ElementTable[i];
@@ -646,7 +646,7 @@ class ExamplesDfsu:
             nodesIncluded[node] = True;
             
       # array containing numbers of existing nodes in new mesh (indices)
-      renumber = np.zeros(dfsu.NumberOfNodes, dtype=np.int);
+      renumber = np.zeros(dfsu.NumberOfNodes, dtype=int);
 
       # new mesh nodes
       X2 = [];

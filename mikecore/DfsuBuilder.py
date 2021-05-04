@@ -238,7 +238,7 @@ class DfsuBuilder:
 
     def SetElementIds(self, elementIds):
       """Set the element id's. Optional. If not set, default values are used (1,2,3,...)"""
-      if (self.__connectivity != None and len(self.__connectivity) != elementIds.size):
+      if (self.__connectivity is not None) and (len(self.__connectivity) != elementIds.size):
           raise Exception("Number of element id's does not match number of elements", "elementIds")
 
     def SetFromMeshFile(self, meshFile: MeshFile):
