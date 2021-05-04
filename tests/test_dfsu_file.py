@@ -465,7 +465,7 @@ class FileOdenseHD3DDfsu:
       Assert.AreEqual(13, topLayerElements[1]);
       Assert.AreEqual(20, topLayerElements[2]);
 
-      Assert.AreEqual(5068, dfsFile.ElementTable.size);
+      Assert.AreEqual(5068, len(dfsFile.ElementTable));
       Assert.AreEqual(6, dfsFile.ElementTable[0].size);
       Assert.AreEqual(6, dfsFile.ElementTable[7*507-1].size);
       Assert.AreEqual(8, dfsFile.ElementTable[7*507].size);
@@ -601,7 +601,7 @@ class FileVerticalProfileSigmaDfsu:
       Assert.AreEqual(np.float32(6159041.5), dfsFile.Y[0]);
       Assert.AreEqual(np.float32(6158791.0), dfsFile.Y[311]);
 
-      Assert.AreEqual(266, dfsFile.ElementTable.size);
+      Assert.AreEqual(266, len(dfsFile.ElementTable));
 
       topLayerElements = dfsFile.FindTopLayerElements();
       Assert.AreEqual(38, len(topLayerElements));
@@ -843,7 +843,7 @@ class FileVerticalProfileSigmaZDfsu:
       Assert.AreEqual(np.float32(360327.438), dfsFile.X[0]);
       Assert.AreEqual(np.float32(368120.2), dfsFile.X[211]);
 
-      Assert.AreEqual(166, dfsFile.ElementTable.size);
+      Assert.AreEqual(166, len(dfsFile.ElementTable));
 
       topLayerElements = dfsFile.FindTopLayerElements();
       Assert.AreEqual(35, len(topLayerElements));
@@ -1157,7 +1157,7 @@ class FileVerticalColumnDfsu:
       Assert.AreEqual(np.float32(363808.125), dfsFile.X[0]);
       Assert.AreEqual(np.float32(363808.125), dfsFile.X[10]);
 
-      Assert.AreEqual(10, dfsFile.ElementTable.size);
+      Assert.AreEqual(10, len(dfsFile.ElementTable));
 
       topLayerElements = dfsFile.FindTopLayerElements();
       Assert.AreEqual(1, len(topLayerElements));

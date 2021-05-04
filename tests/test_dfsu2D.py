@@ -571,7 +571,7 @@ class FileOdenseHD2DDfsu:
       Assert.AreEqual(13, dfsuFile.NumberOfTimeSteps);
 
       # Check the element table and element types
-      Assert.AreEqual(724, dfsuFile.ElementTable.size);
+      Assert.AreEqual(724, len(dfsuFile.ElementTable));
 
       Assert.AreEqual(21, dfsuFile.ElementType[54]);
       Assert.AreEqual(25, dfsuFile.ElementType[55]);
