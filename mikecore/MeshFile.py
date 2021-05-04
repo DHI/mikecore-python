@@ -29,31 +29,17 @@ class MeshFile:
     # Element variables
     ElementIds = None # this can be None, then set default id's, starting from 1
     ElementType = None
-    _connectivity = []
+    ElementTable = []
     
     _hasQuads = None
 
-    #  <summary>
-    #  Quantity of the data stored in the mesh file. This is the quantity of the
-    #  <see cref="Z"/> variable.
-    #  </summary>
-    # @property
-    # def EumQuantity(self) -> eumQuantity:
-    #     return self._eumQuantity
-
-    # def GetProjectionString(self) -> str:
-    #     """The projection string """
-    #     return self._wktString
-
-    # def SetProjectionString(self, value: str):
-    #     """Set the projection string """
-    #     self._wktString = value
-
-    def GetNumberOfNodes(self) -> int:
+    @property
+    def NumberOfNodes(self) -> int:
         """Number of nodes in the mesh."""
         return len(self.NodeIds)
 
-    def GetNumberOfElements(self) -> int:
+    @property
+    def NumberOfElements(self) -> int:
         """Number of elements in the mesh."""
         return len(self.ElementIds)
 
@@ -74,9 +60,9 @@ class MeshFile:
     #         raise ValueError("Length of input does not match number of nodes")
     #     self.NodeIds = value
 
-    def GetNumberOfElements(self) -> int:
-        """Number of elements in the mesh."""
-        return len(self.ElementIds)
+    # def NumberOfElements(self) -> int:
+    #     """Number of elements in the mesh."""
+    #     return len(self.ElementIds)
 
    
     #  <summary>
@@ -200,8 +186,8 @@ class MeshFile:
     #  length as the original one.
     #  </para>
     #  </summary>
-    def GetElementTable(self) -> List:
-        return self._connectivity
+    # def GetElementTable(self) -> List:
+    #     return self._connectivity
 
     # public int[][] ElementTable
     # {
@@ -223,8 +209,6 @@ class MeshFile:
         and triangular elements specifies the last node as zero.
         """
         with open(filename ,'r') as reader:
-            separator = ' '#[' ', '\t']
-            
             # read header line
             line = reader.readline().lstrip()
             if line is None:
@@ -276,29 +260,24 @@ class MeshFile:
                         raise IOError("Unexpected end of file") # used as inner exception
                     strings = re.split(r"\s+",line)
                     self.NodeIds[i] = int(strings[0])
-                    self.X[i] = float(strings[1])#, NumberFormatInfo.InvariantInfo)
-                    self.Y[i] = float(strings[2])#, NumberFormatInfo.InvariantInfo)
-                    self.Z[i] = float(strings[3])#, NumberFormatInfo.InvariantInfo)
+                    self.X[i] = float(strings[1])
+                    self.Y[i] = float(strings[2])
+                    self.Z[i] = float(strings[3])
                     self.Code[i] = int(strings[4])            
             except Exception as inner:
                 # DfsException
                 raise Exception("Can not load mesh file (failed reading nodes): {0}. {1}".format(filename, inner))
             
             # Reading element header line
-            noElements = None
-            maxNoNodesPerElement = None
-            elmtCode = None
-            
             line = reader.readline().strip()
             if line is None:
                 raise IOError("Can not load mesh file (unexpected end of file)")
 
-            strings = re.split(r"\s+",line)
+            strings = re.split(r"\s+", line)
             if (len(strings) != 3):
                 raise IOError("Can not load mesh file (failed reading element header line): {0}".format(filename))
             try:            
                 noElements = int(strings[0])
-                maxNoNodesPerElement = int(strings[1])
                 elmtCode = int(strings[2])            
             except Exception as ex:            
                 raise Exception("Can not load mesh file (failed reading element header line): {0}. {1}".format(filename, ex))
@@ -310,7 +289,7 @@ class MeshFile:
             # Allocate memory for elements
             self.ElementIds = np.zeros(noElements, dtype=int)
             self.ElementType = np.zeros(noElements, dtype=int)
-            self._connectivity = [] #new int[noElements][]
+            self.ElementTable = []
 
             # Read all elements
             try:
@@ -332,12 +311,12 @@ class MeshFile:
                         if nodeNumber > 0:
                             nodesInElement[j] = nodeNumber
                     
-                    self._connectivity.append(nodesInElement)
+                    self.ElementTable.append(nodesInElement)
 
                     # Get element type from number of nodes
-                    if len(self._connectivity[i]) == 3:
+                    if len(self.ElementTable[i]) == 3:
                         self.ElementType[i] = 21
-                    elif len(self._connectivity[i]) == 4:
+                    elif len(self.ElementTable[i]) == 4:
                         self.ElementType[i] = 25
                         self._hasQuads = True
                     else:
@@ -383,7 +362,7 @@ class MeshFile:
             # Element information
             for i in range(len(self.ElementIds)):
                 line = str(self.ElementIds[i])
-                nodes = self._connectivity[i]
+                nodes = self.ElementTable[i]
                 for j in range(len(nodes)):
                     line = " " + str(nodes[j])
                 for j in range(len(nodes), maxNodesPerElmt):
@@ -403,7 +382,7 @@ class MeshFile:
         res.Code = nodeCode
         res.ElementIds = elmtIds
         res.ElementType = elmtTypes
-        res._connectivity = connectivity
+        res.ElementTable = connectivity
         for i in range(len(connectivity)):        
             if len(connectivity[i]) == 4:
                 res._hasQuads = True

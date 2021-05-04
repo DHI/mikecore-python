@@ -17,8 +17,8 @@ class MeshTests(unittest.TestCase):
         Assert.AreEqual(eumItem.eumIBathymetry, mesh.EumQuantity.Item)
         Assert.AreEqual(eumUnit.eumUmeter, mesh.EumQuantity.Unit)
         Assert.AreEqual("UTM-33", mesh.ProjectionString)
-        Assert.AreEqual(2057, mesh.GetNumberOfNodes())
-        Assert.AreEqual(3636, mesh.GetNumberOfElements())
+        Assert.AreEqual(2057, mesh.NumberOfNodes)
+        Assert.AreEqual(3636, mesh.NumberOfElements)
 
         # ## 1 359862.97332797921 6206313.7132576201 -1.7859922534795478 1 
         Assert.AreEqual(359862.97332797921, mesh.X[0])
@@ -35,11 +35,15 @@ class MeshTests(unittest.TestCase):
         Assert.AreEqual(667, mesh.NodeIds[666])
 
         # ## 1 667 142 929         
-        Assert.AreEqual(np.array([667, 142, 929]), mesh.GetElementTable()[0])
+        Assert.AreEqual(667, mesh.ElementTable[0][0])
+        Assert.AreEqual(142, mesh.ElementTable[0][1])
+        Assert.AreEqual(929, mesh.ElementTable[0][2])
         Assert.AreEqual(1, mesh.ElementIds[0])
         Assert.AreEqual(21, mesh.ElementType[0])
         # ## 3636 1024 2057 1766 
-        Assert.AreEqual(np.array([1024, 2057, 1766]), mesh.GetElementTable()[3635])
+        Assert.AreEqual(1024, mesh.ElementTable[3635][0])
+        Assert.AreEqual(2057, mesh.ElementTable[3635][1])
+        Assert.AreEqual(1766, mesh.ElementTable[3635][2])
         Assert.AreEqual(3636, mesh.ElementIds[3635])
         Assert.AreEqual(21, mesh.ElementType[3635])
 
