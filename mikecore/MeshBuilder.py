@@ -109,6 +109,7 @@ class MeshBuilder:
         # Check that all nodenumbers are within the range of number of nodes.        
         if (self.__isSetNodes) and (self.__isSetConnectivity):      
             for elmt in self.__connectivity:
+                elmt = np.array(elmt)
                 if np.any(elmt<=0) or np.any(elmt>len(self.__x)):
                     errors.append("At least one element has an invalid node number. Node numbers must be within [1,numberOfNodes]")
                     break
