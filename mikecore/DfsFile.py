@@ -1659,7 +1659,7 @@ class DfsDLLUtil():
         return customBlockPointer, customBlock
 
     @staticmethod
-    def dfsSetTemporalAxis(headerPointer, temporalAxis):
+    def dfsSetTemporalAxis(headerPointer, temporalAxis: DfsTemporalAxis):
         if temporalAxis.TimeAxisType is TimeAxisType.Undefined:
             raise Exception("Temporal axis can not be undefined");
         if temporalAxis.TimeAxisType is TimeAxisType.TimeEquidistant:

@@ -1,8 +1,10 @@
+import numpy as np
+from mikecore.DfsFile import DfsProjection, DfsTemporalAxis
+from mikecore.MeshFile import MeshFile
 from mikecore.DfsFactory import DfsFactory
 from mikecore.DfsBuilder import DfsBuilder
 from mikecore.DfsuFile import DfsuFile, DfsuFileType, DfsSimpleType, DataValueType, DfsuUtil
 from mikecore.eum import eumUnit, eumQuantity, eumItem
-import numpy as np
 
   #/ <summary>
   #/ Builder for creating a dfsu file.
@@ -97,7 +99,7 @@ class DfsuBuilder:
     #/ If called with a <see cref="DfsuFileType"/> that does not have any
     #/ vertical dimension, an <see cref="InvalidOperationException"/> is thrown.
     #/ </remarks>
-    def SetNumberOfSigmaLayers(self, numberOfSigmaLayers):
+    def SetNumberOfSigmaLayers(self, numberOfSigmaLayers: int):
       if self.__dfsuFileType == DfsuFileType.Dfsu2D:
           raise Exception("Can not set number of sigma layers on a 2D dfsu file")
       elif (self.__dfsuFileType == DfsuFileType.DfsuVerticalColumn # strictly speaking not required, but anyway...
@@ -122,7 +124,7 @@ class DfsuBuilder:
     #/ be sure to test that the file works as intended in your context.
     #/ </para>
     #/ </summary>
-    def SetTemporalAxis(self, timeAxis):
+    def SetTemporalAxis(self, timeAxis: DfsTemporalAxis):
       self.__timeAxis = timeAxis
       self.__isSetTimeInfo = True
 
@@ -143,7 +145,7 @@ class DfsuBuilder:
     #/ This is a stage 1 method.
     #/ </para>
     #/ </summary>
-    def SetNumberOfTimeSteps(self, numberOfTimeSteps):
+    def SetNumberOfTimeSteps(self, numberOfTimeSteps: int):
       self.__numberOfTimeSteps = numberOfTimeSteps
 
     def SetNodes(self, x, y, z, code):
@@ -183,7 +185,7 @@ class DfsuBuilder:
 
 
     #/ <inheritdoc/>
-    def SetZUnit(self, zUnit):
+    def SetZUnit(self, zUnit: eumUnit):
       # TODO: Fix!
       if (zUnit != eumUnit.eumUmeter 
           and zUnit != eumUnit.eumUfeet
@@ -238,7 +240,7 @@ class DfsuBuilder:
       if (self.__connectivity != None and self.__connectivity.size != elementIds.size):
           raise Exception("Number of element id's does not match number of elements", "elementIds")
 
-    def SetFromMeshFile(self, meshFile):
+    def SetFromMeshFile(self, meshFile: MeshFile):
       """Set projection, nodes and elements from mesh file.
       This is equivalent to calling SetProjection, SetNodes, SetElements
       """
@@ -248,7 +250,7 @@ class DfsuBuilder:
       self.__nodeIds = meshFile.NodeIds
       self.__x = meshFile.X
       self.__y = meshFile.Y
-      self.__z = MeshBuilder.Convert(meshFile.Z)
+      self.__z = meshFile.Z.astype(dtype=np.float32)
       self.__code = meshFile.Code
       self.__zUnit = meshFile.EumQuantity.Unit
       self.__isSetNodes = True
@@ -257,11 +259,11 @@ class DfsuBuilder:
       self.__connectivity = meshFile.ElementTable
       self.__isSetConnectivity = True
 
-    def AddDynamicItem(self, itemName, quantity):
+    def AddDynamicItem(self, itemName: str, quantity):
       """Add a dynamic item. """
       self.__dynamicItemData.append((itemName, quantity))
 
-    def Validate(self, dieOnError = False):
+    def Validate(self, dieOnError: bool = False):
       """Validate will return a string of issues from the item builder.
       When this returns an empty list, the item has been properly build.
       """
@@ -331,21 +333,15 @@ class DfsuBuilder:
         msgs = DfsBuilder.ErrorMessage(errors)
         raise Exception(msgs)
 
-      return (errors)
+      return errors
 
     def SetupConnectivityArrays(self):
-      # Creating default node id's, if empty
-      if (self.__nodeIds is None):
-          # Setting node ids 1,2,3,...
-        self.__nodeIds = np.zeros(self.__x.size, dtype=np.int32)
-        for i in range(self.__x.size):
-              self.__nodeIds[i] = i + 1
-        # Creating default element id's, if empty
-      if (self.__elementIds is None):
-          # Setting element ids 1,2,3,...
-        self.__elementIds = np.zeros(self.__connectivity.size, dtype=np.int32)
-        for i in range(self.__connectivity.size):
-              self.__elementIds[i] = i + 1
+      # Creating default node id's, if empty, node ids 1,2,3,...
+      if (self.__nodeIds is None):          
+        self.__nodeIds = np.arange(self.__x.size, dtype=np.int32) + 1        
+      # Creating default element id's, if empty, element ids 1,2,3,...
+      if (self.__elementIds is None):        
+        self.__elementIds = np.arange(self.__connectivity.size, dtype=np.int32) + 1
   
       # Creating additional element information
       elementType = np.zeros(self.__connectivity.size, dtype=np.int32)
@@ -456,10 +452,10 @@ class DfsuBuilder:
         dfsBuilder.AddDynamicItem(dfsItem.GetDynamicItemInfo())
       return dfsBuilder
 
-    def CreateFile(self, filename):
+    def CreateFile(self, filename: str):
       """Create and return a dfsu file"""
 
-      self.Validate(True)
+      self.Validate(dieOnError=True)
       elementType, nodesPerElmt, connectivityArray = self.SetupConnectivityArrays()
       dfsBuilder = self.SetupBuilder()
       dfsBuilder.CreateFile(filename)
