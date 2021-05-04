@@ -85,14 +85,12 @@ class DfsuBuilder:
       self.ApplicationVersion = 0
 
 
-    def SetProjection(self, projection):
+    def SetProjection(self, projection: DfsProjection):
       """Set the geographical projection"""
-      if isinstance(projection, str):
+      if isinstance(projection, DfsProjection):
         self.__dfsProjection = projection
-      elif isinstance(projection, DfsProjection):
-        self.__dfsProjection = projection.WKTString
       else:
-        raise TypeError("projection must be str or DfsProjection")
+        raise TypeError("projection must be DfsProjection")
       self.__isSetProjection = True  
 
     #/ <summary>

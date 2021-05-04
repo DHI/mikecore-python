@@ -329,7 +329,7 @@ class DfsuFile(object):
         self.FileInfo.ApplicationVersion = value
     ApplicationVersion = property(__GetApplicationVersion, __SetApplicationVersion)
 
-    def __GetProjection(self):
+    def __GetProjection(self) -> DfsProjection:
         return self.FileInfo.Projection
     def __SetProjection(self, value: DfsProjection):
         self.FileInfo.Projection = value
