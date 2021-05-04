@@ -63,7 +63,7 @@ jobs:
         run: pytest
 
       - name: Build python package
-        run: python setup.py sdist wheel
+        run: python setup.py bdist_wheel --universal
 
       - name: Upload python package
         uses: actions/upload-artifact@v2.2.3
