@@ -172,12 +172,12 @@ class DfsuBuilder:
       except:
         raise TypeError("code must be array of int")
 
-      numberOfNodes = x.size
+      numberOfNodes = len(x)
 
-      if (numberOfNodes != y.size or numberOfNodes != z.size or numberOfNodes != code.size):
+      if (numberOfNodes != len(y) or numberOfNodes != len(z) or numberOfNodes != len(code)):
           raise Exception("All arguments must have same length. Lengths are: x={x}, y={y}, z={z}, code={code}".format(x=x.size, y=y.size, z=z.size, code=code.size))
 
-      if (self.__nodeIds != None and numberOfNodes != self.__nodeIds.size):
+      if (self.__nodeIds != None and numberOfNodes != len(self.__nodeIds)):
         raise Exception("Arguments does not have same length as the number of node ids. These must match")
 
       self.__x = x
@@ -215,22 +215,22 @@ class DfsuBuilder:
       """
       if (connectivity is None):
         raise Exception("connectivity")
-      if (connectivity.size == 0):
+      if (len(connectivity) == 0):
         raise Exception("Element table has no rows. There must be at least one row")
 
-      if (self.__elementIds != None and self.__elementIds.size != connectivity.size):
+      if (self.__elementIds != None and self.__elementIds.size != len(connectivity)):
         raise Exception("Number of elements is not the same as number of element ids. They must match")
 
       # Validate that element numbers are ok.
       if self.__dfsuFileType == DfsuFileType.Dfsu2D:
             # Check number of elements
-            for i in range(connectivity.size):
+            for i in range(len(connectivity)):
               elmnt = connectivity[i]
               if (3 > elmnt.size or elmnt.size > 4):
                 raise Exception("All elements must have 3 or 4 nodes. Element number {id} has {size} nodes".format(id=i+1,size=elmnt.size))
       elif self.__dfsuFileType == DfsuFileType.Dfsu3DSigma:
             # Check number of elements
-            for i in range(connectivity.size):
+            for i in range(len(connectivity)):
               elmnt = connectivity[i]
               if (elmnt.size != 6 and elmnt.size != 8):
                   raise Exception("All elements must have 6 or 8 nodes. Element number {id} has {size} nodes".format(id=i+1,size=elmnt.size))
@@ -240,7 +240,7 @@ class DfsuBuilder:
 
     def SetElementIds(self, elementIds):
       """Set the element id's. Optional. If not set, default values are used (1,2,3,...)"""
-      if (self.__connectivity != None and self.__connectivity.size != elementIds.size):
+      if (self.__connectivity != None and len(self.__connectivity) != elementIds.size):
           raise Exception("Number of element id's does not match number of elements", "elementIds")
 
     def SetFromMeshFile(self, meshFile: MeshFile):
@@ -344,11 +344,11 @@ class DfsuBuilder:
         self.__nodeIds = np.arange(self.__x.size, dtype=np.int32) + 1        
       # Creating default element id's, if empty, element ids 1,2,3,...
       if (self.__elementIds is None):        
-        self.__elementIds = np.arange(self.__connectivity.size, dtype=np.int32) + 1
+        self.__elementIds = np.arange(len(self.__connectivity), dtype=np.int32) + 1
   
       # Creating additional element information
-      elementType = np.zeros(self.__connectivity.size, dtype=np.int32)
-      nodesPerElmt = np.zeros(self.__connectivity.size, dtype=np.int32)
+      elementType = np.zeros(len(self.__connectivity), dtype=np.int32)
+      nodesPerElmt = np.zeros(len(self.__connectivity), dtype=np.int32)
       nodeElmtCount = 0 # total number of nodes listed in the connectivity table
       for i in range(elementType.size):
         elmt = self.__connectivity[i]
@@ -396,22 +396,22 @@ class DfsuBuilder:
 
       # Set up custom block
       if self.__dfsuFileType == DfsuFileType.Dfsu2D:
-          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, self.__connectivity.size, 2, 0, 0 ], np.int32))
+          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, len(self.__connectivity), 2, 0, 0 ], np.int32))
       elif self.__dfsuFileType == DfsuFileType.DfsuVerticalColumn:
-          maxNumberOfLayers = self.__connectivity.size
-          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, self.__connectivity.size, 1, maxNumberOfLayers, self.__numberOfSigmaLayers ], np.int32))
+          maxNumberOfLayers = len(self.__connectivity)
+          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, len(self.__connectivity), 1, maxNumberOfLayers, self.__numberOfSigmaLayers ], np.int32))
       elif self.__dfsuFileType == DfsuFileType.DfsuVerticalProfileSigma:
           maxNumberOfLayers = self.__numberOfSigmaLayers
-          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, self.__connectivity.size, 2, maxNumberOfLayers, self.__numberOfSigmaLayers ], np.int32))
+          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, len(self.__connectivity), 2, maxNumberOfLayers, self.__numberOfSigmaLayers ], np.int32))
       elif self.__dfsuFileType == DfsuFileType.DfsuVerticalProfileSigmaZ:
           maxNumberOfLayers = DfsuUtil.FindMaxNumberOfLayers(DfsuUtil.FindTopLayerElements(self.__connectivity))
-          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, self.__connectivity.size, 2, maxNumberOfLayers, self.__numberOfSigmaLayers ], np.int32))
+          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, len(self.__connectivity), 2, maxNumberOfLayers, self.__numberOfSigmaLayers ], np.int32))
       elif self.__dfsuFileType == DfsuFileType.Dfsu3DSigma:
           maxNumberOfLayers = self.__numberOfSigmaLayers
-          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, self.__connectivity.size, 3, maxNumberOfLayers, self.__numberOfSigmaLayers ], np.int32))
+          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, len(self.__connectivity), 3, maxNumberOfLayers, self.__numberOfSigmaLayers ], np.int32))
       elif self.__dfsuFileType == DfsuFileType.Dfsu3DSigmaZ:
           maxNumberOfLayers = DfsuUtil.FindMaxNumberOfLayers(DfsuUtil.FindTopLayerElements(self.__connectivity))
-          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, self.__connectivity.size, 3, maxNumberOfLayers, self.__numberOfSigmaLayers ], np.int32))
+          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, len(self.__connectivity), 3, maxNumberOfLayers, self.__numberOfSigmaLayers ], np.int32))
       else:
           raise Exception()
 
@@ -427,7 +427,7 @@ class DfsuBuilder:
           # Disabled to make the dfsu files exactly match those from the engine. Not necessary, 
           # but enables binary compares
           #if (false):
-          #  dfsItem.SetAxis(factory.CreateAxisDummy(self.__connectivity.size))
+          #  dfsItem.SetAxis(factory.CreateAxisDummy(len(self.__connectivity)))
           #else
             # Set axis to have meter unit (not necessary, just to make file exactly equal)
           dfsItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, self.__x.size, 0, 1))
@@ -445,10 +445,10 @@ class DfsuBuilder:
         # Disabled to make the dfsu files exactly match those from the engine. Not necessary, 
         # but enables binary compares
         #if (false):
-        #  dfsItem.SetAxis(factory.CreateAxisDummy(self.__connectivity.size))
+        #  dfsItem.SetAxis(factory.CreateAxisDummy(len(self.__connectivity)))
         #else
           # Set axis to have meter unit (not necessary, just to make file exactly equal)
-        dfsItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, self.__connectivity.size, 0, 1))
+        dfsItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, len(self.__connectivity), 0, 1))
         # Set to default ufs delete values (not used anyway, just to make file exactly equal)
         dfsItem.SetReferenceCoordinates(-1e-35, -1e-35, -1e-35)
         dfsItem.SetOrientation(-1e-35, -1e-35, -1e-35)

@@ -192,17 +192,16 @@ class DfsuFile(object):
               k += 1
 
       self.NumberOfNodes = self.NodeIds.size; 
-      self.NumberOfNodes = self.ElementIds.size;
       self.ItemInfo = self.dfsFile.ItemInfo
 
       self.NumberOfElements = self.ElementIds.size
-      self.NumberOfNodes = self.X.size
+      #self.NumberOfNodes = self.X.size
 
       if (not build):
          # In append mode, move the file pointer to end of file
          # It was moved elsewhere when reading static data...
          if (self.dfsFile.FileMode == DfsFileMode.Append):
-            self.dfsFile.FindTimeStep(NumberOfTimeSteps);
+            self.dfsFile.FindTimeStep(self.NumberOfTimeSteps);
 
 
     def Dispose(self):
@@ -357,7 +356,10 @@ class DfsuFile(object):
 
     def __GetNumberOfTimeSteps(self):
         return self.FileInfo.TimeAxis.NumberOfTimeSteps
-    NumberOfTimeSteps = property(__GetNumberOfTimeSteps)
+    
+    @property
+    def NumberOfTimeSteps(self):
+      return self.__GetNumberOfTimeSteps()
 
     def __GetDeleteValueFloat(self):
         return self.FileInfo.DeleteValueFloat

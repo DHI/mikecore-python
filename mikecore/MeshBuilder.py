@@ -59,12 +59,12 @@ class MeshBuilder:
       except:
         raise TypeError("code must be array of int")
 
-      numberOfNodes = x.size
+      numberOfNodes = len(x)
 
-      if (numberOfNodes != y.size or numberOfNodes != z.size or numberOfNodes != code.size):
+      if (numberOfNodes != len(y) or numberOfNodes != len(z) or numberOfNodes != len(code)):
           raise Exception("All arguments must have same length. Lengths are: x={x}, y={y}, z={z}, code={code}".format(x=x.size, y=y.size, z=z.size, code=code.size))
 
-      if (self.__nodeIds != None and numberOfNodes != self.__nodeIds.size):
+      if (self.__nodeIds != None and numberOfNodes != len(self.__nodeIds)):
         raise Exception("Arguments does not have same length as the number of node ids. These must match")
 
       self.__x = x

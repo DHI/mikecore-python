@@ -179,7 +179,7 @@ class DfsBuilder():
         self.FileInfo.Projection = projection;
         self.isSetProjection = True;
 
-    def SetTemporalAxis(self, temporalAxis):
+    def SetTemporalAxis(self, temporalAxis: DfsTemporalAxis):
         self.__CheckBuildStage1()
         self.FileInfo.TimeAxis = temporalAxis;
         self.isSetTemporalAxis = True;
