@@ -30,10 +30,9 @@ class MeshBuilder:
             self.Projection = projection.WKTString
         self.__isSetProjection = True    
 
-    # public void SetEumQuantity(eumQuantity eumQuantity)
-    # {
-    #   _eumQuantity = eumQuantity;
-    # }
+    def SetEumQuantity(self, eumQuantity):    
+        self.EumQuantity = eumQuantity
+    
 
     def SetNodes(self, x, y, z, code):
         self.X = x
@@ -216,7 +215,6 @@ class MeshBuilder:
     @staticmethod
     def Create(dfsuFile: DfsuFile) -> MeshFile:
     
-      #eumQuantity bathyQuantity;
         if dfsuFile.ZUnit != eumUnit.eumUUnitUndefined:
             bathyQuantity = eumQuantity(eumItem.eumIBathymetry, dfsuFile.ZUnit)
         else:
@@ -231,7 +229,6 @@ class MeshBuilder:
                               dfsuFile.Code, 
                               dfsuFile.ElementIds, 
                               dfsuFile.ElementType, 
-                              dfsuFile.ElementTable)
-                                    
+                              dfsuFile.ElementTable)                                    
         return res
     
