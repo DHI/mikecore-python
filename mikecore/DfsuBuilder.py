@@ -85,14 +85,12 @@ class DfsuBuilder:
       self.ApplicationVersion = 0
 
 
-    def SetProjection(self, projection):
+    def SetProjection(self, projection: DfsProjection):
       """Set the geographical projection"""
-      if isinstance(projection, str):
+      if isinstance(projection, DfsProjection):
         self.__dfsProjection = projection
-      elif isinstance(projection, DfsProjection):
-        self.__dfsProjection = projection.WKTString
       else:
-        raise TypeError("projection must be str or DfsProjection")
+        raise TypeError("projection must be DfsProjection")
       self.__isSetProjection = True  
 
     #/ <summary>
@@ -226,14 +224,14 @@ class DfsuBuilder:
             # Check number of elements
             for i in range(len(connectivity)):
               elmnt = connectivity[i]
-              if (3 > elmnt.size or elmnt.size > 4):
-                raise Exception("All elements must have 3 or 4 nodes. Element number {id} has {size} nodes".format(id=i+1,size=elmnt.size))
+              if (3 > len(elmnt) or len(elmnt) > 4):
+                raise Exception("All elements must have 3 or 4 nodes. Element number {id} has {size} nodes".format(id=i+1,size=len(elmnt)))
       elif self.__dfsuFileType == DfsuFileType.Dfsu3DSigma:
             # Check number of elements
             for i in range(len(connectivity)):
               elmnt = connectivity[i]
-              if (elmnt.size != 6 and elmnt.size != 8):
-                  raise Exception("All elements must have 6 or 8 nodes. Element number {id} has {size} nodes".format(id=i+1,size=elmnt.size))
+              if (len(elmnt) != 6 and len(elmnt) != 8):
+                  raise Exception("All elements must have 6 or 8 nodes. Element number {id} has {size} nodes".format(id=i+1,size=len(elmnt)))
 
       self.__connectivity = connectivity
       self.__isSetConnectivity = True
@@ -352,7 +350,7 @@ class DfsuBuilder:
       nodeElmtCount = 0 # total number of nodes listed in the connectivity table
       for i in range(elementType.size):
         elmt = self.__connectivity[i]
-        elmtsize = elmt.size
+        elmtsize = len(elmt)
         if   elmtsize == 2: # vertical column
             elmtTypeNumber = 11
         elif elmtsize == 3: # triangle
@@ -367,14 +365,14 @@ class DfsuBuilder:
             # this should have been caught in the validate phase, but just in case:
             raise Exception("Element with invalid number of nodes encountered")
         elementType[i] = elmtTypeNumber
-        nodesPerElmt[i] = elmt.size
-        nodeElmtCount += elmt.size
+        nodesPerElmt[i] = len(elmt)
+        nodeElmtCount += len(elmt)
 
       connectivityArray = np.zeros(nodeElmtCount, dtype=np.int32)
       k = 0
       for i in range(elementType.size):
         elmt = self.__connectivity[i]
-        for j in range (elmt.size):
+        for j in range (len(elmt)):
            connectivityArray[k] = elmt[j]
            k += 1
 
