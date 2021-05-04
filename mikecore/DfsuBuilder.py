@@ -65,7 +65,7 @@ class DfsuBuilder:
       self.__dynamicItemData = []
 
       self.__dfsuFileType = dfsuFileType
-      if   dfsuFileType == DfsuFileType.Dfsu2D:
+      if dfsuFileType == DfsuFileType.Dfsu2D:
           self.FileTitle = "Area Series"
       elif dfsuFileType == DfsuFileType.DfsuVerticalColumn:
           self.FileTitle = "Vertical column series"
@@ -150,24 +150,27 @@ class DfsuBuilder:
       """Set node coordinates and code. Depending on the projection string, 
          node coordinates are in meters or degrees
       """
-      if (x is None):
-        raise Exception("x")
-      if (y is None):
-        raise Exception("y")
-      if (z is None):
-        raise Exception("z")
-      if (code is None):
-        raise Exception("code")
-
-      if (x.dtype == np.float32):
+      try:
         x = np.array(x, dtype=np.float64)
-      if (y.dtype == np.float32):
+      except:
+        raise TypeError("x must be array of float")
+      try:
         y = np.array(y, dtype=np.float64)
+      except:
+        raise TypeError("y must be array of float")
+      try:
+        z = np.array(z, dtype=np.float32)
+      except:
+        raise TypeError("z must be array of float")
+      try:
+        code = np.array(code, dtype=int)
+      except:
+        raise TypeError("code must be array of int")
 
       numberOfNodes = x.size
 
       if (numberOfNodes != y.size or numberOfNodes != z.size or numberOfNodes != code.size):
-          raise Exception("All arguments must have same length. Lengths are: x={x}, y={y}, z={z}", code={code}.format(x=x.size, y=y.size, z=z.size,code =code.size))
+          raise Exception("All arguments must have same length. Lengths are: x={x}, y={y}, z={z}, code={code}".format(x=x.size, y=y.size, z=z.size, code=code.size))
 
       if (self.__nodeIds != None and numberOfNodes != self.__nodeIds.size):
         raise Exception("Arguments does not have same length as the number of node ids. These must match")
