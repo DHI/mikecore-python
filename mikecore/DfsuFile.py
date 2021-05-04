@@ -461,7 +461,7 @@ class DfsuUtil:
       # with the first half of element i+1.
       # Elements always start from the bottom, and the element of one columne are following
       # each other in the element table.
-      for i in range(elementTable.size-1):
+      for i in range(len(elementTable)-1):
         elmt1 = elementTable[i];
         elmt2 = elementTable[i+1];
 
@@ -494,7 +494,7 @@ class DfsuUtil:
               break;
 
       # The last element will always be a top layer element
-      topLayerElments.append(elementTable.size-1);
+      topLayerElments.append(len(elementTable)-1);
 
       return (np.array(topLayerElments, dtype=np.int32));
 
@@ -522,7 +522,7 @@ class DfsuUtil:
 
       # Find top layer elements by matching the element center (x,y)-coordinates
       # of a column
-      for i in range(elementTable.size - 1):
+      for i in range(len(elementTable) - 1):
         elmt1 = elementTable[i];
         elmt2 = elementTable[i + 1];
 
@@ -572,7 +572,7 @@ class DfsuUtil:
           topLayerElments.append(i);
       
       # The last element will always be a top layer element
-      topLayerElments.append(elementTable.size - 1);
+      topLayerElments.append(len(elementTable) - 1);
 
       return (np.array(topLayerElments, dtype=np.int32));
 
