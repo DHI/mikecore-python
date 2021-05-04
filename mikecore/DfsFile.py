@@ -1027,7 +1027,7 @@ class DfsFile:
 
         """
         self.__CheckIfOpen()
-        self.__FpFindItemTimeStep(1,0)
+        self.__FpFindItemTimeStep(1, 0)
 
     def FindItem(self, itemNumber, timestepIndex):
         """
@@ -1037,8 +1037,8 @@ class DfsFile:
         :param itemNumber: Number of item to find (1-based)
         :param timestepIndex: Index of time step to find (0-based)
         """
-        self.__CheckIfOpen();
-        self.__FpFindItemTimeStep(itemNumber, timestepIndex);
+        self.__CheckIfOpen()
+        self.__FpFindItemTimeStep(itemNumber, timestepIndex)
 
     def FindTimeStep(self, timestepIndex):
         """
@@ -1046,8 +1046,8 @@ class DfsFile:
         specified time step starts.
         :param timestepIndex: Index of time step to find (0-based)
         """
-        self.__CheckIfOpen();
-        self.__FpFindTimeStep(timestepIndex);
+        self.__CheckIfOpen()
+        self.__FpFindTimeStep(timestepIndex)
 
     def Flush(self):
         """
@@ -1092,7 +1092,7 @@ class DfsFile:
         self.fpItemNumber = 1
         self.fpTimeStepIndex = 0
 
-    def __FpFindItemTimeStep(self, itemNumber, timestepIndex):
+    def __FpFindItemTimeStep(self, itemNumber: int, timestepIndex: int):
         # If itemNumber is first item, search for time step instead
         if itemNumber == 1:
             self.__FpFindTimeStep(timestepIndex)
@@ -1104,13 +1104,13 @@ class DfsFile:
             or self.fpTimeStepIndex != timestepIndex
         ):
             DfsDLL.Wrapper.dfsFindItemDynamic(
-                self.headPointer, self.filePointer, timestepIndex, itemNumber
+                self.headPointer, self.filePointer, int(timestepIndex), itemNumber
             )
             self.fpState = DfsFilePointerState.DynamicItem
             self.fpItemNumber = itemNumber
             self.fpTimeStepIndex = timestepIndex
 
-    def __FpFindTimeStep(self, timestepIndex):
+    def __FpFindTimeStep(self, timestepIndex: int):
         # Position the file pointer at the dynamic item
         if (
             self.fpState != DfsFilePointerState.DynamicItem
@@ -1118,7 +1118,7 @@ class DfsFile:
             or self.fpTimeStepIndex != timestepIndex
         ):
             DfsDLL.Wrapper.dfsFindTimeStep(
-                self.headPointer, self.filePointer, timestepIndex
+                self.headPointer, self.filePointer, int(timestepIndex)
             )
             self.fpState = DfsFilePointerState.DynamicItem
             self.fpItemNumber = 1
@@ -1132,7 +1132,6 @@ class DfsFile:
             return True
         return False
 
-
     def __DynamicItemInfoReadAndCreate(self, itemNumber, noOfItems):
         if itemNumber < 1 or itemNumber > noOfItems:
             raise ValueError("Item number must be in the range of 1 - {}".format(noOfItems))
@@ -1142,7 +1141,6 @@ class DfsFile:
         item = DfsDynamicItemInfo(itemPointer, itemNumber)
         self.__GetItemInfo(item)
         return item
-
 
     def __StaticItemReadAndCreate(self, number, ubgConversion):
 
@@ -1170,11 +1168,10 @@ class DfsFile:
         #     staticItem.SetUnitConversion(UnitConversionType.UbgConversion, default(eumUnit));
         #     staticItem.SetAxisUnitConversion(UnitConversionType.UbgConversion, default(eumUnit));
 
-        self.__GetItemInfo(staticItem);
-        self.__GetStaticData(staticItem);
+        self.__GetItemInfo(staticItem)
+        self.__GetStaticData(staticItem)
 
-        return (staticItem);
-
+        return (staticItem)
 
     def __GetItemInfo(self, item):
         eumItemIntP = ctypes.c_int32()
