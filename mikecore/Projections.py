@@ -1689,8 +1689,8 @@ class Reprojector:
     def InvertOrder(self):
       MzCartDLL.MzConverterInvertOrder(self._mzConverterPointer);
       # Invert projection strings
-      tmp = _projectionStringSource;
-      _projectionStringSource = _projectionStringTarget;
+      tmp = self.ProjectionStringSource;
+      _projectionStringSource = self.ProjectionStringTarget;
       _projectionStringTarget = tmp;
       # Also invert conversion type for the "non-symmetric" cases, as CMzDatumConverter class does
       if (self._typeOfConversion == ReprojectorConversionType.Proj2Geo):
