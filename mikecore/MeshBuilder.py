@@ -157,13 +157,14 @@ class MeshBuilder:
             nodesPerElmt[i] = len(elmt)
             nodeElmtCount += len(elmt)
 
-        connectivityArray = np.zeros(nodeElmtCount, dtype=np.int32)
-        k = 0
-        for i in range(len(elementType)):
-            elmt = self.__connectivity[i]
-            for j in range(len(elmt)):
-                connectivityArray[k] = elmt[j]
-                k += 1
+        # NotUsed
+        # connectivityArray = np.zeros(nodeElmtCount, dtype=np.int32)
+        # k = 0
+        # for i in range(len(elementType)):
+        #     elmt = self.__connectivity[i]
+        #     for j in range(len(elmt)):
+        #         connectivityArray[k] = elmt[j]
+        #         k += 1
  
         res = MeshFile.Create(self.__eumQuantity, 
                               self.__projectionString, 
