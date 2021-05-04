@@ -47,12 +47,6 @@ jobs:
          patchelf --set-rpath '$ORIGIN' mikecore/bin/linux/libpfs2004.so
          patchelf --set-rpath '$ORIGIN' mikecore/bin/linux/libxerces-c-3.1.so
          
-          
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v2.2.3
-        with: 
-          name: bin
-          path: mikecore/bin
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
@@ -61,9 +55,24 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
+          pip install pytest wheel
         
       - name: Install mikecore-python
         run: pip install .
       - name: Test with pytest
         run: pytest
+
+      - name: Build python package
+        run: python setup.py sdist wheel
+
+      - name: Upload python package
+        uses: actions/upload-artifact@v2.2.3
+        with: 
+          name: mikecore
+          path: dist
+      #- name: Publish to pypi
+      #  env:
+      #    TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+      #    TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      #  run: |
+      #    twine upload --skip-existing dist/*
