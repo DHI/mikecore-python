@@ -1,12 +1,8 @@
 import os.path
-#from enum import Enum
-#import datetime
-#import ctypes
 import numpy as np
-from mikecore.eum import *
-#from mikecore.DfsDLL import DfsDLL
-from typing import Union, List
+from typing import List
 import re
+from mikecore.eum import eumQuantity, eumItem, eumUnit
 
 #  <summary>
 #  Class for handling mesh files (reading, writing, editing)
@@ -226,9 +222,6 @@ class MeshFile:
                 groups = match.groups()
                 itemType = eumItem(int(groups[0]))
                 itemUnit = eumUnit(int(groups[1]))
-                #(eumItem)Int32.Parse(groups[1]g)
-                #itemUnit = (eumUnit)Int32.Parse(groups[2])
-                
                 self.EumQuantity = eumQuantity(itemType, itemUnit)
                 noNodes = int(groups[2])
                 proj = groups[3]                
@@ -330,8 +323,8 @@ class MeshFile:
     def Write(self, filename:str):
         """Write mesh to file
         """
-        # # All double values are written using the "r" format string in order to assure correct
-        # # round-tripping (not loosing any decimals when reading again)
+        # All double values are written using the "r" format string in order to assure correct
+        # round-tripping (not loosing any decimals when reading again)
 
         with open(filename, 'w') as writer:
             # header line
