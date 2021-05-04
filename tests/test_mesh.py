@@ -1,3 +1,4 @@
+import numpy as np
 import unittest
 from mikecore.MeshFile import MeshFile
 from mikecore.MeshBuilder import MeshBuilder
@@ -15,7 +16,7 @@ class MeshTests(unittest.TestCase):
 
         Assert.AreEqual(eumItem.eumIBathymetry, mesh.EumQuantity.Item)
         Assert.AreEqual(eumUnit.eumUmeter, mesh.EumQuantity.Unit)
-        # Assert.AreEqual("UTM-33", mesh.ProjectionString)
+        Assert.AreEqual("UTM-33", mesh.ProjectionString)
         Assert.AreEqual(2057, mesh.GetNumberOfNodes())
         Assert.AreEqual(3636, mesh.GetNumberOfElements())
 
@@ -33,12 +34,12 @@ class MeshTests(unittest.TestCase):
         Assert.AreEqual(0, mesh.Code[666])
         Assert.AreEqual(667, mesh.NodeIds[666])
 
-        # ## 1 667 142 929 
-        # Assert.AreEqual(new int[]{667, 142, 929}, mesh.ElementTable[0])
+        # ## 1 667 142 929         
+        Assert.AreEqual(np.array([667, 142, 929]), mesh.GetElementTable()[0])
         Assert.AreEqual(1, mesh.ElementIds[0])
         Assert.AreEqual(21, mesh.ElementType[0])
         # ## 3636 1024 2057 1766 
-        # Assert.AreEqual(new int[] { 1024, 2057, 1766 }, mesh.ElementTable[3635])
+        Assert.AreEqual(np.array([1024, 2057, 1766]), mesh.GetElementTable()[3635])
         Assert.AreEqual(3636, mesh.ElementIds[3635])
         Assert.AreEqual(21, mesh.ElementType[3635])
 
@@ -85,6 +86,16 @@ class MeshTests(unittest.TestCase):
         # quantity
         # numNodes
         # proj
+            # header2012 = lambda s: re.match(r"(\d+)\s+(\d+)\s+(\d+)\s+(.+)", s)            
+            # header2011 = lambda s: re.match(r"(\d+)\s+(.+)", s)
+
+            # # First try match the 2012 header line format
+            # match = header2012(line)
+            # if match:
+            #     groups = match.groups()
+            #     itemType = eumItem(int(groups[0]))
+            #     itemUnit = eumUnit(int(groups[1]))
+
 
         # ParseHeaderline(header2011.Trim(), out quantity, out numNodes, out proj)
         # Assert.AreEqual(eumItem.eumIBathymetry, quantity.Item)

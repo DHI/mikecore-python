@@ -14,7 +14,7 @@ import re
 class MeshFile:
 
     # projection as wkt-string
-    _wktString = None
+    ProjectionString = None
 
     # quantity of data in the mesh file
     EumQuantity = None
@@ -261,7 +261,7 @@ class MeshFile:
             if proj == None:
                 raise IOError("Can not load mesh file (failed reading mesh file header line): {0}".format(filename))
             
-            _wktString = proj.strip()
+            self.ProjectionString = proj.strip()
             self.NodeIds = np.zeros(noNodes, dtype=int)
             self.X = np.zeros(noNodes, dtype=np.float)
             self.Y = np.zeros(noNodes, dtype=np.float)
@@ -312,23 +312,18 @@ class MeshFile:
             self.ElementType = np.zeros(noElements, dtype=int)
             self._connectivity = [] #new int[noElements][]
 
-            # Temporary (reused) list of nodes in one element
-            nodesInElement = np.zeros(maxNoNodesPerElement, dtype=int)
-            #List<int> nodesInElement = new List<int>(maxNoNodesPerElement)
-
             # Read all elements
             try:
                 for i in range(noElements):
 
-                    nodesInElement[:] = 0
-
                     line = reader.readline().strip()
                     if line is None:
                         raise IOError("Unexpected end of file") # used as inner exception
+                    strings = re.split(r"\s+",line)
 
-                    strings = re.split(r"\s+",line)                    
                     self.ElementIds[i] = int(strings[0])
                     noNodesInElmt = len(strings) - 1
+                    nodesInElement = np.zeros(noNodesInElmt, dtype=int)
                     for j in range(noNodesInElmt):
                         nodeNumber = int(strings[j + 1])
                         if (nodeNumber < 0) or (nodeNumber > noNodes): # used as inner exception:
@@ -337,7 +332,7 @@ class MeshFile:
                         if nodeNumber > 0:
                             nodesInElement[j] = nodeNumber
                     
-                    self._connectivity.append(nodesInElement[:noNodesInElmt])
+                    self._connectivity.append(nodesInElement)
 
                     # Get element type from number of nodes
                     if len(self._connectivity[i]) == 3:
@@ -364,7 +359,7 @@ class MeshFile:
             line = str(self.EumQuantity.ItemInt) + " "
             line += str(self.EumQuantity.UnitInt) + " " 
             line += str(self.NodeIds) + " " 
-            line += self._wktString
+            line += self.ProjectionString
             writer.write(line)
 
             # Node information
@@ -400,7 +395,7 @@ class MeshFile:
 
         res = MeshFile()
         res.EumQuantity = eumQuantity
-        res._wktString = wktString
+        res.ProjectionString = wktString
         res.NodeIds = nodeIds
         res.X = x
         res.Y = y
