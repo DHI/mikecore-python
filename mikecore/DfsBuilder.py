@@ -87,7 +87,7 @@ class DfsBuilder():
     def SetApplicationTitle(self, appTitle):
         self.__CheckBuildStage1()
         if (appTitle == None):
-              appTitle = "";
+            appTitle = "";
         self.FileInfo.ApplicationTitle = appTitle;
 
 
@@ -102,7 +102,7 @@ class DfsBuilder():
            or statType is StatType.RegularStat):
             ...
         elif statType is StatType.LargevalStat:
-          statType = StatType.RegularStat;
+            statType = StatType.RegularStat;
 
         self.FileInfo.StatsType = statType;
 
@@ -179,7 +179,7 @@ class DfsBuilder():
         self.FileInfo.Projection = projection;
         self.isSetProjection = True;
 
-    def SetTemporalAxis(self, temporalAxis):
+    def SetTemporalAxis(self, temporalAxis: DfsTemporalAxis):
         self.__CheckBuildStage1()
         self.FileInfo.TimeAxis = temporalAxis;
         self.isSetTemporalAxis = True;
@@ -247,11 +247,11 @@ class DfsBuilder():
 
         errors = []
         if (not self.isSetDataType):
-            errors.Add("DataType has not been set.")
+            errors.append("DataType has not been set.")
         if (not self.isSetProjection):
-            errors.Add("Projection information has not been set.")
+            errors.append("Projection information has not been set.")
         if (not self.isSetTemporalAxis):
-            errors.Add("Temporal axis has not been set.")
+            errors.append("Temporal axis has not been set.")
 
         fileIsCompressed = self.FileInfo.IsFileCompressed
 
@@ -262,13 +262,13 @@ class DfsBuilder():
                 errors.append("Custom block without data (count is zero) is invalid");
 
         if (len(self.DynamicItems) == 0):
-            errors.Add("No dynamic items defined")
+            errors.append("No dynamic items defined")
 
-        for itemInfo in self.DynamicItems:
+        for i, itemInfo in enumerate(self.DynamicItems):
             if (itemInfo.Name == None or itemInfo.Name == ""):
-                errors.Add("Name of dynamic item number {} is null or empty".format(i + 1));
+                errors.append("Name of dynamic item number {} is null or empty".format(i + 1));
             if (itemInfo.SpatialAxis == None):
-                errors.Add("Spatial axis of dynamic item number {} can not be null".format(i+1));
+                errors.append("Spatial axis of dynamic item number {} can not be null".format(i+1));
                 continue;
 
             if (fileIsCompressed):
@@ -302,11 +302,11 @@ class DfsBuilder():
 
     def ErrorMessage(self, errors):
         if (len(errors) == 1):
-            return (errors[0]);
-        msgs = "Several issues:";
+            return (errors[0])
+        msgs = "Several issues:"
         for err in errors:
-            msgs += "\n  " + err;
-        return (msgs);
+            msgs += "\n  " + err
+        return (msgs)
 
 
     def CreateFile(self, filename):
@@ -597,7 +597,7 @@ class DfsAbstractItemBuilder:
     def Validate(self):
         errors = []
         if (not self.isSetNameQuantityDataType):
-            errors.Add("Name, Quantity and DataType has not been set.");
+            errors.append("Name, Quantity and DataType has not been set.");
         if (not self.isSetSpatialAxis):
             errors.append("Spatial axis has not been set.");
 
@@ -625,7 +625,7 @@ class DfsDynamicItemBuilder(DfsAbstractItemBuilder):
         self.isSetDataValueType = True;
 
     def SetAssociatedStaticItem(self, staticItemNumber):
-        if (self.ItemInfo.AssociatedStaticItemNumbers == null):
+        if (self.ItemInfo.AssociatedStaticItemNumbers == None):
             self.ItemInfo.AssociatedStaticItemNumbers = [];
         self.ItemInfo.AssociatedStaticItemNumbers.append(staticItemNumber);
 
@@ -681,7 +681,7 @@ class DfsStaticItemBuilder(DfsAbstractItemBuilder):
         if (not self.isSetData):
             errors.append("Data has not been set.");
         if (self.ItemInfo.Data.size != self.ItemInfo.SpatialAxis.SizeOfData):
-            errors.append("Size of data ({}) does not match spatial axis size ({}).".format(self.ItemInfo.Data.size, ItemInfo.SpatialAxis.SizeOfData));
+            errors.append("Size of data ({}) does not match spatial axis size ({}).".format(self.ItemInfo.Data.size, self.ItemInfo.SpatialAxis.SizeOfData));
 
         return (errors);
 

@@ -1,9 +1,6 @@
 import os
 import platform
 from pathlib import Path
-from mikecore.DfsDLL import DfsDLL
-from mikecore.eum import eumDLL
-from mikecore.Projections import MzCartDLL
 
 p = platform.architecture()
 if not "64" in p[0]:
@@ -17,16 +14,22 @@ if not "64" in p[0]:
 # print(Path(__file__).parent.parent)
 
 if platform.system() == "Windows":
-    mikebin = str(Path(__file__).parent.parent / "bin/windows")
+    mikebin = str(Path(__file__).parent / "bin/windows")
     os.environ["PATH"] = mikebin + ";" + os.environ["PATH"]
 elif platform.system() == "Linux":
     # mikebin = os.path.join(package_directory, "../bin/linux")
-    mikebin = str(Path(__file__).parent.parent / "bin/linux")
+    mikebin = str(Path(__file__).parent / "bin/linux")
 else:
     raise Exception("Unsupported platform: " + platform.system())
 
-# print(mikebin)
+print(mikebin)
 #os.environ["PATH"] = mikebin + ";" + os.environ["PATH"]
+os.environ["LD_LIBRARY_PATH"] = mikebin
+
+from mikecore.DfsDLL import DfsDLL
+from mikecore.eum import eumDLL
+from mikecore.Projections import MzCartDLL
+
 
 # Path is required for reading EUM.xml
 DfsDLL.libfilepath = mikebin

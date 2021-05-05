@@ -1,6 +1,4 @@
-import datetime
-import numpy as np
-from mikecore.DfsFile import *
+from mikecore.DfsFile import DfsFile, DfsFileMode
 
 class Dfs123File(DfsFile):
     def __init__(self):

@@ -1,5 +1,6 @@
 import os
 import ctypes
+from typing import Tuple
 import numpy as np
 from enum import Enum, IntEnum
 
@@ -169,7 +170,7 @@ class MzCartDLL():
     @staticmethod
     def MzCartProjectionName(mzCartPointer: ctypes.c_void_p) -> str:
       if (mzCartPointer.value is None):
-        raise ArgumentException("Pointer is null", "mzCartPointer");
+        raise ValueError("Pointer is null", "mzCartPointer");
       rc = ctypes.c_int32();
       projName = ctypes.c_char_p((" " * 1024).encode("ascii"))
       MzCartDLL.Wrapper.C_MZC_GETPROJECTIONNAME(mzCartPointer, projName, ctypes.c_int32(1024), ctypes.byref(rc));
@@ -188,7 +189,7 @@ class MzCartDLL():
     @staticmethod
     def MzCartProjectionString(mzCartPointer: ctypes.c_void_p) -> str:
       if (mzCartPointer.value is None):
-        raise ArgumentException("Pointer is null", "mzCartPointer");
+        raise ValueError("Pointer is null", "mzCartPointer");
       rc = ctypes.c_int32();
       projName = ctypes.c_char_p((" " * 2048).encode("ascii"));
       MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING(mzCartPointer, projName, ctypes.c_int32(2048), ctypes.byref(rc));
@@ -223,7 +224,7 @@ class MzCartDLL():
     #/ </summary>
     @staticmethod
     def MzCartProjectionNorth(mzCartPointer: ctypes.c_void_p) -> float:
-        return MzCartDLL.Wrapper.C_MZC_GETPROJNORTH(mzCartPointer);
+        return MzCartDLL.Wrapper.C_MZC_GETPROJNORTH(mzCartPointer)
 
     #/ <summary>
     #/ Returns the angle between true north and a line parallel to the 
@@ -237,7 +238,7 @@ class MzCartDLL():
     #/ Convert coordinates from geographical coordinates to projection coordinates
     #/ </summary>
     @staticmethod
-    def MzCartGeo2Proj(mzCartPointer: ctypes.c_void_p, lon: float, lat: float) -> (float,float):
+    def MzCartGeo2Proj(mzCartPointer: ctypes.c_void_p, lon: float, lat: float) -> Tuple[float,float]:
         east = ctypes.c_double() 
         north = ctypes.c_double() 
         MzCartDLL.Wrapper.C_MZC_GEO2PROJ(mzCartPointer, 
@@ -249,7 +250,7 @@ class MzCartDLL():
     #/ Convert coordinates from projection coordinates to geographical coordinates 
     #/ </summary>
     @staticmethod
-    def MzCartProj2Geo(mzCartPointer: ctypes.c_void_p, east: float, north: float) -> (float,float):
+    def MzCartProj2Geo(mzCartPointer: ctypes.c_void_p, east: float, north: float) -> Tuple[float,float]:
         lon = ctypes.c_double() 
         lat = ctypes.c_double() 
         MzCartDLL.Wrapper.C_MZC_PROJ2GEO(mzCartPointer, 
@@ -261,7 +262,7 @@ class MzCartDLL():
     #/ Convert coordinates from geographical coordinates to local grid x-y coordinates
     #/ </summary>
     @staticmethod
-    def MzCartGeo2Xy(mzCartPointer: ctypes.c_void_p, lon: float, lat: float) -> (float,float):
+    def MzCartGeo2Xy(mzCartPointer: ctypes.c_void_p, lon: float, lat: float) -> Tuple[float,float]:
         x = ctypes.c_double() 
         y = ctypes.c_double() 
         MzCartDLL.Wrapper.C_MZC_GEO2XY(mzCartPointer, 
@@ -273,7 +274,7 @@ class MzCartDLL():
     #/ Convert coordinates from local grid x-y coordinates to geographical coordinates 
     #/ </summary>
     @staticmethod
-    def MzCartXy2Geo(mzCartPointer: ctypes.c_void_p, x: float, y: float) -> (float,float):
+    def MzCartXy2Geo(mzCartPointer: ctypes.c_void_p, x: float, y: float) -> Tuple[float,float]:
         lon = ctypes.c_double() 
         lat = ctypes.c_double() 
         MzCartDLL.Wrapper.C_MZC_XY2GEO(mzCartPointer, 
@@ -285,7 +286,7 @@ class MzCartDLL():
     #/ Convert coordinates from projetion coordinates to local grid x-y coordinates
     #/ </summary>
     @staticmethod
-    def MzCartProj2Xy(mzCartPointer: ctypes.c_void_p, east: float, north: float) -> (float,float):
+    def MzCartProj2Xy(mzCartPointer: ctypes.c_void_p, east: float, north: float) -> Tuple[float,float]:
         x = ctypes.c_double() 
         y = ctypes.c_double() 
         MzCartDLL.Wrapper.C_MZC_PROJ2XY(mzCartPointer, 
@@ -297,7 +298,7 @@ class MzCartDLL():
     #/ Convert coordinates from local grid x-y coordinates to projection coordinates 
     #/ </summary>
     @staticmethod
-    def MzCartXy2Proj(mzCartPointer: ctypes.c_void_p, x: float, y: float) -> (float,float):
+    def MzCartXy2Proj(mzCartPointer: ctypes.c_void_p, x: float, y: float) -> Tuple[float,float]:
         east = ctypes.c_double() 
         north = ctypes.c_double() 
         MzCartDLL.Wrapper.C_MZC_XY2PROJ(mzCartPointer, 
@@ -359,7 +360,7 @@ class MzCartDLL():
     @staticmethod
     def MzMapProjName(mzMapProjPointer: ctypes.c_void_p) -> str:
       if (mzMapProjPointer is None):
-        raise ArgumentException("Pointer is null", "mzMapProjPointer");
+        raise Exception("Pointer is null", "mzMapProjPointer");
       rc = ctypes.c_int32();
       projName = ctypes.c_char_p((" " * 128).encode("ascii"));
       MzCartDLL.Wrapper.C_MZMP_GETNAME(mzMapProjPointer, projName, ctypes.c_int32(128), ctypes.byref(rc));
@@ -378,7 +379,7 @@ class MzCartDLL():
     @staticmethod
     def MzMapProjProjectionString(mzMapProjPointer: ctypes.c_void_p) -> str:
       if (mzMapProjPointer.value is None):
-        raise ArgumentException("Pointer is null", "mzMapProjPointer");
+        raise Exception("Pointer is null", "mzMapProjPointer");
       rc = ctypes.c_int32();
       projName = ctypes.c_char_p((" " * 2048).encode("ascii"));
       MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING(mzMapProjPointer, projName, ctypes.c_int32(2048), ctypes.byref(rc));
@@ -394,7 +395,7 @@ class MzCartDLL():
     #/ Convert coordinates from geographical coordinates to projection coordinates
     #/ </summary>
     @staticmethod
-    def MzMapProjGeo2Proj(mzMapProjPointer: ctypes.c_void_p, lon: float, lat: float) -> (float,float):
+    def MzMapProjGeo2Proj(mzMapProjPointer: ctypes.c_void_p, lon: float, lat: float) -> Tuple[float,float]:
         east = ctypes.c_double() 
         north = ctypes.c_double() 
         MzCartDLL.Wrapper.C_MZMP_GEO2PROJ(mzMapProjPointer, 
@@ -406,7 +407,7 @@ class MzCartDLL():
     #/ Convert coordinates from projection coordinates to geographical coordinates 
     #/ </summary>
     @staticmethod
-    def MzMapProjProj2Geo(mzMapProjPointer: ctypes.c_void_p, east: float, north: float) -> (float,float):
+    def MzMapProjProj2Geo(mzMapProjPointer: ctypes.c_void_p, east: float, north: float) -> Tuple[float,float]:
         lon = ctypes.c_double() 
         lat = ctypes.c_double() 
         MzCartDLL.Wrapper.C_MZMP_PROJ2GEO(mzMapProjPointer, 
@@ -419,7 +420,7 @@ class MzCartDLL():
     #/ Gets the geographical origin of the map projection
     #/ </summary>
     @staticmethod
-    def MzMapProjGetOrigin(mzMapProjPointer: ctypes.c_void_p) -> (float,float):
+    def MzMapProjGetOrigin(mzMapProjPointer: ctypes.c_void_p) -> Tuple[float,float]:
         lon = ctypes.c_double() 
         lat = ctypes.c_double() 
         MzCartDLL.Wrapper.C_MZMP_GETORIGIN(mzMapProjPointer, ctypes.byref(lon), ctypes.byref(lat))
@@ -436,7 +437,7 @@ class MzCartDLL():
     #/ Function that returns the default area in map projection coordinates of the projection.
     #/ </summary>
     @staticmethod
-    def GetDefaultArea(mzMapProjPointer: ctypes.c_void_p) -> (float,float,float,float):
+    def GetDefaultArea(mzMapProjPointer: ctypes.c_void_p) -> Tuple[float,float,float,float]:
         x0 = ctypes.c_double();
         y0 = ctypes.c_double();
         x1 = ctypes.c_double();
@@ -449,7 +450,7 @@ class MzCartDLL():
     #/ Convert coordinates from geographical coordinates to 3D coordinates
     #/ </summary>
     @staticmethod
-    def MzMapProjGeo2Xyz(mzMapProjPointer: ctypes.c_void_p, lon: float, lat: float, height: float) -> (float,float,float):
+    def MzMapProjGeo2Xyz(mzMapProjPointer: ctypes.c_void_p, lon: float, lat: float, height: float) -> Tuple[float,float,float]:
         x = ctypes.c_double();
         y = ctypes.c_double();
         z = ctypes.c_double();
@@ -462,7 +463,7 @@ class MzCartDLL():
     #/ Convert coordinates from 3D coordinates to geographical coordinates 
     #/ </summary>
     @staticmethod
-    def MzMapProjXyz2Geo(mzMapProjPointer: ctypes.c_void_p, x: float, y: float, z: float) -> (float,float,float):
+    def MzMapProjXyz2Geo(mzMapProjPointer: ctypes.c_void_p, x: float, y: float, z: float) -> Tuple[float,float,float]:
         lon = ctypes.c_double();
         lat = ctypes.c_double();
         height = ctypes.c_double();
@@ -526,7 +527,7 @@ class MzCartDLL():
     #/ Converts a point (x, y) from the source map projection to the target map projection
     #/ </summary>
     @staticmethod
-    def MzConverterConvertXY(mzConverterPointer: ctypes.c_void_p, x: float, y: float) -> (float,float):
+    def MzConverterConvertXY(mzConverterPointer: ctypes.c_void_p, x: float, y: float) -> Tuple[float,float]:
         resx = ctypes.c_double(x);
         resy = ctypes.c_double(y);
         MzCartDLL.Wrapper.C_MZDC_CONVERTXY(mzConverterPointer, 
@@ -537,7 +538,7 @@ class MzCartDLL():
     #/ Converts a point (x, y) from the target map projection to the source map projection.
     #/ </summary>
     @staticmethod
-    def MzConverterInvConvertXY(mzConverterPointer: ctypes.c_void_p, x: float, y: float) -> (float,float):
+    def MzConverterInvConvertXY(mzConverterPointer: ctypes.c_void_p, x: float, y: float) -> Tuple[float,float]:
         resx = ctypes.c_double(x);
         resy = ctypes.c_double(y);
         MzCartDLL.Wrapper.C_MZDC_INVCONVERTXY(mzConverterPointer, 
@@ -549,7 +550,7 @@ class MzCartDLL():
     #/ Converts a point (x, y, h) from the source map projection to the target map projection
     #/ </summary>
     @staticmethod
-    def MzConverterConvertXYH(mzConverterPointer: ctypes.c_void_p, x: float, y: float, h: float) -> (float,float,float):
+    def MzConverterConvertXYH(mzConverterPointer: ctypes.c_void_p, x: float, y: float, h: float) -> Tuple[float,float,float]:
         resx = ctypes.c_double(x);
         resy = ctypes.c_double(y);
         resh = ctypes.c_double(h);
@@ -561,7 +562,7 @@ class MzCartDLL():
     #/ Converts a point (x, y, h) from the target map projection to the source map projection.
     #/ </summary>
     @staticmethod
-    def MzConverterInvConvertXYH(mzConverterPointer: ctypes.c_void_p, x: float, y: float, h: float) -> (float,float,float):
+    def MzConverterInvConvertXYH(mzConverterPointer: ctypes.c_void_p, x: float, y: float, h: float) -> Tuple[float,float,float]:
         resx = ctypes.c_double(x);
         resy = ctypes.c_double(y);
         resh = ctypes.c_double(h);
@@ -575,7 +576,7 @@ class MzCartDLL():
     #/ Euclidean coordinates relative to the target datum center
     #/ </summary>
     @staticmethod
-    def MzConverterDatumShift(mzConverterPointer: ctypes.c_void_p, x: float, y: float, z: float) -> (float,float,float):
+    def MzConverterDatumShift(mzConverterPointer: ctypes.c_void_p, x: float, y: float, z: float) -> Tuple[float,float,float]:
         resx = ctypes.c_double(x);
         resy = ctypes.c_double(y);
         resz = ctypes.c_double(z);
@@ -588,7 +589,7 @@ class MzCartDLL():
     #/ Euclidean coordinates relative to the source datum center
     #/ </summary>
     @staticmethod
-    def MzConverterInvDatumShift(mzConverterPointer: ctypes.c_void_p, x: float, y: float, z: float) -> (float,float,float):
+    def MzConverterInvDatumShift(mzConverterPointer: ctypes.c_void_p, x: float, y: float, z: float) -> Tuple[float,float,float]:
         resx = ctypes.c_double(x);
         resy = ctypes.c_double(y);
         resz = ctypes.c_double(z);
@@ -742,7 +743,7 @@ class MzCartDLL():
     #/ <param name="lon">Longitude coordinate of the projection origin</param>
     #/ <param name="lat">Latitude coordinate of the projection origin</param>
     @staticmethod
-    def ProjectionOrigin(projstring: str) -> (float,float):
+    def ProjectionOrigin(projstring: str) -> Tuple[float,float]:
       lon = ctypes.c_double() ;
       lat = ctypes.c_double() ;
       rc = ctypes.c_int32();
@@ -780,11 +781,11 @@ class MzCartDLL():
     @staticmethod
     def ConvertWkt2Proj4(wktProjectionString: str, datumShiftParameters: np.ndarray) -> str:
       noOfParams = 0;
-      if (datumShiftParameters != null):
+      if (datumShiftParameters is not None):
         noOfParams= datumShiftParameters.size;
 
       if ( not (noOfParams==0 or noOfParams==3 or noOfParams==7) ):
-        raise ArgumentException("Invalid number of datum shift parameters specified. Only 0, 3 or 7 is allowed", "datumShiftParameters");
+        raise Exception("Invalid number of datum shift parameters specified. Only 0, 3 or 7 is allowed", "datumShiftParameters");
 
       rc = ctypes.c_int32();
       proj4 = ctypes.c_char_p((" " * 1024).encode("ascii"));
@@ -912,10 +913,10 @@ class MapProjection:
     @staticmethod
     def Create(projectionString: str, validateProjectionString: bool = True):
       if (projectionString is None or projectionString == ""):
-        raise ArgumentException("Projection string cannot be null or empty", "projectionString");
+        raise Exception("Projection string cannot be null or empty", "projectionString");
       if (validateProjectionString):
         if (not MapProjection.IsValid(projectionString)):
-          raise ArgumentException("Not a valid projection string", "projectionString");
+          raise Exception("Not a valid projection string", "projectionString");
       return MapProjection(projectionString, mustFree=True);
 
     #/ <summary>
@@ -932,7 +933,7 @@ class MapProjection:
     #/ is garbage collected (and only then parent unmanged ressources are released).
     #/ </remarks>
     def CreatePointer(self, mzMapProjPointer: ctypes.c_void_p, mapProjObjectHolder: object):
-        return MapProjection(None, mzMapProjPointer, false, mapProjObjectHolder)
+        return MapProjection(None, mzMapProjPointer, False, mapProjObjectHolder)
 
     #/ <summary>
     #/ Free unmanaged ressources
@@ -968,7 +969,7 @@ class MapProjection:
     #/ <param name="lat">Latitude</param>
     #/ <param name="east">Easting</param>
     #/ <param name="north">Northing</param>
-    def Geo2Proj(self, lon: float, lat: float) -> (float,float):
+    def Geo2Proj(self, lon: float, lat: float) -> Tuple[float,float]:
       return MzCartDLL.MzMapProjGeo2Proj(self._mzMapProjPointer, lon, lat);
 
     #/ <summary>
@@ -978,7 +979,7 @@ class MapProjection:
     #/ <param name="north">Northing</param>
     #/ <param name="lon">Longitude</param>
     #/ <param name="lat">Latitude</param>
-    def Proj2Geo(self, east: float, north: float) -> (float,float):
+    def Proj2Geo(self, east: float, north: float) -> Tuple[float,float]:
       return MzCartDLL.MzMapProjProj2Geo(self._mzMapProjPointer, east, north);
 
     #/ <summary>
@@ -986,7 +987,7 @@ class MapProjection:
     #/ </summary>
     #/ <param name="lon">Longitude</param>
     #/ <param name="lat">Latitude</param>
-    def GetOrigin(self) -> (float,float):
+    def GetOrigin(self) -> Tuple[float,float]:
       return MzCartDLL.MzMapProjGetOrigin(self._mzMapProjPointer);
 
     #/ <summary>
@@ -1013,7 +1014,7 @@ class MapProjection:
     #/ <param name="y0">the y-coordinate of the lower lefthand corner</param>
     #/ <param name="x1">the x-coordinate of the upper righthand corner</param>
     #/ <param name="y1">the y-coordinate of the upper righthand corner</param>
-    def GetDefaultArea(self) -> (float,float,float,float):
+    def GetDefaultArea(self) -> Tuple[float,float,float,float]:
       return MzCartDLL.GetDefaultArea(self._mzMapProjPointer);
 
     #/ <summary>
@@ -1028,7 +1029,7 @@ class MapProjection:
     #/ <param name="x">Eucledian x coordinate</param>
     #/ <param name="y">Eucledian y coordinate</param>
     #/ <param name="z">Eucledian z coordinate</param>
-    def Geo2Xyz(self, lon: float, lat: float, height: float) -> (float,float,float):
+    def Geo2Xyz(self, lon: float, lat: float, height: float) -> Tuple[float,float,float]:
       return MzCartDLL.MzMapProjGeo2Xyz(self._mzMapProjPointer, lon, lat, height);
 
     #/ <summary>
@@ -1043,7 +1044,7 @@ class MapProjection:
     #/ <param name="lon">Longitude</param>
     #/ <param name="lat">Latitude</param>
     #/ <param name="height">Height over ellipsoid</param>
-    def Xyz2Geo(self, x: float, y: float, z: float) -> (float,float,float):
+    def Xyz2Geo(self, x: float, y: float, z: float) -> Tuple[float,float,float]:
       return MzCartDLL.MzMapProjXyz2Geo(self._mzMapProjPointer, x, y, z);
 
     #/ <summary>
@@ -1197,9 +1198,9 @@ class MapProjection:
     #/ It is fairly expensive to validate the projection strings, and the validation can be skipped by setting this flag to false. 
     #/ Then the user must beforehand check that the projection is valid by calling <see cref="MapProjection.IsValid"/>. </param>
     @staticmethod
-    def ProjectionOrigin(projstring: str, validateProjectionString: bool = True) -> (float,float):
+    def ProjectionOrigin(projstring: str, validateProjectionString: bool = True) -> Tuple[float,float]:
       if (validateProjectionString and not MzCartDLL.IsValid(projstring)):
-        raise ArgumentException("Projection string is not a valid WKT projection string", "projstring");
+        raise Exception("Projection string is not a valid WKT projection string", "projstring");
       return MzCartDLL.ProjectionOrigin(projstring);
 
     #/ <summary>
@@ -1317,7 +1318,7 @@ class Cartography:
 
         if (validateProjectionString):
           if (not MapProjection.IsValid(projectionString)):
-            raise ArgumentException("Not a valid projection string", "projectionString");
+            raise Exception("Not a valid projection string", "projectionString");
 
         if (lonOrigin is None):
             lonOrigin, latOrigin = MapProjection.ProjectionOrigin(projectionString, False);
@@ -1403,7 +1404,7 @@ class Cartography:
     #/ <param name="lat">Latitude</param>
     #/ <param name="east">Easting</param>
     #/ <param name="north">Northing</param>
-    def Geo2Proj(self, lon: float, lat: float) -> (float,float):
+    def Geo2Proj(self, lon: float, lat: float) -> Tuple[float,float]:
       return MzCartDLL.MzCartGeo2Proj(self._mzCartPointer, lon, lat);
 
     #/ <summary>
@@ -1413,7 +1414,7 @@ class Cartography:
     #/ <param name="north">Northing</param>
     #/ <param name="lon">Longitude</param>
     #/ <param name="lat">Latitude</param>
-    def Proj2Geo(self, east: float, north: float) -> (float,float):
+    def Proj2Geo(self, east: float, north: float) -> Tuple[float,float]:
       return MzCartDLL.MzCartProj2Geo(self._mzCartPointer, east, north);
 
     #/ <summary>
@@ -1423,7 +1424,7 @@ class Cartography:
     #/ <param name="lat">Latitude</param>
     #/ <param name="x">Local grid x coordinate</param>
     #/ <param name="y">Local grid y coordinate</param>
-    def Geo2Xy(self, lon: float, lat: float) -> (float,float):
+    def Geo2Xy(self, lon: float, lat: float) -> Tuple[float,float]:
       return MzCartDLL.MzCartGeo2Xy(self._mzCartPointer, lon, lat);
 
     #/ <summary>
@@ -1433,7 +1434,7 @@ class Cartography:
     #/ <param name="y">Local grid y coordinate</param>
     #/ <param name="lon">Longitude</param>
     #/ <param name="lat">Latitude</param>
-    def Xy2Geo(self, x: float, y: float) -> (float,float):
+    def Xy2Geo(self, x: float, y: float) -> Tuple[float,float]:
       return MzCartDLL.MzCartXy2Geo(self._mzCartPointer, x, y);
 
     #/ <summary>
@@ -1443,7 +1444,7 @@ class Cartography:
     #/ <param name="north">Northing</param>
     #/ <param name="x">Local grid x coordinate</param>
     #/ <param name="y">Local grid y coordinate</param>
-    def Proj2Xy(self, east: float, north: float) -> (float,float):
+    def Proj2Xy(self, east: float, north: float) -> Tuple[float,float]:
       return MzCartDLL.MzCartProj2Xy(self._mzCartPointer, east, north);
 
     #/ <summary>
@@ -1453,7 +1454,7 @@ class Cartography:
     #/ <param name="y">Local grid y coordinate</param>
     #/ <param name="east">Easting</param>
     #/ <param name="north">Northing</param>
-    def Xy2Proj(self, x: float, y: float) -> (float,float):
+    def Xy2Proj(self, x: float, y: float) -> Tuple[float,float]:
       return MzCartDLL.MzCartXy2Proj(self._mzCartPointer, x, y);
 
     #region Static factory methods
@@ -1476,10 +1477,10 @@ class Cartography:
     @staticmethod
     def CreateGeoOrigin(projectionString: str, lonOrigin: float, latOrigin: float, orientation: float = 0, validateProjectionString: bool = True):
       if (projectionString is None or projectionString == ""):
-        raise ArgumentException("Projection string can not be null or empty", "projectionString");
+        raise ValueError("Projection string can not be null or empty")
       if (validateProjectionString):
         if (not MapProjection.IsValid(projectionString)):
-          raise ArgumentException("Not a valid projection string", "projectionString");
+          raise ValueError("Not a valid projection string")
       cart = Cartography(projectionString, lonOrigin, latOrigin, orientation, validateProjectionString=False);
       return cart;
 
@@ -1500,24 +1501,20 @@ class Cartography:
     @staticmethod
     def CreateProjOrigin(projectionString: str, east: float, north: float, orientationProj: float, validateProjectionString: bool = True):
       if (projectionString is None or projectionString == ""):
-        raise ArgumentException("Projection string cannot be null or empty", "projectionString");
+        raise ValueError("Projection string cannot be null or empty")
       if (validateProjectionString):
         if (not MapProjection.IsValid(projectionString)):
-          raise ArgumentException("Not a valid projection string", "projectionString");
+          raise ValueError("Not a valid projection string")
       proj = MapProjection.Create(projectionString, validateProjectionString);
       lonOrigin, latOrigin = proj.Proj2Geo(east, north);
       orientationGeo = proj.Proj2GeoRotation(east, north, orientationProj);
       return Cartography(projectionString, lonOrigin, latOrigin, orientationGeo, east, north, orientationProj, validateProjectionString=False);
 
 
-
-    #endregion
-
-
 #/ <summary>
 #/ Side of conversion in reprojection
 #/ </summary>
-class ReprojectorSide(Enum):
+class ReprojectorSide(IntEnum):
   #/ <summary> Source side </summary>
   Source = 0;
   #/ <summary> Target side </summary>
@@ -1527,7 +1524,7 @@ class ReprojectorSide(Enum):
 #/ Type of conversion
 #/ </summary>
 # Must be kept synchronized with enum ETypeOfConversion in MzDatumConverter.h
-class ReprojectorConversionType(Enum):
+class ReprojectorConversionType(IntEnum):
   #/ <summary> Convert from source projection coordinates to target projection coordinates</summary>
   Proj2Proj = 0;
   #/ <summary> Convert from source projection coordinates to target geographic coordinates</summary>
@@ -1631,14 +1628,14 @@ class Reprojector:
     #/ Then the user must beforehand check that the projection is valid by calling <see cref="MapProjection.IsValid"/>. </param>
     def __init__(self, projectionStringSource: str, projectionStringTarget: str, validateProjectionStrings: bool = True):
       if (projectionStringSource is None or projectionStringSource == ""):
-        raise ArgumentException("Projection string cannot be null or empty", "projectionStringSource");
+        raise Exception("Projection string cannot be null or empty", "projectionStringSource");
       if (projectionStringTarget is None or projectionStringTarget == ""):
-        raise ArgumentException("Projection string cannot be null or empty", "projectionStringTarget");
+        raise Exception("Projection string cannot be null or empty", "projectionStringTarget");
       if (validateProjectionStrings):
         if (not MapProjection.IsValid(projectionStringSource)):
-          raise ArgumentException("Not a valid projection string", "projectionStringSource");
+          raise Exception("Not a valid projection string", "projectionStringSource");
         if (not MapProjection.IsValid(projectionStringTarget)):
-          raise ArgumentException("Not a valid projection string", "projectionStringTarget");
+          raise Exception("Not a valid projection string", "projectionStringTarget");
       self.ProjectionStringSource = projectionStringSource;
       self.ProjectionStringTarget = projectionStringTarget;
       self._mzConverterPointer = MzCartDLL.MzConverterCreate(projectionStringSource, projectionStringTarget);
@@ -1689,9 +1686,9 @@ class Reprojector:
     def InvertOrder(self):
       MzCartDLL.MzConverterInvertOrder(self._mzConverterPointer);
       # Invert projection strings
-      tmp = _projectionStringSource;
-      _projectionStringSource = _projectionStringTarget;
-      _projectionStringTarget = tmp;
+      tmp = self.ProjectionStringSource
+      _projectionStringSource = self.ProjectionStringTarget
+      _projectionStringTarget = tmp
       # Also invert conversion type for the "non-symmetric" cases, as CMzDatumConverter class does
       if (self._typeOfConversion == ReprojectorConversionType.Proj2Geo):
         self._typeOfConversion = ReprojectorConversionType.Geo2Proj;
@@ -1783,43 +1780,43 @@ class Reprojector:
           pass;
       elif typeOfDatumShift is ReprojectorDatumShiftType.Param3:
           if (datumParams is None):
-            raise ArgumentNullException("datumParams");
+            raise TypeError("datumParams is None")
           if (datumParams.size < 3):
-            raise ArgumentException("Length of datum shift parameters must be at least three");
+            raise Exception("Length of datum shift parameters must be at least three");
           datumParamsdata = datumParams.ctypes.data
       elif typeOfDatumShift is ReprojectorDatumShiftType.Param7:
-          if (datumParams == null):
-            raise ArgumentNullException("datumParams");
+          if (datumParams is None):
+            raise TypeError("datumParams is None")
           if (datumParams.size < 7):
-            raise ArgumentException("Length of datum shift parameters must be at least seven");
+            raise Exception("Length of datum shift parameters must be at least seven");
           datumParamsdata = datumParams.ctypes.data
       else:
-          raise ArgumentOutOfRangeException("typeOfDatumShift");
+          raise ArgumentOutOfRangeException("typeOfDatumShift")
       MzCartDLL.Wrapper.C_MZDC_SETDATUMSHIFT(self._mzConverterPointer, ctypes.c_int32(typeOfDatumShift), datumParamsdata, ctypes.c_int32(1 if source else 0));
 
 
     #/ <summary>
     #/ Converts a point (x, y) from the source map projection to the target map projection.
     #/ </summary>
-    def ConvertXY(self, x: float, y: float) -> (float,float):
+    def ConvertXY(self, x: float, y: float) -> Tuple[float,float]:
       return MzCartDLL.MzConverterConvertXY(self._mzConverterPointer, x, y);
 
     #/ <summary>
     #/ Inverse conversion, converts a point (x, y) from the target map projection to the source map projection.
     #/ </summary>
-    def InvConvertXY(self, x: float, y: float) -> (float,float):
+    def InvConvertXY(self, x: float, y: float) -> Tuple[float,float]:
       return MzCartDLL.MzConverterInvConvertXY(self._mzConverterPointer, x, y);
 
     #/ <summary>
     #/ Converts a point (x, y, h) from the source map projection to the target map projection.
     #/ </summary>
-    def ConvertXYH(self, x: float, y: float, h: float) -> (float,float,float):
+    def ConvertXYH(self, x: float, y: float, h: float) -> Tuple[float,float,float]:
       return MzCartDLL.MzConverterConvertXYH(self._mzConverterPointer, x, y, h);
 
     #/ <summary>
     #/ Inverse conversion, converts a point (x, y, h) from the target map projection to the source map projection.
     #/ </summary>
-    def InvConvertXYH(self, x: float, y: float, h: float) -> (float,float,float):
+    def InvConvertXYH(self, x: float, y: float, h: float) -> Tuple[float,float,float]:
       return MzCartDLL.MzConverterInvConvertXYH(self._mzConverterPointer, x, y, h);
 
     #/ <summary>
@@ -1834,7 +1831,7 @@ class Reprojector:
     #/ <param name="x">Euclidean x coordinate</param>
     #/ <param name="y">Euclidean y coordinate</param>
     #/ <param name="z">Euclidean z coordinate</param>
-    def DatumShift(self, x: float, y: float, z: float) -> (float,float,float):
+    def DatumShift(self, x: float, y: float, z: float) -> Tuple[float,float,float]:
       return MzCartDLL.MzConverterDatumShift(self._mzConverterPointer, x, y, z);
 
     #/ <summary>
@@ -1849,5 +1846,5 @@ class Reprojector:
     #/ <param name="x">Euclidean x coordinate</param>
     #/ <param name="y">Euclidean y coordinate</param>
     #/ <param name="z">Euclidean z coordinate</param>
-    def InvDatumShift(self, x: float, y: float, z: float) -> (float,float,float):
+    def InvDatumShift(self, x: float, y: float, z: float) -> Tuple[float,float,float]:
       return MzCartDLL.MzConverterInvDatumShift(self._mzConverterPointer, x, y, z);

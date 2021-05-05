@@ -8,7 +8,7 @@ def CheckForNull(obj):
   if (obj == None):
     raise Exception("File is not a valid dfsu file. It can not be opened");
 
-class DfsuFileType(Enum):
+class DfsuFileType(IntEnum):
 
     # 2D area series
     Dfsu2D = 1,
@@ -192,17 +192,16 @@ class DfsuFile(object):
               k += 1
 
       self.NumberOfNodes = self.NodeIds.size; 
-      self.NumberOfNodes = self.ElementIds.size;
       self.ItemInfo = self.dfsFile.ItemInfo
 
       self.NumberOfElements = self.ElementIds.size
-      self.NumberOfNodes = self.X.size
+      #self.NumberOfNodes = self.X.size
 
       if (not build):
          # In append mode, move the file pointer to end of file
          # It was moved elsewhere when reading static data...
          if (self.dfsFile.FileMode == DfsFileMode.Append):
-            self.dfsFile.FindTimeStep(NumberOfTimeSteps);
+            self.dfsFile.FindTimeStep(self.NumberOfTimeSteps);
 
 
     def Dispose(self):
@@ -308,13 +307,13 @@ class DfsuFile(object):
 
     def __GetFileName(self):
         return self.FileInfo.FileName
-    def __SetFileName(self, value):
+    def __SetFileName(self, value: str):
         self.FileInfo.FileName = value
     FileName = property(__GetFileName, __SetFileName)
 
     def __GetFileTitle(self):
         return self.FileInfo.FileTitle
-    def __SetFileTitle(self, value):
+    def __SetFileTitle(self, value: str):
         self.FileInfo.FileTitle = value
     FileTitle = property(__GetFileTitle, __SetFileTitle)
 
@@ -330,9 +329,9 @@ class DfsuFile(object):
         self.FileInfo.ApplicationVersion = value
     ApplicationVersion = property(__GetApplicationVersion, __SetApplicationVersion)
 
-    def __GetProjection(self):
+    def __GetProjection(self) -> DfsProjection:
         return self.FileInfo.Projection
-    def __SetProjection(self, value):
+    def __SetProjection(self, value: DfsProjection):
         self.FileInfo.Projection = value
     Projection = property(__GetProjection, __SetProjection)
 
@@ -357,7 +356,10 @@ class DfsuFile(object):
 
     def __GetNumberOfTimeSteps(self):
         return self.FileInfo.TimeAxis.NumberOfTimeSteps
-    NumberOfTimeSteps = property(__GetNumberOfTimeSteps)
+    
+    @property
+    def NumberOfTimeSteps(self):
+      return self.__GetNumberOfTimeSteps()
 
     def __GetDeleteValueFloat(self):
         return self.FileInfo.DeleteValueFloat
@@ -459,7 +461,7 @@ class DfsuUtil:
       # with the first half of element i+1.
       # Elements always start from the bottom, and the element of one columne are following
       # each other in the element table.
-      for i in range(elementTable.size-1):
+      for i in range(len(elementTable)-1):
         elmt1 = elementTable[i];
         elmt2 = elementTable[i+1];
 
@@ -492,7 +494,7 @@ class DfsuUtil:
               break;
 
       # The last element will always be a top layer element
-      topLayerElments.append(elementTable.size-1);
+      topLayerElments.append(len(elementTable)-1);
 
       return (np.array(topLayerElments, dtype=np.int32));
 
@@ -520,7 +522,7 @@ class DfsuUtil:
 
       # Find top layer elements by matching the element center (x,y)-coordinates
       # of a column
-      for i in range(elementTable.size - 1):
+      for i in range(len(elementTable) - 1):
         elmt1 = elementTable[i];
         elmt2 = elementTable[i + 1];
 
@@ -570,7 +572,7 @@ class DfsuUtil:
           topLayerElments.append(i);
       
       # The last element will always be a top layer element
-      topLayerElments.append(elementTable.size - 1);
+      topLayerElments.append(len(elementTable) - 1);
 
       return (np.array(topLayerElments, dtype=np.int32));
 

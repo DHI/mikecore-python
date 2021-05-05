@@ -1,5 +1,5 @@
 import os.path
-from enum import Enum
+from enum import IntEnum
 import datetime
 import ctypes
 import numpy as np
@@ -7,14 +7,20 @@ from mikecore.eum import *
 from mikecore.DfsDLL import DfsDLL
 from typing import Union
 
-class DfsFileMode(Enum):
+class NotSupportedException(Exception):
+    pass
+
+class ArgumentNullException(Exception):
+    pass
+
+class DfsFileMode(IntEnum):
     Read = 0
     Edit = 1
     Append = 2
     Closed = 3
 
 
-class TimeAxisType(Enum):
+class TimeAxisType(IntEnum):
     Undefined = 0
     TimeEquidistant = 1
     TimeNonEquidistant = 2
@@ -22,7 +28,7 @@ class TimeAxisType(Enum):
     CalendarNonEquidistant = 4
 
 
-class DataValueType(Enum):
+class DataValueType(IntEnum):
     """
     Data value type defines how one value is interpreted in time:
     Instantaneous : Value at current point in time, current time step.
@@ -38,7 +44,7 @@ class DataValueType(Enum):
     MeanStepForward = 4
 
 
-class SpaceAxisType(Enum):
+class SpaceAxisType(IntEnum):
     Undefined = 0
     EqD0 = 1
     EqD1 = 2
@@ -55,7 +61,7 @@ class SpaceAxisType(Enum):
     CurveLinearD3 = 13
 
 
-class DfsSimpleType(Enum):
+class DfsSimpleType(IntEnum):
     Float = 1
     Double = 2
     Byte = 3
@@ -65,7 +71,7 @@ class DfsSimpleType(Enum):
     UShort = 7
 
 
-class ProjectionType(Enum):
+class ProjectionType(IntEnum):
     """
     Projection type, specifies whether file has projection or not. 
     All newer files has a projection defined, though there exists 
@@ -75,7 +81,7 @@ class ProjectionType(Enum):
     Projection = 1
 
 
-class UnitConversionType(Enum):
+class UnitConversionType(IntEnum):
     """
     Type of unit conversion, when reading item
     data and axis.
@@ -89,7 +95,7 @@ class UnitConversionType(Enum):
     FreeConversion = 2
     FirstRegisteredUnitConversion = 3
 
-class StatType(Enum):
+class StatType(IntEnum):
     Undefined = 0
     NoStat = 1
     RegularStat = 2
@@ -541,14 +547,14 @@ class DfsFileInfo:
     def SetEncodingKey(self, xKey, yKey, zKey):
         if xKey == None:
             raise ArgumentNullException("xKey")
-        if yKey == null:
+        if yKey == None:
             raise ArgumentNullException("yKey")
-        if zKey == null:
+        if zKey == None:
             raise ArgumentNullException("zKey")
 
         encodeKeySize = len(xKey)
         if encodeKeySize != len(yKey) or encodeKeySize != len(zKey):
-            raise ArgumentException("Encoding key arguments must have same length")
+            raise ValueError("Encoding key arguments must have same length")
 
         self.xKey = xKey
         self.yKey = yKey
@@ -567,7 +573,7 @@ class DfsCustomBlock():
         self.Values[key] = value
 
 
-class DfsFilePointerState(Enum):
+class DfsFilePointerState(IntEnum):
     StaticItem = 0
     DynamicItem = 1
     CreatingItems = 2
@@ -937,7 +943,7 @@ class DfsFile:
                 and itemNumber != self.fpItemNumber  
                 or timestepIndex != self.fpTimeStepIndex 
                 and itemNumber != 1):
-                raise ArgumentOutOfRangeException("itemNumber", "Wrong item number while trying to append item data to file. Item data must be appended in order, and for all items in the time step");
+                raise IndexError("Wrong item number while trying to append item data to file. Item data must be appended in order, and for all items in the time step");
 
         # Position file pointer
         self.__FpFindItemTimeStep(itemNumber, timestepIndex);
@@ -1021,7 +1027,7 @@ class DfsFile:
 
         """
         self.__CheckIfOpen()
-        self.__FpFindItemTimeStep(1,0)
+        self.__FpFindItemTimeStep(1, 0)
 
     def FindItem(self, itemNumber, timestepIndex):
         """
@@ -1031,8 +1037,8 @@ class DfsFile:
         :param itemNumber: Number of item to find (1-based)
         :param timestepIndex: Index of time step to find (0-based)
         """
-        self.__CheckIfOpen();
-        self.__FpFindItemTimeStep(itemNumber, timestepIndex);
+        self.__CheckIfOpen()
+        self.__FpFindItemTimeStep(itemNumber, timestepIndex)
 
     def FindTimeStep(self, timestepIndex):
         """
@@ -1040,8 +1046,8 @@ class DfsFile:
         specified time step starts.
         :param timestepIndex: Index of time step to find (0-based)
         """
-        self.__CheckIfOpen();
-        self.__FpFindTimeStep(timestepIndex);
+        self.__CheckIfOpen()
+        self.__FpFindTimeStep(timestepIndex)
 
     def Flush(self):
         """
@@ -1086,7 +1092,7 @@ class DfsFile:
         self.fpItemNumber = 1
         self.fpTimeStepIndex = 0
 
-    def __FpFindItemTimeStep(self, itemNumber, timestepIndex):
+    def __FpFindItemTimeStep(self, itemNumber: int, timestepIndex: int):
         # If itemNumber is first item, search for time step instead
         if itemNumber == 1:
             self.__FpFindTimeStep(timestepIndex)
@@ -1098,13 +1104,13 @@ class DfsFile:
             or self.fpTimeStepIndex != timestepIndex
         ):
             DfsDLL.Wrapper.dfsFindItemDynamic(
-                self.headPointer, self.filePointer, timestepIndex, itemNumber
+                self.headPointer, self.filePointer, int(timestepIndex), itemNumber
             )
             self.fpState = DfsFilePointerState.DynamicItem
             self.fpItemNumber = itemNumber
             self.fpTimeStepIndex = timestepIndex
 
-    def __FpFindTimeStep(self, timestepIndex):
+    def __FpFindTimeStep(self, timestepIndex: int):
         # Position the file pointer at the dynamic item
         if (
             self.fpState != DfsFilePointerState.DynamicItem
@@ -1112,7 +1118,7 @@ class DfsFile:
             or self.fpTimeStepIndex != timestepIndex
         ):
             DfsDLL.Wrapper.dfsFindTimeStep(
-                self.headPointer, self.filePointer, timestepIndex
+                self.headPointer, self.filePointer, int(timestepIndex)
             )
             self.fpState = DfsFilePointerState.DynamicItem
             self.fpItemNumber = 1
@@ -1126,7 +1132,6 @@ class DfsFile:
             return True
         return False
 
-
     def __DynamicItemInfoReadAndCreate(self, itemNumber, noOfItems):
         if itemNumber < 1 or itemNumber > noOfItems:
             raise ValueError("Item number must be in the range of 1 - {}".format(noOfItems))
@@ -1136,7 +1141,6 @@ class DfsFile:
         item = DfsDynamicItemInfo(itemPointer, itemNumber)
         self.__GetItemInfo(item)
         return item
-
 
     def __StaticItemReadAndCreate(self, number, ubgConversion):
 
@@ -1164,11 +1168,10 @@ class DfsFile:
         #     staticItem.SetUnitConversion(UnitConversionType.UbgConversion, default(eumUnit));
         #     staticItem.SetAxisUnitConversion(UnitConversionType.UbgConversion, default(eumUnit));
 
-        self.__GetItemInfo(staticItem);
-        self.__GetStaticData(staticItem);
+        self.__GetItemInfo(staticItem)
+        self.__GetStaticData(staticItem)
 
-        return (staticItem);
-
+        return (staticItem)
 
     def __GetItemInfo(self, item):
         eumItemIntP = ctypes.c_int32()
@@ -1229,8 +1232,8 @@ class DfsDLLUtil():
         elif (arrayData.dtype == np.int8):
             datatype = DfsSimpleType.Byte
         else:
-            raise Exception("Date type not supported: "+arrayData.dtype);
-        return datatype;
+            raise Exception("Date type not supported: {0}".format(arrayData.dtype))
+        return datatype
 
 
     def GetProjection(headerPointer):
@@ -1446,7 +1449,33 @@ class DfsDLLUtil():
             raise NotSupportedException();
 
         if axisType == SpaceAxisType.EqD3:
-            raise NotSupportedException();
+            eumUnitInt = ctypes.c_int32()
+            eumUnitDescr = ctypes.c_char_p()
+            xCount = ctypes.c_int32()
+            x0 = ctypes.c_float()
+            dx = ctypes.c_float()
+            yCount = ctypes.c_int32()
+            y0 = ctypes.c_float()
+            dy = ctypes.c_float()
+            zCount = ctypes.c_int32()
+            z0 = ctypes.c_float()
+            dz = ctypes.c_float()
+            DfsDLL.Wrapper.dfsGetItemAxisEqD3(
+                itemPointer, 
+                ctypes.byref(eumUnitInt), 
+                ctypes.byref(eumUnitDescr), 
+                ctypes.byref(xCount), 
+                ctypes.byref(yCount), 
+                ctypes.byref(zCount), 
+                ctypes.byref(x0), 
+                ctypes.byref(y0), 
+                ctypes.byref(z0), 
+                ctypes.byref(dx), 
+                ctypes.byref(dy),
+                ctypes.byref(dz),
+                )
+            axis = DfsAxisEqD3(eumUnit(eumUnitInt.value), xCount.value, x0.value, dx.value, yCount.value, y0.value, dy.value, zCount.value, z0.value, dz.value)
+            return axis
 
         if axisType == SpaceAxisType.NeqD3:
             raise NotSupportedException();
@@ -1627,7 +1656,7 @@ class DfsDLLUtil():
         return customBlockPointer, customBlock
 
     @staticmethod
-    def dfsSetTemporalAxis(headerPointer, temporalAxis):
+    def dfsSetTemporalAxis(headerPointer, temporalAxis: DfsTemporalAxis):
         if temporalAxis.TimeAxisType is TimeAxisType.Undefined:
             raise Exception("Temporal axis can not be undefined");
         if temporalAxis.TimeAxisType is TimeAxisType.TimeEquidistant:
