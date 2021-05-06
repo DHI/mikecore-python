@@ -28,8 +28,11 @@ class Dfs0Tests(unittest.TestCase):
     def test_Read_non_ascii_itemname(self):
         dfs = DfsFile()
         dfs.Open("testdata/TS_non_ascii.dfs0")
-        Assert.AreEqual(len(dfs.ItemInfo), 12)        
+        Assert.AreEqual(len(dfs.ItemInfo), 12) 
 
+
+    def test_Write_non_ascii(self):        
+        Dfs0Tests.CreateNeqCalTimeTest(True, fileTitle="Title æøå", itemName1='item æøå')
 
     #def UpdateDfs0Data():
     #    examples_dfs0.UpdateDfs0Data(UnitTestHelper.TestDataRoot + @"Rain_instantaneous.dfs0", UnitTestHelper.TestDataRoot + @"test_update_Rain_instantaneous.dfs0");
@@ -92,7 +95,7 @@ class Dfs0Tests(unittest.TestCase):
 
 
     @staticmethod
-    def CreateNeqCalTimeTest(calendarAxis):
+    def CreateNeqCalTimeTest(calendarAxis, fileTitle="TemporalAxisTest", itemName1="WaterLevel item"):    
 
         if (calendarAxis):
             filename = "testdata/testtmp/test_create_TemporalNeqCal.dfs0";
@@ -100,7 +103,7 @@ class Dfs0Tests(unittest.TestCase):
             filename = "testdata/testtmp/test_create_TemporalNeqTime.dfs0";
 
         factory = DfsFactory();
-        builder = DfsBuilder.Create("TemporalAxisTest", "dfs Timeseries Bridge", 10000);
+        builder = DfsBuilder.Create(fileTitle, "dfs Timeseries Bridge", 10000);
 
         # Set up file header
         builder.SetDataType(1);
@@ -113,7 +116,7 @@ class Dfs0Tests(unittest.TestCase):
 
         # Set up first item
         item1 = builder.CreateDynamicItemBuilder();
-        item1.Set("WaterLevel item", eumQuantity.Create(eumItem.eumIWaterLevel, eumUnit.eumUmeter), DfsSimpleType.Float);
+        item1.Set(itemName1, eumQuantity.Create(eumItem.eumIWaterLevel, eumUnit.eumUmeter), DfsSimpleType.Float);
         item1.SetValueType(DataValueType.Instantaneous);
         item1.SetAxis(factory.CreateAxisEqD0());
         item1.SetReferenceCoordinates(1, 2, 3);
