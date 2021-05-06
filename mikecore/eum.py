@@ -2,7 +2,7 @@ import os
 import ctypes
 import numpy as np
 from enum import IntEnum
-
+from typing import Tuple
 
 class eumItem(IntEnum):
     eumIItemUndefined = 999
@@ -1605,7 +1605,7 @@ class eumWrapper:
     #/ the unit if any unit attached to an item with this text description exists. 
     #/ </summary>
     @staticmethod
-    def eumGetItemUnitTag(itemKey: eumItem, unitDesc: str) -> (bool,eumUnit):
+    def eumGetItemUnitTag(itemKey: eumItem, unitDesc: str) -> Tuple[bool,eumUnit]:
         unitKey = ctypes.c_int32();
         if 0 != eumDLL.Wrapper.eumGetItemUnitTag(ctypes.c_int32(itemKey), 
                                                  ctypes.c_char_p(unitDesc.encode("ascii")),
