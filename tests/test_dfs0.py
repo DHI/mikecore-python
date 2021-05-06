@@ -29,6 +29,7 @@ class Dfs0Tests(unittest.TestCase):
         dfs = DfsFile()
         dfs.Open("testdata/TS_non_ascii.dfs0")
         Assert.AreEqual(len(dfs.ItemInfo), 12) 
+        Assert.AreEqual(dfs.ItemInfo[1].Name, 'Hornbæk: Surface elevation')
 
 
     def test_Write_non_ascii(self):        
