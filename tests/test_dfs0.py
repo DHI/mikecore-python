@@ -8,12 +8,12 @@ from mikecore.DfsFile import *
 from mikecore.eum import eumQuantity
 from numpy.testing import *
 from tests.examples_dfs0 import *
-
+from tests.test_util import *
 
 class Dfs0Tests(unittest.TestCase):
     timeOffset = 3.0;
 
-    #def ReadDfs0Example():
+    # def ReadDfs0Example():
     #    sum = examples_dfs0.ReadDfs0File("testdata/Rain_stepaccumulated.dfs0");
     #    assert_equal(21.960000000000001, sum);
 
@@ -25,6 +25,10 @@ class Dfs0Tests(unittest.TestCase):
     #    maxValue = examples_dfs0.FindMaxValue("testdata/data_ndr_roese.dfs0", 4);
     #    assert_equal(1.0754467248916626, maxValue);
 
+    def test_Read_non_ascii_itemname(self):
+        dfs = DfsFile()
+        dfs.Open("testdata/TS_non_ascii.dfs0")
+        Assert.AreEqual(len(dfs.ItemInfo), 12)        
 
 
     #def UpdateDfs0Data():
