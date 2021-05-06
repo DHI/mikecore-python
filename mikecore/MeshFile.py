@@ -366,6 +366,7 @@ class MeshFile:
 
         with open(filename, 'w') as writer:
             writer.write("\n".join(lines))
+            writer.write("\n")
 
     @staticmethod
     def Create(eumQuantity: eumQuantity, 
