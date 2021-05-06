@@ -1,4 +1,3 @@
-from enum import Enum
 import datetime
 import numpy as np
 from mikecore.eum import *
@@ -369,7 +368,8 @@ class DfsuFile(object):
 
 
 
-    def CreateEmptyItemDatas(dfsFile):
+    @staticmethod
+    def CreateEmptyItemDatas(dfsFile: DfsFile):
       """
       Create an <see cref="IDfsItemData{T}"/> of the provided type for each of the
       dynamic items in the file.
@@ -385,48 +385,48 @@ class DfsuFile(object):
         res[i] = dfsFile.ItemInfo[i].CreateEmptyItemData();
       return res;
 
-    def CalculateElementCenterCoordinates(dfsuFile):
+    def CalculateElementCenterCoordinates(self):
       """"
       For each element, calculates the element center coordinate
       as the average of all node coordinates of the nodes in 
       each element.
       """
-      xArr = np.zeros(dfsuFile.NumberOfElements, dtype=np.float64);
-      yArr = np.zeros(dfsuFile.NumberOfElements, dtype=np.float64);
-      zArr = np.zeros(dfsuFile.NumberOfElements, dtype=np.float64);
+      xArr = np.zeros(self.NumberOfElements, dtype=np.float64);
+      yArr = np.zeros(self.NumberOfElements, dtype=np.float64);
+      zArr = np.zeros(self.NumberOfElements, dtype=np.float64);
 
-      for i in range(dfsuFile.NumberOfElements):
-        nodesInElmt = dfsuFile.ElementTable[i].size;
+      for i in range(self.NumberOfElements):
+        nodesInElmt = self.ElementTable[i].size;
         iNodesInElmt = 1.0/nodesInElmt;
         x = 0;
         y = 0;
         z = 0;
         for j in range(nodesInElmt):
-          nodeIndex = dfsuFile.ElementTable[i][j];
-          x += dfsuFile.X[nodeIndex -1] * iNodesInElmt;
-          y += dfsuFile.Y[nodeIndex -1] * iNodesInElmt;
-          z += dfsuFile.Z[nodeIndex -1] * iNodesInElmt;
+          nodeIndex = self.ElementTable[i][j];
+          x += self.X[nodeIndex -1] * iNodesInElmt;
+          y += self.Y[nodeIndex -1] * iNodesInElmt;
+          z += self.Z[nodeIndex -1] * iNodesInElmt;
         xArr[i] = x;
         yArr[i] = y;
         zArr[i] = z;
       return xArr, yArr, zArr
 
-    def GetDateTimes(dfsuFile):
+    def GetDateTimes(self):
       """"
       Return an array of DateTimes which are the times for each timestep
       """
-      res = np.zeros(dfsuFile.NumberOfTimeSteps, dtype=datetime.datetime);
-      start = dfsuFile.StartDateTime;
-      timestepInSecs = dfsuFile.TimeStepInSeconds;
-      for i in range(dfsuFile.NumberOfTimeSteps):
+      res = np.zeros(self.NumberOfTimeSteps, dtype=datetime.datetime);
+      start = self.StartDateTime;
+      timestepInSecs = self.TimeStepInSeconds;
+      for i in range(self.NumberOfTimeSteps):
         res[i] = start + datetime.timedelta(seconds=i*timestepInSecs);
       return (res);
 
-    def FindTopLayerElements(dfsuFile):
-      if (dfsuFile.DfsuFileType == DfsuFileType.Dfsu2D):
+    def FindTopLayerElements(self):
+      if (self.DfsuFileType == DfsuFileType.Dfsu2D):
         raise Exception("Can not extract top layer elements of a 2D dfsu file");
 
-      return DfsuUtil.FindTopLayerElements(dfsuFile.ElementTable)
+      return DfsuUtil.FindTopLayerElements(self.ElementTable)
 
     """"
     Utility and extension methods for <see cref="DfsuFile"/>
