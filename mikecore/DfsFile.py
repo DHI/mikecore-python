@@ -631,7 +631,7 @@ class DfsFile:
         self.headPointer = ctypes.c_void_p()
         # Marshal filename string to C char*
         fnp = ctypes.c_char_p()
-        fnp.value = filename.encode("ascii")
+        fnp.value = filename.encode("utf-8")
 
         if mode is DfsFileMode.Read:
             # Open file for reading
