@@ -371,9 +371,7 @@ class DfsDynamicItemInfo:
             'DfsItem("'
             + self.Name
             + '", ('
-            + self.eumItemStr
-            + ","
-            + self.eumUnitStr
+            + str(self.Quantity)
             + "), "
             + self.DataType.name
             + ")"

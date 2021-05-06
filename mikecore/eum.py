@@ -1203,6 +1203,9 @@ class eumQuantity:
         self.Unit = unit;
         self.UnitInt = unit;
 
+    def __repr__(self):
+        return "{item}-{unit}".format(item=self.Item, unit=self.Unit)
+
     @staticmethod
     def Create(item, unit):
         return eumQuantity(item, unit)
