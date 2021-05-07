@@ -22,7 +22,6 @@ elif platform.system() == "Linux":
 else:
     raise Exception("Unsupported platform: " + platform.system())
 
-print(mikebin)
 #os.environ["PATH"] = mikebin + ";" + os.environ["PATH"]
 os.environ["LD_LIBRARY_PATH"] = mikebin
 
