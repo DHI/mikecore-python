@@ -5,6 +5,9 @@ import numpy as np
 from enum import Enum, IntEnum
 
 
+class ProjectionException(Exception):
+  pass
+
   #/ <summary>
   #/ Abstract (static) class providing one-to-one access to the methods in 
   #/ MzCart.dll, using C# calling conventions and marshalling. 
@@ -159,6 +162,7 @@ class MzCartDLL():
     #/ use this pointer after destroy have been called on the cartography pointer.
     #/ </para>
     #/ </summary>
+    @staticmethod
     def MzCartGetMapProjection(mzCartPointer: ctypes.c_void_p) -> ctypes.c_void_p:
         return ctypes.c_void_p(MzCartDLL.Wrapper.C_MZC_GETPROJECTION(mzCartPointer));
 
@@ -1210,6 +1214,7 @@ class MapProjection:
     def GoogleMapProjectionString() -> str:
         return MzCartDLL.GoogleMapProjectionString();
 
+    @staticmethod
     def LocalCoordinatesProjectionString() -> str:
         return "NON-UTM";
 
@@ -1791,7 +1796,7 @@ class Reprojector:
             raise Exception("Length of datum shift parameters must be at least seven");
           datumParamsdata = datumParams.ctypes.data
       else:
-          raise ArgumentOutOfRangeException("typeOfDatumShift")
+          raise IndexError("typeOfDatumShift")
       MzCartDLL.Wrapper.C_MZDC_SETDATUMSHIFT(self._mzConverterPointer, ctypes.c_int32(typeOfDatumShift), datumParamsdata, ctypes.c_int32(1 if source else 0));
 
 

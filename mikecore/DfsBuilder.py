@@ -1,6 +1,5 @@
 from mikecore.DfsDLL import DfsDLL
 from mikecore.DfsFile import *
-import numpy as np
 
 class DfsBuilder():
     '''
@@ -299,8 +298,9 @@ class DfsBuilder():
             raise Exception(msgs);
 
         return (errors);
-
-    def ErrorMessage(self, errors):
+    
+    @staticmethod
+    def ErrorMessage(errors):
         if (len(errors) == 1):
             return (errors[0])
         msgs = "Several issues:"

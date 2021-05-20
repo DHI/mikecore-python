@@ -69,16 +69,16 @@ class DfsFactory:
         ):
         return (DfsAxisEqD3(axisUnit, xCount, x0, dx, yCount, y0, dy, zCount, z0, dz));
 
-    def CreateAxisNeqD1(axisUnit, coords):
+    def CreateAxisNeqD1(self, axisUnit, coords):
         return (DfsAxisNeqD1(axisUnit, coords));
 
-    def CreateAxisNeqD2(axisUnit, xCoords, yCoords):
+    def CreateAxisNeqD2(self, axisUnit, xCoords, yCoords):
         return (DfsAxisNeqD2(axisUnit, xCoords, yCoords));
 
-    def CreateAxisNeqD3(axisUnit, xCoords, yCoords, zCoords):
+    def CreateAxisNeqD3(self, axisUnit, xCoords, yCoords, zCoords):
         return (DfsAxisNeqD3(axisUnit, xCoords, yCoords, zCoords));
 
-    def CreateAxisCurveLinearD2(axisUnit, xCount, yCount, xCoords, yCoords):
+    def CreateAxisCurveLinearD2(self, axisUnit, xCount, yCount, xCoords, yCoords):
         arrSize = (xCount + 1) * (yCount + 1);
         if (xCoords.size != arrSize):
             raise Exception("size of xCoords array does not match x,y,z-count values");
@@ -87,6 +87,7 @@ class DfsFactory:
 
         return (DfsAxisCurveLinearD2(axisUnit, xCount, yCount, xCoords, yCoords));
 
+    @staticmethod
     def CreateAxisCurveLinearD3(axisUnit, xCount, yCount, zCount, xCoords, yCoords, zCoords):
         arrSize = (xCount + 1) * (yCount + 1) * (zCount + 1);
         if (xCoords.size != arrSize):
@@ -164,7 +165,7 @@ class DfsFactory:
 
     #endregion
 
-
+    @staticmethod
     def CreateStaticItem(name, quantity, data):
         if (data.size == 0):
             raise Exception("data size is zero, it must have at least one element");
