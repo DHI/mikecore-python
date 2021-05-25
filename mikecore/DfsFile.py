@@ -6,6 +6,7 @@ import numpy as np
 from mikecore.eum import *
 from mikecore.DfsDLL import DfsDLL
 from typing import Union
+from mikecore.eum import eumQuantity
 
 class NotSupportedException(Exception):
     pass
@@ -514,8 +515,8 @@ class DfsFileInfo:
         DfsDLL.Wrapper.dfsParamModifyTimes(headerPointer, ctypes.c_int32(parameters.ModifyTimes))
 
         self.FileName = dfsFile.FileName
-        self.FileTitle = DfsDLL.Wrapper.dfsGetFileTitle(headerPointer).decode("ascii")
-        self.ApplicationTitle = DfsDLL.Wrapper.dfsGetAppTitle(headerPointer).decode("ascii")
+        self.FileTitle = DfsDLL.Wrapper.dfsGetFileTitle(headerPointer).decode("cp1252", "replace")
+        self.ApplicationTitle = DfsDLL.Wrapper.dfsGetAppTitle(headerPointer).decode("cp1252", "replace")
         self.ApplicationVersion = DfsDLL.Wrapper.dfsGetAppVersionNo(headerPointer)
         self.DataType = DfsDLL.Wrapper.dfsGetDataType(headerPointer)
 
@@ -637,7 +638,7 @@ class DfsFile:
         self.headPointer = ctypes.c_void_p()
         # Marshal filename string to C char*
         fnp = ctypes.c_char_p()
-        fnp.value = filename.encode("ascii")
+        fnp.value = filename.encode("cp1252")
 
         if mode is DfsFileMode.Read:
             # Open file for reading
@@ -1200,7 +1201,7 @@ class DfsFile:
         )
         eumItemDesc = eumItemDescP.value.decode("ascii")
         eumUnitDesc = eumUnitDescP.value.decode("ascii")
-        itemName = itemNameP.value.decode("ascii")
+        itemName = itemNameP.value.decode("cp1252", "replace")
         itemDataType = DfsSimpleType(itemDataTypeP.value)
 
         quantity = eumQuantity(eumItem(eumItemIntP.value), eumUnit(eumUnitIntP.value))
