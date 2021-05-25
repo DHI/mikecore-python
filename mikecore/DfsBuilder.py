@@ -1,6 +1,5 @@
 from mikecore.DfsDLL import DfsDLL
 from mikecore.DfsFile import *
-import numpy as np
 
 class DfsBuilder():
     '''
@@ -299,8 +298,9 @@ class DfsBuilder():
             raise Exception(msgs);
 
         return (errors);
-
-    def ErrorMessage(self, errors):
+    
+    @staticmethod
+    def ErrorMessage(errors):
         if (len(errors) == 1):
             return (errors[0])
         msgs = "Several issues:"
@@ -317,7 +317,7 @@ class DfsBuilder():
 
         filePointer = ctypes.c_void_p(0);
         headerPointer = ctypes.c_void_p(0);
-        fnp = ctypes.c_char_p(filename.encode("ascii"))
+        fnp = ctypes.c_char_p(filename.encode("cp1252"))
         try:
             headerPointer = self.__CreateHeader();
             DfsDLL.Wrapper.dfsFileCreate(fnp.value, headerPointer, ctypes.byref(filePointer));
@@ -346,8 +346,8 @@ class DfsBuilder():
         headerPointer = ctypes.c_void_p()
         rok = DfsDLL.Wrapper.dfsHeaderCreate(
             fileTypeNumber, 
-            ctypes.c_char_p(self.FileInfo.FileTitle.encode("ascii")), 
-            ctypes.c_char_p(self.FileInfo.ApplicationTitle.encode("ascii")), 
+            ctypes.c_char_p(self.FileInfo.FileTitle.encode("cp1252")), 
+            ctypes.c_char_p(self.FileInfo.ApplicationTitle.encode("cp1252")), 
             ctypes.c_int32(self.FileInfo.ApplicationVersion),
             ctypes.c_int32(len(self.DynamicItems)), 
             ctypes.c_int32(self.FileInfo.StatsType.value),
@@ -508,7 +508,7 @@ class DfsBuilder():
             headerPointer, 
             itemPointer, 
             ctypes.c_int32(quantity.Item.value), 
-            ctypes.c_char_p(itemInfo.Name.encode("ascii")), 
+            ctypes.c_char_p(itemInfo.Name.encode("cp1252")), 
             ctypes.c_int32(quantity.Unit.value), 
             ctypes.c_int32(itemInfo.DataType.value));
         DfsDLL.CheckReturnCode(rok);

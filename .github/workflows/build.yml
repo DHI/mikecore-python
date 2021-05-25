@@ -1,4 +1,4 @@
-name: Build package
+name: Test Windows
 on:
   push
 

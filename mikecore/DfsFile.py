@@ -6,6 +6,7 @@ import numpy as np
 from mikecore.eum import *
 from mikecore.DfsDLL import DfsDLL
 from typing import Union
+from mikecore.eum import eumQuantity
 
 class NotSupportedException(Exception):
     pass
@@ -151,11 +152,14 @@ class DfsProjection:
         self.Longitude = longitude;
         self.Latitude = latitude;
         self.Orientation = orientation;
+    
     @staticmethod
     def Create(wktString: str):
         if (wktString == None or wktString == ""):
             raise Exception("Projection string can not be null or empty");
         return DfsProjection(ProjectionType.Projection, wktString, 0.0, 0.0, 0.0)
+    
+    @staticmethod
     def CreateWithGeoOrigin(wktString: str, lon0: float, lat0: float, orientation: float):
         if (wktString == None or wktString == ""):
             raise Exception("Projection string can not be null or empty");
@@ -267,6 +271,10 @@ class DfsAxisEqD0(DfsSpatialAxis):
     def __init__(self, axisUnit = eumUnit.eumUmeter):
         super().__init__(SpaceAxisType.EqD0, (0,), 1, axisUnit)
 
+    @staticmethod
+    def Create():
+        return DfsAxisEqD0()
+
 
 class DfsAxisEqD1(DfsSpatialAxis):
     def __init__(self, axisUnit, xCount, x0, dx):
@@ -274,6 +282,7 @@ class DfsAxisEqD1(DfsSpatialAxis):
         self.XCount = xCount
         self.X0 = x0
         self.Dx = dx
+    
     @staticmethod
     def CreateDummyAxis(xCount):
         axis = DfsAxisEqD1(
@@ -365,15 +374,14 @@ class DfsDynamicItemInfo:
         self.AxisConversionType = UnitConversionType.NoConversion
         self.AxisConversionUnit = 0
         self.AssociatedStaticItemNumbers = []
+        self.SpatialAxis = None
 
     def __repr__(self):
         return (
             'DfsItem("'
             + self.Name
             + '", ('
-            + self.eumItemStr
-            + ","
-            + self.eumUnitStr
+            + str(self.Quantity)
             + "), "
             + self.DataType.name
             + ")"
@@ -458,7 +466,7 @@ class DfsItemData:
     def __repr__(self):
         return (
             "DfsItemData("
-            + str(self.TimestepIndex)
+            + str(self.TimeStepIndex)
             + ","
             + str(self.ItemNumber)
             + ","
@@ -507,8 +515,8 @@ class DfsFileInfo:
         DfsDLL.Wrapper.dfsParamModifyTimes(headerPointer, ctypes.c_int32(parameters.ModifyTimes))
 
         self.FileName = dfsFile.FileName
-        self.FileTitle = DfsDLL.Wrapper.dfsGetFileTitle(headerPointer).decode("ascii")
-        self.ApplicationTitle = DfsDLL.Wrapper.dfsGetAppTitle(headerPointer).decode("ascii")
+        self.FileTitle = DfsDLL.Wrapper.dfsGetFileTitle(headerPointer).decode("cp1252", "replace")
+        self.ApplicationTitle = DfsDLL.Wrapper.dfsGetAppTitle(headerPointer).decode("cp1252", "replace")
         self.ApplicationVersion = DfsDLL.Wrapper.dfsGetAppVersionNo(headerPointer)
         self.DataType = DfsDLL.Wrapper.dfsGetDataType(headerPointer)
 
@@ -630,7 +638,7 @@ class DfsFile:
         self.headPointer = ctypes.c_void_p()
         # Marshal filename string to C char*
         fnp = ctypes.c_char_p()
-        fnp.value = filename.encode("ascii")
+        fnp.value = filename.encode("cp1252")
 
         if mode is DfsFileMode.Read:
             # Open file for reading
@@ -1193,7 +1201,7 @@ class DfsFile:
         )
         eumItemDesc = eumItemDescP.value.decode("ascii")
         eumUnitDesc = eumUnitDescP.value.decode("ascii")
-        itemName = itemNameP.value.decode("ascii")
+        itemName = itemNameP.value.decode("cp1252", "replace")
         itemDataType = DfsSimpleType(itemDataTypeP.value)
 
         quantity = eumQuantity(eumItem(eumItemIntP.value), eumUnit(eumUnitIntP.value))
@@ -1216,6 +1224,7 @@ class DfsFile:
 class DfsDLLUtil():
     """Utilities class, creating various Dfs classes based on pointers to DFS native data"""
 
+    @staticmethod
     def GetDfsType(arrayData):
         if   (arrayData.dtype == np.float32):
             datatype = DfsSimpleType.Float
@@ -1232,10 +1241,10 @@ class DfsDLLUtil():
         elif (arrayData.dtype == np.int8):
             datatype = DfsSimpleType.Byte
         else:
-            raise Exception("Date type not supported: {0}".format(arrayData.dtype))
+            raise Exception("Data type not supported: {0}".format(arrayData.dtype))
         return datatype
 
-
+    @staticmethod
     def GetProjection(headerPointer):
         type = ProjectionType(DfsDLL.Wrapper.dfsGetGeoInfoType(headerPointer));
         if (type == ProjectionType.Projection):
@@ -1480,8 +1489,8 @@ class DfsDLLUtil():
         if axisType == SpaceAxisType.NeqD3:
             raise NotSupportedException();
 
-        if axisType == SpaceAxisType.EqD4:
-            raise NotSupportedException();
+        #if axisType == SpaceAxisType.EqD4:
+        #    raise NotSupportedException();
 
         if axisType == SpaceAxisType.CurveLinearD2:
             raise NotSupportedException();
@@ -1489,10 +1498,10 @@ class DfsDLLUtil():
         if axisType == SpaceAxisType.CurveLinearD3:
             raise NotSupportedException();
 
-        if (   axisType == SpaceAxisType.TvarD1
-            or axisType == SpaceAxisType.TvarD2
-            or axisType == SpaceAxisType.TvarD3):
-            raise NotSupportedException();
+        #if (   axisType == SpaceAxisType.TvarD1
+        #    or axisType == SpaceAxisType.TvarD2
+        #    or axisType == SpaceAxisType.TvarD3):
+        #    raise NotSupportedException();
 
         return None
 
@@ -1539,13 +1548,13 @@ class DfsDLLUtil():
         #                                     axis.XCoordinates.Length - 1, axis.YCoordinates.Length - 1, axis.ZCoordinates.Length - 1,
         #                                     axis.XCoordinates, axis.YCoordinates, axis.ZCoordinates, true);
         #    DfsDLL.CheckReturnCode(rok);
-        elif spatialAxis.AxisType is SpaceAxisType.EqD4:
-            rok = DfsDLL.Wrapper.dfsSetItemAxisEqD4(
-                itemPointer, ctypes.c_int32(axis.AxisUnit.value),
-                ctypes.c_int32(axis.XCount), ctypes.c_int32(axis.YCount), ctypes.c_int32(axis.ZCount), ctypes.c_int32(axis.FCount),
-                ctypes.c_float(axis.X0), ctypes.c_float(axis.Y0), ctypes.c_float(axis.Z0), ctypes.c_float(axis.F0),
-                ctypes.c_float(axis.Dx), ctypes.c_float(axis.Dy), ctypes.c_float(axis.Dz), ctypes.c_float(axis.Df));
-            DfsDLL.CheckReturnCode(rok);
+        #elif spatialAxis.AxisType is SpaceAxisType.EqD4:
+        #    rok = DfsDLL.Wrapper.dfsSetItemAxisEqD4(
+        #        itemPointer, ctypes.c_int32(axis.AxisUnit.value),
+        #        ctypes.c_int32(axis.XCount), ctypes.c_int32(axis.YCount), ctypes.c_int32(axis.ZCount), ctypes.c_int32(axis.FCount),
+        #        ctypes.c_float(axis.X0), ctypes.c_float(axis.Y0), ctypes.c_float(axis.Z0), ctypes.c_float(axis.F0),
+        #        ctypes.c_float(axis.Dx), ctypes.c_float(axis.Dy), ctypes.c_float(axis.Dz), ctypes.c_float(axis.Df));
+        #    DfsDLL.CheckReturnCode(rok);
         #elif spatialAxis.AxisType is SpaceAxisType.CurveLinearD2:
         #    rok = DfsDLL.Wrapper.dfsSetItemAxisCurveLinearD2(itemPointer, (int) axis.AxisUnit.value,
         #                                              ctypes.c_int32(axis.XCount), ctypes.c_int32(axis.YCount),
