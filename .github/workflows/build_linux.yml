@@ -28,11 +28,11 @@ jobs:
       - run: ls -l
       - name: Install nuget packages
         run: |
-          nuget install DHI.MikeCore.Linux.rhel7 -Version 19.0.0 -OutputDirectory packages
+          nuget install DHI.MikeCore.Linux.rhel7 -Version 19.1.0 -OutputDirectory packages
       - run: mkdir -p mikecore/bin/linux
       - run: pwd
       - run: ls -l
-      - run: cp -r packages/DHI.MikeCore.Linux.rhel7.19.0.0/runtimes/linux-x64/native/* mikecore/bin/linux
+      - run: cp -r packages/DHI.MikeCore.Linux.rhel7.19.1.0/runtimes/linux-x64/native/* mikecore/bin/linux
       - run: sudo apt-get install patchelf
       - run: |
          patchelf --set-rpath '$ORIGIN' mikecore/bin/linux/libufs.so 
