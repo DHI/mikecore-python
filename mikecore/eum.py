@@ -3,8 +3,10 @@ import ctypes
 from typing import Optional, Tuple
 import numpy as np
 from enum import IntEnum
-from typing import Tuple
 
+# Predefined enums of EUM item types.
+#
+# Must be updated with every new release, or if the EUM.xml is updated
 class eumItem(IntEnum):
     eumIItemUndefined = 999
     eumIWaterLevel = 100000
@@ -587,7 +589,14 @@ class eumItem(IntEnum):
     eumIDischargePerPressure = 110303
     eumIRotationalSpeed = 110304
     eumIInfiltrationPerArea = 110305
+    eumIMassPerLengthPerTime = 110306
+    eumINearBedLoadPerLength = 110307
+    eumISubstancePerUnitArea = 110308
+    eumIAccNearBedLoadPerLength =     110309
 
+# Predefined enums of EUM units.
+#
+# Must be updated with every new release, or if the EUM.xml is updated
 class eumUnit(IntEnum):
     eumUUnitUndefined = 0
     eumUmeter = 1000
@@ -616,6 +625,7 @@ class eumUnit(IntEnum):
     eumUmegaton = 1206
     eumUPound = 1207
     eumUtonUS = 1208
+    eumUounce = 1209
     eumUperKilogram = 1250
     eumUperGram = 1251
     eumUperMilligram = 1252
@@ -625,6 +635,7 @@ class eumUnit(IntEnum):
     eumUperMegaton = 1256
     eumUperPound = 1257
     eumUperTonUS = 1258
+    eumUperOunce = 1259
     eumUsec = 1400
     eumUminute = 1401
     eumUhour = 1402
@@ -748,8 +759,25 @@ class eumUnit(IntEnum):
     eumUPoundPeryard3 = 2213
     eumUPoundPerCubicFeetUS = 2214
     eumUPoundPerSquareFeetUS = 2215
+    eumUouncePerCubicFeet = 2216
+    eumUouncePerCubicFeetUS = 2217
+    eumUouncePerYard3 = 2218
+    eumUouncePerYardUS3 = 2219
+    eumUouncePerSquareFeet = 2220
+    eumUouncePerSquareFeetUS = 2221
     eumUKiloGramPerMeterPerSecond = 2300
     eumUPascalSecond = 2301
+    eumUkilogramPerMeterPerDay = 2302
+    eumUgramPerMeterPerDay = 2303
+    eumUgramPerKmPerDay = 2304
+    eumUpoundPerFeetPerDay = 2305
+    eumUpoundPerFeetUSPerDay = 2306
+    eumUouncePerFeetPerDay = 2307
+    eumUouncePerFeetUSPerDay = 2308
+    eumUkilogramPerYardPerSecond = 2309
+    eumUkilogramPerFeetPerSecond = 2310
+    eumUpoundPerYardPerSecond = 2311
+    eumUpoundPerFeetPerSecond = 2312
     eumUradian = 2400
     eumUdegree = 2401
     eumUDegreeNorth50 = 2402
@@ -875,6 +903,16 @@ class eumUnit(IntEnum):
     eumUmilligramPerMi2 = 4428
     eumUPoundPerMeter = 4429
     eumUtonPerMeter = 4430
+    eumUpoundPerFeet = 4431
+    eumUpoundPerYard = 4432
+    eumUpoundPerFeetUS = 4433
+    eumUpoundPerYardUS = 4434
+    eumUouncePerFeet = 4435
+    eumUouncePerYard = 4436
+    eumUouncePerFeetUS = 4437
+    eumUouncePerYardUS = 4438
+    eumUkilogramPerYard = 4439
+    eumUkilogramPerFeet = 4440
     eumUgramPerM2PerDay = 4500
     eumUgramPerM2PerSec = 4501
     eumUkilogramPerHaPerHour = 4502
@@ -1107,6 +1145,10 @@ class eumUnit(IntEnum):
     eumUmillimolePerKilogram = 12041
     eumUmicromolePerKilogram = 12042
     eumUnanomolePerKilogram = 12043
+    eumUmolePerM2 = 12060
+    eumUmillimolePerM2 = 12061
+    eumUmicromolePerM2 = 12062
+    eumUnanomolePerM2 = 12063
     eumUOnePerOne = 99000
     eumUPerCent = 99001
     eumUPerThousand = 99002
