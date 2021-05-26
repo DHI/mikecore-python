@@ -48,9 +48,10 @@ jobs:
       with: 
         name: mikecore
         path: dist
-      #- name: Publish to pypi
-      #  env:
-      #    TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-      #    TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      #  run: |
-      #    twine upload --skip-existing dist/*
+        
+    - name: Publish to pypi
+      env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+          twine upload --skip-existing dist/*
