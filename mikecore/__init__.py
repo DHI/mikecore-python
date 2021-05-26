@@ -2,6 +2,8 @@ import os
 import platform
 from pathlib import Path
 
+__version__ = "0.1.0"
+
 p = platform.architecture()
 if not "64" in p[0]:
     raise Exception("This library is 64 bit only!!!! Please use 64 bit Python")
