@@ -52,9 +52,7 @@ jobs:
           # Test the wheels.
           CIBW_TEST_COMMAND: pytest --pyargs gsd -v --log-level=DEBUG          
           CIBW_TEST_REQUIRES: pytest
-        run: |
-          python -m cibuildwheel --output-dir wheelhouse
-          ls -al wheelhouse/
+
       - name: "Upload wheels"
         uses: actions/upload-artifact@v2.2.3
         with:
