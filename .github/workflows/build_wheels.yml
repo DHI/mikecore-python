@@ -46,6 +46,7 @@ jobs:
         env:
           # Don't build wheels for PyPy.
           CIBW_SKIP: cp27-* pp*
+          CIBW_BUILD_VERBOSITY: 1
         run: |
           python -m cibuildwheel --output-dir wheelhouse
           ls -al wheelhouse/
