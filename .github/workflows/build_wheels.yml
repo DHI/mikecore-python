@@ -39,19 +39,24 @@ jobs:
         with:
           python-version: "3.7"
 
-      - name: "Install cibuildwheel"
-        run: |
-          pip install . cibuildwheel
       - name: "Build wheels"
-        env:
-          # Don't build wheels for PyPy.
-          CIBW_SKIP: cp27-* pp*
-          CIBW_BUILD_VERBOSITY: 1
+        uses: joerick/cibuildwheel@v1.11.0
+        env:          
+          CIBW_PROJECT_REQUIRES_PYTHON: ">=3.5"
+          CIBW_SKIP: pp*
+                    
+          # Build only on 64-bit architectures.          
+          CIBW_ARCHS_LINUX: auto64
+          CIBW_ARCHS_WINDOWS: auto64
+
+          # Test the wheels.
+          CIBW_TEST_COMMAND: pytest --pyargs gsd -v --log-level=DEBUG          
+          CIBW_TEST_REQUIRES: pytest
         run: |
           python -m cibuildwheel --output-dir wheelhouse
           ls -al wheelhouse/
       - name: "Upload wheels"
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.3
         with:
           name: dist
           path: wheelhouse/*.whl
