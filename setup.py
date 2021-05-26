@@ -14,9 +14,10 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/DHI/mikecore-python",
     packages=setuptools.find_packages(),
+    license="BSD-3",
     classifiers=[
+        "License :: OSI Approved :: BSD License",
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: BSD-3-Clause License",
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.5<",
