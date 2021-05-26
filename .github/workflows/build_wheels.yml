@@ -1,0 +1,56 @@
+name: "build wheels"
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  wheels:
+    name: "Build wheels on ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:          
+          - windows-latest
+      fail-fast: false
+
+    steps:
+      - name: Create packages directory
+        run: mkdir packages
+      - uses: actions/checkout@v2
+      - name: Get nuget packages
+        uses: nuget/setup-nuget@v1
+        with:
+          nuget-version: '5.x'
+      - name: Install nuget packages
+        run: |
+        nuget install DHI.DFS -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
+        nuget install DHI.Projections -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
+      
+      - name: Install packages into directory
+        shell: cmd
+        run: .\BuildNativeBin.bat
+
+      - name: "Install Python 3.7"
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+
+      - name: "Install cibuildwheel"
+        run: |
+          pip install . cibuildwheel
+      - name: "Build wheels"
+        env:
+          # Don't build wheels for PyPy.
+          CIBW_SKIP: cp27-* pp*
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+          ls -al wheelhouse/
+      - name: "Upload wheels"
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: wheelhouse/*.whl
