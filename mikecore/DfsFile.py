@@ -1101,6 +1101,8 @@ class DfsFile:
         All item data are converted to doubles.
         """
 
+        self.__CheckIfOpen();
+
         # Size of matrix is numTimeSteps x (numItems + 1)
         numItems = len(self.ItemInfo)
         numTimeSteps = self.FileInfo.TimeAxis.NumberOfTimeSteps
@@ -1129,6 +1131,8 @@ class DfsFile:
         item in the file. There are as many rows as there are timesteps.
         All item data are converted to doubles.
         """
+
+        self.__CheckIfOpen();
 
         # Size of matrix is numTimeSteps x (numItems + 1)
         numItems = len(self.ItemInfo)
