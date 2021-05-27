@@ -4,7 +4,6 @@
 #include "pch.h"
 #include "eum.h"
 #include "dfsio.h"
-#include "framework.h"
 #include "MIKECoreCUtil.h"
 
 
@@ -126,6 +125,125 @@ MIKECORECUTIL_API int ReadDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
   delete itemSimpleTypes;
   delete dfsdataf;
   delete dfsdatad;
+
+  return 0;
+}
+
+
+/** @brief Bulk write the times and data for a dfs0 file, loading it all from a matrix structure.
+ *  @details First column in the data are the times, then a column for each
+ *         item in the file. There are as many rows as there are timesteps.
+ *         All item data are in doubles, and converted to float if necessary.
+ *  @param[in] pdfs Specifies a reference to the header information structure.
+ *  @param[in] fp Specifies a pointer to the file.
+ *  @param[in] data Array to store data in, must be of size (num_timesteps * (num_items + 1))
+ *  @return
+ *  It returns a LONG that indicates possible errors that occurred during or before
+ *  the execution of the call. Possible return values are <b>F_NO_ERROR</b> ( = 0), indicating
+ *  successful execution or a nonzero value ( != 0) of type @ref FioErrors specifying the exact type
+ *  of error.
+ */
+MIKECORECUTIL_API int WriteDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
+{
+  int rc;
+
+  // Get time axis information - should also work for non-time axis
+  int num_timesteps;
+  double to_sec_scale;
+  bool is_time_equidistant;
+  if ((rc = dfsGetTimeAxisInfo(pdfs, &num_timesteps, &to_sec_scale, &is_time_equidistant)))
+    return rc;
+  double to_timeAxis_scale = 1.0 / to_sec_scale;
+
+  double double_delete = dfsGetDeleteValDouble(pdfs);
+  float float_delete = dfsGetDeleteValFloat(pdfs);
+
+  // Number of dynamic items
+  int num_items = dfsGetNoOfItems(pdfs);
+
+  // Store simple type for every item
+  SimpleType* itemSimpleTypes = new SimpleType[num_items];
+
+  /***********************************
+   * Dynamic item information
+   ***********************************/
+  LONG          item_type;                     // Item EUM type id
+  LPCTSTR       item_type_str;                 // Name of item type
+  LPCTSTR       item_name;                     // Name of item
+  LONG          item_unit;                     // Item EUM unit id
+  LPCTSTR       item_unit_str;                 // Item EUM unit string
+  SimpleType    item_datatype;                 // Simple type stored in item, usually float but can be double
+
+  int maxItemElmts = 1;
+  for (int i_item = 1; i_item <= num_items; i_item++)
+  {
+    LPITEM pitem = dfsItemD(pdfs, i_item);
+
+    // Name, quantity type and unit, and datatype
+    rc = dfsGetItemInfo(pitem, &item_type, &item_type_str, &item_name, &item_unit, &item_unit_str, &item_datatype);
+    if (rc) return rc;
+    itemSimpleTypes[i_item - 1] = item_datatype;
+
+    // Number of elements in item, find the max (in case they are not all dfs0 files, to not do any array-out-of-bounds operations)
+    int numElmts = dfsGetItemElements(pitem);
+    if (numElmts > maxItemElmts)
+      maxItemElmts = numElmts;
+  }
+
+  // Buffer for writing to dfs
+  float*  dfsdataf = new float[maxItemElmts];
+  double* dfsdatad = new double[maxItemElmts];
+  int*    dfsdatai = new int[maxItemElmts]; // used for non-floating point items
+  for (int i = 0; i < maxItemElmts; i++)
+  {
+    dfsdataf[i] = 0.0f;
+    dfsdatad[i] = 0.0;
+    dfsdatai[i] = 0;
+  }
+
+  // Reset file pointer to first dynamic item-timestep.
+  dfsFindBlockDynamic(pdfs, fp);
+
+  int pos = 0;
+  for (int i = 0; i < num_timesteps; i++)
+  {
+    // First column is time, remaining columns are data
+    double time = data[pos++] * to_timeAxis_scale;
+
+    for (int j = 0; j < num_items; j++)
+    {
+      double value = data[pos++];
+
+      if (itemSimpleTypes[j] == UFS_FLOAT)
+      {
+        float valuef;
+        if (value == double_delete)
+          valuef = float_delete;
+        else
+          valuef = (float)value;
+
+        dfsdataf[0] = valuef;
+        rc = dfsWriteItemTimeStep(pdfs, fp, time, dfsdataf);
+      }
+      else if (itemSimpleTypes[j] == UFS_DOUBLE)
+      {
+        dfsdatad[0] = value;
+        rc = dfsWriteItemTimeStep(pdfs, fp, time, dfsdatad);
+      }
+      else
+      {
+        // simple type not supported, write dummy zero data
+        rc = dfsWriteItemTimeStep(pdfs, fp, time, dfsdatai);
+      }
+
+      if (rc) return rc;
+    }
+  }
+
+  delete itemSimpleTypes;
+  delete dfsdataf;
+  delete dfsdatad;
+  delete dfsdatai;
 
   return 0;
 }

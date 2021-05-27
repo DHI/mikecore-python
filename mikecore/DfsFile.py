@@ -1121,6 +1121,31 @@ class DfsFile:
 
         return data
 
+    def WriteDfs0DataDouble(self, data):
+        """
+        Bulk write the times and data for a dfs0 file, loading it all data from a matrix structure.
+
+        First column in the result are the times, then a column for each
+        item in the file. There are as many rows as there are timesteps.
+        All item data are converted to doubles.
+        """
+
+        # Size of matrix is numTimeSteps x (numItems + 1)
+        numItems = len(self.ItemInfo)
+        numTimeSteps = self.FileInfo.TimeAxis.NumberOfTimeSteps
+        npSize = (numItems+1) * numTimeSteps;
+
+        if data.size != npSize:
+            raise Exception("Size of input data does not match size of data in file")
+        if data.dtype != np.float64:
+            raise Exception("Type of input data is incorrect. Must be float(64), but is: " + str(data.dtype))
+
+        success = DfsDLL.MCCUWrapper.WriteDfs0DataDouble(
+            self.headPointer, self.filePointer, data.ctypes.data
+        )
+
+        return success;
+
 
     def __CheckIfOpen(self):
         if self.filePointer.value == None:
