@@ -1118,7 +1118,7 @@ class DfsFile:
         if success != 0:
             return None
 
-        if (data.size == data.size):
+        if data.size == npSize:
             data = data.reshape( (numTimeSteps, numItems+1))
 
         return data
