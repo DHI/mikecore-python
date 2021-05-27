@@ -122,9 +122,9 @@ MIKECORECUTIL_API int ReadDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
     }
   }
 
-  delete itemSimpleTypes;
-  delete dfsdataf;
-  delete dfsdatad;
+  delete[] itemSimpleTypes;
+  delete[] dfsdataf;
+  delete[] dfsdatad;
 
   return 0;
 }
@@ -240,10 +240,10 @@ MIKECORECUTIL_API int WriteDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
     }
   }
 
-  delete itemSimpleTypes;
-  delete dfsdataf;
-  delete dfsdatad;
-  delete dfsdatai;
+  delete[] itemSimpleTypes;
+  delete[] dfsdataf;
+  delete[] dfsdatad;
+  delete[] dfsdatai;
 
   return 0;
 }
