@@ -1090,6 +1090,38 @@ class DfsFile:
             item = self.ItemInfo[item-1]
         return item.CreateEmptyItemData(reshape)
 
+
+    def ReadDfs0DataDouble(self, data = None):
+        """
+        Bulk read the times and data for a dfs0 file, putting it all in
+        a matrix structure.
+
+        First column in the result are the times, then a column for each
+        item in the file. There are as many rows as there are timesteps.
+        All item data are converted to doubles.
+        """
+
+        # Size of matrix is numTimeSteps x (numItems + 1)
+        numItems = len(self.ItemInfo)
+        numTimeSteps = self.FileInfo.TimeAxis.NumberOfTimeSteps
+        npSize = (numItems+1) * numTimeSteps;
+
+        if data == None or data.size < npSize:
+            data = np.zeros(npSize, dtype=np.float64)
+
+        success = DfsDLL.MCCUWrapper.ReadDfs0DataDouble(
+            self.headPointer, self.filePointer, data.ctypes.data
+        )
+
+        if success != 0:
+            return None
+
+        if (data.size == data.size):
+            data = data.reshape( (numTimeSteps, numItems+1))
+
+        return data
+
+
     def __CheckIfOpen(self):
         if self.filePointer.value == None:
             raise IOError("File is closed")

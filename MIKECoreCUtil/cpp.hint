@@ -1,0 +1,2 @@
+#define MIKECORECUTIL_API __declspec(dllexport)
+#define MIKECORECUTIL_API __declspec(dllimport)
