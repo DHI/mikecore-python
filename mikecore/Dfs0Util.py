@@ -1,12 +1,16 @@
+import os
 import numpy as np
 
 from mikecore.DfsFile import DfsSimpleType
 
-
 class Dfs0Util:
     @staticmethod
     def ReadDfs0DataDouble(dfs0File):
+        if os.name == 'nt':            
+            res = dfs0File.ReadDfs0DataDouble()
+            return res.astype(np.float64)
 
+        # not windows... 
         itemCount = len(dfs0File.ItemInfo)
         timestepCount = dfs0File.FileInfo.TimeAxis.NumberOfTimeSteps
         res = np.zeros(shape=(timestepCount, itemCount + 1), dtype=np.float64)
