@@ -88,3 +88,4 @@ bin
 /htmlcov
 /dist
 x64
+/tmp/
