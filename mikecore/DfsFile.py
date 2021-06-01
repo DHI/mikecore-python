@@ -170,10 +170,54 @@ class DfsTemporalAxis:
         self, timeUnit, startTimeOffset, numberOfTimeSteps, firstTimeStepIndex
     ):
         self.TimeAxisType = TimeAxisType.Undefined
-        self.TimeUnit = timeUnit
-        self.StartTimeOffset = startTimeOffset
+        self._TimeUnit = timeUnit
+        self._StartTimeOffset = startTimeOffset
         self.NumberOfTimeSteps = numberOfTimeSteps
-        self.FirstTimeStepIndex = firstTimeStepIndex
+        self._FirstTimeStepIndex = firstTimeStepIndex
+        self._OnUpdate = None;
+        self.__calcToSecFactor();
+
+    # Method that is invoked when ever the temporal axis is updated.
+    def _InvokeOnUpdate(self):
+        if self._OnUpdate != None:
+            self._OnUpdate()
+
+    def __getTimeUnit(self):
+        return self._TimeUnit;
+    def __setTimeUnit(self, timeUnit):
+        self._TimeUnit = timeUnit
+        self._InvokeOnUpdate();
+        self.__calcToSecFactor();
+    TimeUnit = property(__getTimeUnit, __setTimeUnit)
+
+    def __calcToSecFactor(self):
+        if self._TimeUnit == eumUnit.eumUmillisec: self._toSecondsFactor = 0.001; return;
+        if self._TimeUnit == eumUnit.eumUsec:      self._toSecondsFactor = 1.0; return;
+        if self._TimeUnit == eumUnit.eumUminute:   self._toSecondsFactor = 60.0; return;
+        if self._TimeUnit == eumUnit.eumUhour:     self._toSecondsFactor = 3600.0; return;
+        if self._TimeUnit == eumUnit.eumUday:      self._toSecondsFactor = 86400.0; return;
+        self._toSecondsFactor = 1.0;
+        if (eumWrapper.eumUnitsEqv(self._TimeUnit, eumUnit.eumUsec)):
+            res = eumWrapper.eumConvertUnit(self._TimeUnit, 1.0, eumUnit.eumUsec);
+            if res[0]:
+                self._toSecondsFactor = res[1]
+            else:
+                self._toSecondsFactor = 1.0;
+
+
+    def __getStartTimeOffset(self):
+        return self._StartTimeOffset;
+    def __setStartTimeOffset(self, startTimeOffset):
+        self._StartTimeOffset = startTimeOffset
+        self._InvokeOnUpdate();
+    StartTimeOffset = property(__getStartTimeOffset, __setStartTimeOffset)
+
+    def __getFirstTimeStepIndex(self):
+        return self._FirstTimeStepIndex;
+    def __setFirstTimeStepIndex(self, firstTimeStepIndex):
+        self._FirstTimeStepIndex = firstTimeStepIndex
+        self._InvokeOnUpdate();
+    FirstTimeStepIndex = property(__getFirstTimeStepIndex, __setFirstTimeStepIndex)
 
     def IncrementNumberOfTimeSteps(self, time):
         self.NumberOfTimeSteps += 1
@@ -186,6 +230,13 @@ class DfsTemporalAxis:
         return (   self.TimeAxisType == TimeAxisType.CalendarEquidistant 
                 or self.TimeAxisType == TimeAxisType.CalendarNonEquidistant)
 
+    def ToSeconds(self, relativeTime):
+        return relativeTime * self._toSecondsFactor;
+
+    def ToRelativeTime(self, relativeSeconds):
+        return relativeSeconds / self._toSecondsFactor;
+
+
 class DfsEqTimeAxis(DfsTemporalAxis):
     def __init__(
         self, timeUnit, startTimeOffset, timeStep, numberOfTimeSteps, firstTimeStepIndex
@@ -194,11 +245,17 @@ class DfsEqTimeAxis(DfsTemporalAxis):
             timeUnit, startTimeOffset, numberOfTimeSteps, firstTimeStepIndex
         )
         self.TimeAxisType = TimeAxisType.TimeEquidistant
-        self.TimeStep = timeStep
+        self._TimeStep = timeStep
+
+    def __getTimeStep(self):
+        return self._TimeStep;
+    def __setTimeStep(self, timeStep):
+        self._TimeStep = timeStep
+        self._InvokeOnUpdate();
+    TimeStep = property(__getTimeStep, __setTimeStep)
+
     def TimeStepInSeconds(self):
-        if (self.TimeUnit == eumUnit.eumUsec):
-            return self.TimeStep
-        raise Exception("Not Implemeneted: timestep-not-in-seconds-unit")
+        return self.TimeStep * self._toSecondsFactor;
 
 
 class DfsNonEqTimeAxis(DfsTemporalAxis):
@@ -210,6 +267,7 @@ class DfsNonEqTimeAxis(DfsTemporalAxis):
         )
         self.TimeAxisType = TimeAxisType.TimeNonEquidistant
         self.TimeSpan = timeSpan
+
     def IncrementNumberOfTimeSteps(self, time):
         self.NumberOfTimeSteps += 1
         self.TimeSpan = time - self.StartTimeOffset;
@@ -229,13 +287,25 @@ class DfsEqCalendarAxis(DfsTemporalAxis):
             timeUnit, startTimeOffset, numberOfTimeSteps, firstTimeStepIndex
         )
         self.TimeAxisType = TimeAxisType.CalendarEquidistant
-        self.StartDateTime = startDateTime
-        self.TimeStep = timeStep
-    def TimeStepInSeconds(self):
-        if (self.TimeUnit == eumUnit.eumUsec):
-            return self.TimeStep
-        raise Exception("Not Implemeneted: timestep-not-in-seconds-unit")
+        self._StartDateTime = startDateTime
+        self._TimeStep = timeStep
 
+    def __getStartDateTime(self):
+        return self._StartDateTime;
+    def __setStartDateTime(self, startDateTime):
+        self._StartDateTime = startDateTime;
+        self._InvokeOnUpdate();
+    StartDateTime = property(__getStartDateTime, __setStartDateTime)
+
+    def __getTimeStep(self):
+        return self._TimeStep;
+    def __setTimeStep(self, timeStep):
+        self._TimeStep = timeStep
+        self._InvokeOnUpdate();
+    TimeStep = property(__getTimeStep, __setTimeStep)
+
+    def TimeStepInSeconds(self):
+        return self.TimeStep * self._toSecondsFactor;
 
 class DfsNonEqCalendarAxis(DfsTemporalAxis):
     def __init__(
@@ -251,8 +321,16 @@ class DfsNonEqCalendarAxis(DfsTemporalAxis):
             timeUnit, startTimeOffset, numberOfTimeSteps, firstTimeStepIndex
         )
         self.TimeAxisType = TimeAxisType.CalendarNonEquidistant
-        self.StartDateTime = startDateTime
+        self._StartDateTime = startDateTime
         self.TimeSpan = timeSpan
+
+    def __getStartDateTime(self):
+        return self._StartDateTime;
+    def __setStartDateTime(self, startDateTime):
+        self._StartDateTime = startDateTime;
+        self._InvokeOnUpdate();
+    StartDateTime = property(__getStartDateTime, __setStartDateTime)
+
     def IncrementNumberOfTimeSteps(self, time):
         self.NumberOfTimeSteps += 1
         self.TimeSpan = time - self.StartTimeOffset;
@@ -536,6 +614,8 @@ class DfsFileInfo:
         self.CustomBlocks = DfsDLLUtil.BuildCustomBlocks(headerPointer)
         self.IsFileCompressed = (DfsDLL.Wrapper.dfsIsFileCompressed(headerPointer) != 0)
 
+        self.TimeAxis._OnUpdate = self.__UpdateTemporalAxis;
+
         # TODO: Test on dfs3 file from MIKE SHE
         if self.IsFileCompressed:
             encodeKeySize = DfsDLL.Wrapper.dfsGetEncodeKeySize(headerPointer)
@@ -568,6 +648,8 @@ class DfsFileInfo:
         self.yKey = yKey
         self.zKey = zKey
 
+    def __UpdateTemporalAxis(self):
+        DfsDLLUtil.dfsSetTemporalAxis(self.DfsFile.headPointer, self.TimeAxis)
 
 class DfsCustomBlock():
     def __init__(self, name, datatype, values):
