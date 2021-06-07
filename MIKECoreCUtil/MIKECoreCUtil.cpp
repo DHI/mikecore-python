@@ -31,6 +31,28 @@ int dfsGetTimeAxisInfo(LPHEAD pdfs, int* num_timesteps_rtn, double* to_sec_scale
  */
 MIKECORECUTIL_API int ReadDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
 {
+  return ReadDfs0ItemsDouble(pdfs, fp, data, NULL, 0);
+}
+
+
+/** @brief Bulk read the times and data for a dfs0 file, putting it all in
+ *         a matrix structure.
+ *  @details First column in the result are the times, then a column for each
+ *         item in the file. There are as many rows as there are timesteps.
+ *         All item data are converted to doubles.
+ *  @param[in] pdfs Specifies a reference to the header information structure.
+ *  @param[in] fp Specifies a pointer to the file.
+ *  @param[in] data Array to store data in, must be of size (num_timesteps * (num_items + 1))
+ *  @param[in] itemNums Array of item numbers (1-based) to store in data array. Can be null to store all items
+ *  @param[in] nitemNums Size of itemNums array. Set to zero to store data for all items
+ *  @return
+ *  It returns a LONG that indicates possible errors that occurred during or before
+ *  the execution of the call. Possible return values are <b>F_NO_ERROR</b> ( = 0), indicating
+ *  successful execution or a nonzero value ( != 0) of type @ref FioErrors specifying the exact type
+ *  of error.
+ */
+MIKECORECUTIL_API int ReadDfs0ItemsDouble(LPHEAD pdfs, LPFILE fp, double* data, int* itemNums, int nitemNums)
+{
   int rc;
 
   // Get time axis information - should also work for non-time axis
@@ -46,8 +68,27 @@ MIKECORECUTIL_API int ReadDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
   // Number of dynamic items
   int num_items = dfsGetNoOfItems(pdfs);
 
+  // Figure out which items to load
+  BOOL* itemsToLoad = NULL;
+  if (nitemNums > 0)
+  {
+    itemsToLoad = (BOOL*)malloc(num_items * sizeof(BOOL));
+    for (int i = 0; i < num_items; i++)
+      itemsToLoad[i] = FALSE;
+    for (int i = 0; i < nitemNums; i++)
+    {
+      int itemIdx = itemNums[i]-1;
+      if (itemIdx < 0 || itemIdx >= num_items)
+      {
+        free (itemsToLoad);
+        return F_ERR_DATA;
+      }
+      itemsToLoad[itemIdx] = TRUE;
+    }
+  }
+
   // Store simple type for every item
-  SimpleType* itemSimpleTypes = new SimpleType[num_items];
+  SimpleType* itemSimpleTypes = (SimpleType *)malloc(num_items * sizeof(SimpleType));
 
   /***********************************
    * Dynamic item information
@@ -66,7 +107,12 @@ MIKECORECUTIL_API int ReadDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
 
     // Name, quantity type and unit, and datatype
     rc = dfsGetItemInfo(pitem, &item_type, &item_type_str, &item_name, &item_unit, &item_unit_str, &item_datatype);
-    if (rc) return rc;
+    if (rc) 
+    {
+      if (itemsToLoad) free(itemsToLoad);
+      free(itemSimpleTypes);
+      return rc;
+    }
     itemSimpleTypes[i_item - 1] = item_datatype;
 
     // Number of elements in item, find the max (in case they are not all dfs0 files, to not do any array-out-of-bounds operations)
@@ -76,8 +122,8 @@ MIKECORECUTIL_API int ReadDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
   }
 
   // Buffer for reading from dfs
-  float*  dfsdataf = new float[maxItemElmts];
-  double* dfsdatad = new double[maxItemElmts];
+  float*  dfsdataf = (float *) malloc(maxItemElmts * sizeof(float));
+  double* dfsdatad = (double *)malloc(maxItemElmts * sizeof(double));
 
   // Reset file pointer to first dynamic item-timestep.
   dfsFindBlockDynamic(pdfs, fp);
@@ -93,7 +139,7 @@ MIKECORECUTIL_API int ReadDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
       {
         rc = dfsReadItemTimeStep(pdfs, fp, &time, dfsdataf);
         float valuef = dfsdataf[0];
-        if (valuef != float_delete) 
+        if (valuef != float_delete)
           value = valuef;
         else
           value = double_delete;
@@ -102,12 +148,20 @@ MIKECORECUTIL_API int ReadDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
       {
         rc = dfsReadItemTimeStep(pdfs, fp, &time, dfsdatad);
         value = dfsdatad[0];
-      } else
+      }
+      else
       {
         value = double_delete;
       }
 
-      if (rc) return rc;
+      if (rc) 
+      {
+        if (itemsToLoad) free(itemsToLoad);
+        free(itemSimpleTypes);
+        free(dfsdataf);
+        free(dfsdatad);
+        return rc;
+      }
 
       // First column is time, remaining columns are data
       if (j == 0)
@@ -118,13 +172,18 @@ MIKECORECUTIL_API int ReadDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
         else
           data[pos++] = time * to_sec_scale;
       }
-      data[pos++] = value;
+
+      if (itemsToLoad == NULL || itemsToLoad[j])
+      {
+        data[pos++] = value;
+      }
     }
   }
 
-  delete[] itemSimpleTypes;
-  delete[] dfsdataf;
-  delete[] dfsdatad;
+  if (itemsToLoad) free(itemsToLoad);
+  free(itemSimpleTypes);
+  free(dfsdataf);
+  free(dfsdatad);
 
   return 0;
 }
@@ -136,22 +195,23 @@ MIKECORECUTIL_API int ReadDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
  *         All item data are in doubles, and converted to float if necessary.
  *  @param[in] pdfs Specifies a reference to the header information structure.
  *  @param[in] fp Specifies a pointer to the file.
- *  @param[in] data Array to store data in, must be of size (num_timesteps * (num_items + 1))
+ *  @param[in] data Array to store data in, must be of size (nTimes * (num_items + 1))
+ *  @param[in] nTimes Number of time steps to store, must match size of data array.
  *  @return
  *  It returns a LONG that indicates possible errors that occurred during or before
  *  the execution of the call. Possible return values are <b>F_NO_ERROR</b> ( = 0), indicating
  *  successful execution or a nonzero value ( != 0) of type @ref FioErrors specifying the exact type
  *  of error.
  */
-MIKECORECUTIL_API int WriteDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
+MIKECORECUTIL_API int WriteDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data, int nTimes)
 {
   int rc;
 
   // Get time axis information - should also work for non-time axis
-  int num_timesteps;
+  int num_timesteps_file;
   double to_sec_scale;
   bool is_time_equidistant;
-  if ((rc = dfsGetTimeAxisInfo(pdfs, &num_timesteps, &to_sec_scale, &is_time_equidistant)))
+  if ((rc = dfsGetTimeAxisInfo(pdfs, &num_timesteps_file, &to_sec_scale, &is_time_equidistant)))
     return rc;
   double to_timeAxis_scale = 1.0 / to_sec_scale;
 
@@ -162,7 +222,7 @@ MIKECORECUTIL_API int WriteDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
   int num_items = dfsGetNoOfItems(pdfs);
 
   // Store simple type for every item
-  SimpleType* itemSimpleTypes = new SimpleType[num_items];
+  SimpleType* itemSimpleTypes = (SimpleType *)malloc(num_items * sizeof(SimpleType));
 
   /***********************************
    * Dynamic item information
@@ -181,7 +241,11 @@ MIKECORECUTIL_API int WriteDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
 
     // Name, quantity type and unit, and datatype
     rc = dfsGetItemInfo(pitem, &item_type, &item_type_str, &item_name, &item_unit, &item_unit_str, &item_datatype);
-    if (rc) return rc;
+    if (rc)
+    {
+      free(itemSimpleTypes);
+      return rc;
+    }
     itemSimpleTypes[i_item - 1] = item_datatype;
 
     // Number of elements in item, find the max (in case they are not all dfs0 files, to not do any array-out-of-bounds operations)
@@ -191,9 +255,9 @@ MIKECORECUTIL_API int WriteDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
   }
 
   // Buffer for writing to dfs
-  float*  dfsdataf = new float[maxItemElmts];
-  double* dfsdatad = new double[maxItemElmts];
-  int*    dfsdatai = new int[maxItemElmts]; // used for non-floating point items
+  float*  dfsdataf = (float *) malloc(maxItemElmts * sizeof(float));
+  double* dfsdatad = (double *)malloc(maxItemElmts * sizeof(double));
+  int*    dfsdatai = (int *)   malloc(maxItemElmts * sizeof(int));
   for (int i = 0; i < maxItemElmts; i++)
   {
     dfsdataf[i] = 0.0f;
@@ -205,7 +269,7 @@ MIKECORECUTIL_API int WriteDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
   dfsFindBlockDynamic(pdfs, fp);
 
   int pos = 0;
-  for (int i = 0; i < num_timesteps; i++)
+  for (int i = 0; i < nTimes; i++)
   {
     // First column is time, remaining columns are data
     double time = data[pos++] * to_timeAxis_scale;
@@ -236,14 +300,21 @@ MIKECORECUTIL_API int WriteDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data)
         rc = dfsWriteItemTimeStep(pdfs, fp, time, dfsdatai);
       }
 
-      if (rc) return rc;
+      if (rc)
+      {
+        free(itemSimpleTypes);
+        free(dfsdataf);
+        free(dfsdatad);
+        free(dfsdatai);
+        return rc;
+      }
     }
   }
 
-  delete[] itemSimpleTypes;
-  delete[] dfsdataf;
-  delete[] dfsdatad;
-  delete[] dfsdatai;
+  free(itemSimpleTypes);
+  free(dfsdataf);
+  free(dfsdatad);
+  free(dfsdatai);
 
   return 0;
 }

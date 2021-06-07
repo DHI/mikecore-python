@@ -15,4 +15,5 @@
 //MIKECORECUTIL_API int nMIKECoreCUtil;
 
 extern "C" MIKECORECUTIL_API int ReadDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data);
-extern "C" MIKECORECUTIL_API int WriteDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data);
+extern "C" MIKECORECUTIL_API int ReadDfs0ItemsDouble(LPHEAD pdfs, LPFILE fp, double* data, int* itemNums, int nitemNums);
+extern "C" MIKECORECUTIL_API int WriteDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data, int nTimes);
