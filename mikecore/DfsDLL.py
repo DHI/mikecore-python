@@ -192,11 +192,20 @@ class DfsDLL:
                 ctypes.c_void_p,
                 ctypes.c_void_p,
             ]
+            DfsDLL.MCCUWrapper.ReadDfs0ItemsDouble.restype = ctypes.c_int32
+            DfsDLL.MCCUWrapper.ReadDfs0ItemsDouble.argtypes = [
+                ctypes.c_void_p,
+                ctypes.c_void_p,
+                ctypes.c_void_p,
+                ctypes.c_void_p,
+                ctypes.c_int32,
+            ]
             DfsDLL.MCCUWrapper.WriteDfs0DataDouble.restype = ctypes.c_int32
             DfsDLL.MCCUWrapper.WriteDfs0DataDouble.argtypes = [
                 ctypes.c_void_p,
                 ctypes.c_void_p,
                 ctypes.c_void_p,
+                ctypes.c_int32,
             ]
 
 

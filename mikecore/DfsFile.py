@@ -1091,14 +1091,16 @@ class DfsFile:
         return item.CreateEmptyItemData(reshape)
 
 
-    def ReadDfs0DataDouble(self, data = None):
+    def ReadDfs0DataDouble(self, data = None, itemsToLoad = None):
         """
         Bulk read the times and data for a dfs0 file, putting it all in
         a matrix structure.
 
         First column in the result are the times, then a column for each
-        item in the file. There are as many rows as there are timesteps.
+        item in the file to load. There are as many rows as there are timesteps.
         All item data are converted to doubles.
+
+        :param itemsToLoad: npArray of item numbers (1-based, integers) to store in data array. Can be null to store all items.
         """
 
         self.__CheckIfOpen();
@@ -1106,20 +1108,33 @@ class DfsFile:
         # Size of matrix is numTimeSteps x (numItems + 1)
         numItems = len(self.ItemInfo)
         numTimeSteps = self.FileInfo.TimeAxis.NumberOfTimeSteps
-        npSize = (numItems+1) * numTimeSteps;
+        if (itemsToLoad is None):
+            numItemsToLoad = numItems
+        elif (type(itemsToLoad) is list):
+            itemsToLoad = np.array(itemsToLoad, dtype=np.int32)
+            numItemsToLoad = len(itemsToLoad)
+        else:
+            numItemsToLoad = len(itemsToLoad)
 
-        if data == None or data.size < npSize:
+        npSize = (numItemsToLoad+1) * numTimeSteps;
+
+        if data is None or data.size < npSize:
             data = np.zeros(npSize, dtype=np.float64)
 
-        success = DfsDLL.MCCUWrapper.ReadDfs0DataDouble(
-            self.headPointer, self.filePointer, data.ctypes.data
-        )
+        if (itemsToLoad is None):
+            success = DfsDLL.MCCUWrapper.dfsReadDfs0DataDouble(
+                self.headPointer, self.filePointer, data.ctypes.data
+            )
+        else:
+            success = DfsDLL.MCCUWrapper.dfsReadDfs0ItemsDouble(
+                self.headPointer, self.filePointer, data.ctypes.data, itemsToLoad.ctypes.data, numItemsToLoad
+            )
 
         if success != 0:
             return None
 
         if data.size == npSize:
-            data = data.reshape( (numTimeSteps, numItems+1))
+            data = data.reshape( (numTimeSteps, numItemsToLoad+1))
 
         return data
 
@@ -1136,16 +1151,16 @@ class DfsFile:
 
         # Size of matrix is numTimeSteps x (numItems + 1)
         numItems = len(self.ItemInfo)
-        numTimeSteps = self.FileInfo.TimeAxis.NumberOfTimeSteps
+        numTimeSteps = data.shape[0]
         npSize = (numItems+1) * numTimeSteps;
 
-        if data.size != npSize:
-            raise Exception("Size of input data does not match size of data in file")
+        if data.shape[1] != numItems+1:
+            raise Exception("Number of items in file does not match number of items in data")
         if data.dtype != np.float64:
             raise Exception("Type of input data is incorrect. Must be float(64), but is: " + str(data.dtype))
 
         success = DfsDLL.MCCUWrapper.WriteDfs0DataDouble(
-            self.headPointer, self.filePointer, data.ctypes.data
+            self.headPointer, self.filePointer, data.ctypes.data, numTimeSteps
         )
 
         return success;
