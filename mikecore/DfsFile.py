@@ -1122,11 +1122,11 @@ class DfsFile:
             data = np.zeros(npSize, dtype=np.float64)
 
         if (itemsToLoad is None):
-            success = DfsDLL.MCCUWrapper.dfsReadDfs0DataDouble(
+            success = DfsDLL.MCCUWrapper.ReadDfs0DataDouble(
                 self.headPointer, self.filePointer, data.ctypes.data
             )
         else:
-            success = DfsDLL.MCCUWrapper.dfsReadDfs0ItemsDouble(
+            success = DfsDLL.MCCUWrapper.ReadDfs0ItemsDouble(
                 self.headPointer, self.filePointer, data.ctypes.data, itemsToLoad.ctypes.data, numItemsToLoad
             )
 
