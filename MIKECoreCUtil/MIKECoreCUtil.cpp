@@ -189,10 +189,12 @@ MIKECORECUTIL_API int ReadDfs0ItemsDouble(LPHEAD pdfs, LPFILE fp, double* data, 
 }
 
 
-/** @brief Bulk write the times and data for a dfs0 file, loading it all from a matrix structure.
+/** @brief Bulk write the times and data for a dfs0 file, data is provided in a matrix structure.
  *  @details First column in the data are the times, then a column for each
  *         item in the file. There are as many rows as there are timesteps.
  *         All item data are in doubles, and converted to float if necessary.
+ *         Data is written to the file at the current position of the file pointer,
+ *         i.e. it can also be used to append to an existing file.
  *  @param[in] pdfs Specifies a reference to the header information structure.
  *  @param[in] fp Specifies a pointer to the file.
  *  @param[in] data Array to store data in, must be of size (nTimes * (num_items + 1))
@@ -264,9 +266,6 @@ MIKECORECUTIL_API int WriteDfs0DataDouble(LPHEAD pdfs, LPFILE fp, double* data, 
     dfsdatad[i] = 0.0;
     dfsdatai[i] = 0;
   }
-
-  // Reset file pointer to first dynamic item-timestep.
-  dfsFindBlockDynamic(pdfs, fp);
 
   int pos = 0;
   for (int i = 0; i < nTimes; i++)

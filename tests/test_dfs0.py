@@ -88,20 +88,26 @@ class Dfs0Tests(unittest.TestCase):
     # Create a file matching the TemporalEqTime.dfs0 file, and tests its content
     def test_CreateNeqTimeTest(self):
         Dfs0Tests.CreateNeqCalTimeTest(False);
+        Dfs0Tests.CreateNeqCalTimeDataTest(False);
 
 
     # Create a file matching the TemporalEqCal.dfs0 file, and tests its content
     def test_CreateNeqCalFileTest(self):
         Dfs0Tests.CreateNeqCalTimeTest(True);
+        Dfs0Tests.CreateNeqCalTimeTest(True, bulkWrite=True);
 
 
     @staticmethod
-    def CreateNeqCalTimeTest(calendarAxis, fileTitle="TemporalAxisTest", itemName1="WaterLevel item"):    
+    def CreateNeqCalTimeTest(calendarAxis, fileTitle="TemporalAxisTest", itemName1="WaterLevel item", bulkWrite=False):
 
+        filename = "testdata/testtmp/test_create_Temporal";
         if (calendarAxis):
-            filename = "testdata/testtmp/test_create_TemporalNeqCal.dfs0";
+            filename = filename + "NeqCal";
         else:
-            filename = "testdata/testtmp/test_create_TemporalNeqTime.dfs0";
+            filename = filename + "NeqTime";
+        if (bulkWrite):
+            filename = filename + "Data";
+        filename = filename + ".dfs0";
 
         factory = DfsFactory();
         builder = DfsBuilder.Create(fileTitle, "dfs Timeseries Bridge", 10000);
@@ -134,27 +140,43 @@ class Dfs0Tests(unittest.TestCase):
         builder.CreateFile(filename);
         file = builder.GetFile();
 
-        # Write data to file
-        file.WriteItemTimeStepNext( 0 + Dfs0Tests.timeOffset, np.array([  0], np.float32)); # Water level
-        file.WriteItemTimeStepNext( 0 + Dfs0Tests.timeOffset, np.array([100], np.float32)); # Water depth
-        file.WriteItemTimeStepNext(10 + Dfs0Tests.timeOffset, np.array([  1], np.float32)); # Water level
-        file.WriteItemTimeStepNext(10 + Dfs0Tests.timeOffset, np.array([101], np.float32)); # Water depth
-        file.WriteItemTimeStepNext(20 + Dfs0Tests.timeOffset, np.array([  2], np.float32)); # Water level
-        file.WriteItemTimeStepNext(20 + Dfs0Tests.timeOffset, np.array([102], np.float32)); # Water depth
-        file.WriteItemTimeStepNext(35 + Dfs0Tests.timeOffset, np.array([  3], np.float32)); # etc...
-        file.WriteItemTimeStepNext(35 + Dfs0Tests.timeOffset, np.array([103], np.float32));
-        file.WriteItemTimeStepNext(50 + Dfs0Tests.timeOffset, np.array([  4], np.float32));
-        file.WriteItemTimeStepNext(50 + Dfs0Tests.timeOffset, np.array([104], np.float32));
-        file.WriteItemTimeStepNext(60 + Dfs0Tests.timeOffset, np.array([  5], np.float32));
-        file.WriteItemTimeStepNext(60 + Dfs0Tests.timeOffset, np.array([105], np.float32));
-        file.WriteItemTimeStepNext(75 + Dfs0Tests.timeOffset, np.array([ 10], np.float32));
-        file.WriteItemTimeStepNext(75 + Dfs0Tests.timeOffset, np.array([110], np.float32));
-        file.WriteItemTimeStepNext(90 + Dfs0Tests.timeOffset, np.array([ 11], np.float32));
-        file.WriteItemTimeStepNext(90 + Dfs0Tests.timeOffset, np.array([111], np.float32));
-        file.WriteItemTimeStepNext(91 + Dfs0Tests.timeOffset, np.array([ 12], np.float32));
-        file.WriteItemTimeStepNext(91 + Dfs0Tests.timeOffset, np.array([112], np.float32));
-        file.WriteItemTimeStepNext(95 + Dfs0Tests.timeOffset, np.array([ 13], np.float32));
-        file.WriteItemTimeStepNext(95 + Dfs0Tests.timeOffset, np.array([113], np.float32));
+        if not bulkWrite:
+            # Write data to file
+            file.WriteItemTimeStepNext( 0 + Dfs0Tests.timeOffset, np.array([  0], np.float32)); # Water level
+            file.WriteItemTimeStepNext( 0 + Dfs0Tests.timeOffset, np.array([100], np.float32)); # Water depth
+            file.WriteItemTimeStepNext(10 + Dfs0Tests.timeOffset, np.array([  1], np.float32)); # Water level
+            file.WriteItemTimeStepNext(10 + Dfs0Tests.timeOffset, np.array([101], np.float32)); # Water depth
+            file.WriteItemTimeStepNext(20 + Dfs0Tests.timeOffset, np.array([  2], np.float32)); # Water level
+            file.WriteItemTimeStepNext(20 + Dfs0Tests.timeOffset, np.array([102], np.float32)); # Water depth
+            file.WriteItemTimeStepNext(35 + Dfs0Tests.timeOffset, np.array([  3], np.float32)); # etc...
+            file.WriteItemTimeStepNext(35 + Dfs0Tests.timeOffset, np.array([103], np.float32));
+            file.WriteItemTimeStepNext(50 + Dfs0Tests.timeOffset, np.array([  4], np.float32));
+            file.WriteItemTimeStepNext(50 + Dfs0Tests.timeOffset, np.array([104], np.float32));
+            file.WriteItemTimeStepNext(60 + Dfs0Tests.timeOffset, np.array([  5], np.float32));
+            file.WriteItemTimeStepNext(60 + Dfs0Tests.timeOffset, np.array([105], np.float32));
+            file.WriteItemTimeStepNext(75 + Dfs0Tests.timeOffset, np.array([ 10], np.float32));
+            file.WriteItemTimeStepNext(75 + Dfs0Tests.timeOffset, np.array([110], np.float32));
+            file.WriteItemTimeStepNext(90 + Dfs0Tests.timeOffset, np.array([ 11], np.float32));
+            file.WriteItemTimeStepNext(90 + Dfs0Tests.timeOffset, np.array([111], np.float32));
+            file.WriteItemTimeStepNext(91 + Dfs0Tests.timeOffset, np.array([ 12], np.float32));
+            file.WriteItemTimeStepNext(91 + Dfs0Tests.timeOffset, np.array([112], np.float32));
+            file.WriteItemTimeStepNext(95 + Dfs0Tests.timeOffset, np.array([ 13], np.float32));
+            file.WriteItemTimeStepNext(95 + Dfs0Tests.timeOffset, np.array([113], np.float32));
+        else:
+            data = np.array(
+                [
+                    [ 0 + Dfs0Tests.timeOffset,  0, 100],
+                    [10 + Dfs0Tests.timeOffset,  1, 101],
+                    [20 + Dfs0Tests.timeOffset,  2, 102],
+                    [35 + Dfs0Tests.timeOffset,  3, 103],
+                    [50 + Dfs0Tests.timeOffset,  4, 104],
+                    [60 + Dfs0Tests.timeOffset,  5, 105],
+                    [75 + Dfs0Tests.timeOffset, 10, 110],
+                    [90 + Dfs0Tests.timeOffset, 11, 111],
+                    [91 + Dfs0Tests.timeOffset, 12, 112],
+                    [95 + Dfs0Tests.timeOffset, 13, 113],
+                ], np.float64)
+            file.WriteDfs0DataDouble(data);
 
         file.Close();
 
