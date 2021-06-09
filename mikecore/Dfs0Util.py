@@ -83,7 +83,7 @@ class Dfs0Util:
         fdata = np.array([0], np.float32)
         ddata = np.array([0], np.float64)
 
-        for i in range(len(times)):
+        for i in range(data.shape[0]):
             time = data[i,0];
             for j in range(itemCount):
                 if isFloatItem[j]:
