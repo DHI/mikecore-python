@@ -88,7 +88,7 @@ class Dfs0Tests(unittest.TestCase):
     # Create a file matching the TemporalEqTime.dfs0 file, and tests its content
     def test_CreateNeqTimeTest(self):
         Dfs0Tests.CreateNeqCalTimeTest(False);
-        Dfs0Tests.CreateNeqCalTimeDataTest(False);
+        Dfs0Tests.CreateNeqCalTimeTest(False, bulkWrite=True);
 
 
     # Create a file matching the TemporalEqCal.dfs0 file, and tests its content
