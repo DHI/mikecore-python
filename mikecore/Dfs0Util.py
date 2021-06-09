@@ -6,7 +6,7 @@ from mikecore.DfsFile import DfsSimpleType
 class Dfs0Util:
     @staticmethod
     def ReadDfs0DataDouble(dfs0File):
-        if os.name == 'nt':            
+        if os.name == 'nt':
             res = dfs0File.ReadDfs0DataDouble()
             return res.astype(np.float64)
 
@@ -42,7 +42,7 @@ class Dfs0Util:
         return res.astype(np.float64)
 
     @staticmethod
-    def WriteDfs0DataDouble(dfs0File, times, data):
+    def WriteDfs0TimeDataDouble(dfs0File, times, data):
 
         itemCount = len(dfs0File.ItemInfo)
 
@@ -56,8 +56,6 @@ class Dfs0Util:
         for j in range(itemCount):
             isFloatItem.append(dfs0File.ItemInfo[j].DataType == DfsSimpleType.Float)
 
-        dfs0File.Reset()
-
         fdata = np.array([0], np.float32)
         ddata = np.array([0], np.float64)
 
@@ -69,3 +67,28 @@ class Dfs0Util:
                 else:
                     ddata[0] = data[i, j]
                     dfs0File.WriteItemTimeStepNext(times[i], ddata)
+
+    @staticmethod
+    def WriteDfs0DataDouble(dfs0File, data):
+
+        itemCount = len(dfs0File.ItemInfo)
+
+        if itemCount != data.shape[1]-1:
+            raise ValueError("Number of items does not match number of data columns")
+
+        isFloatItem = []
+        for j in range(itemCount):
+            isFloatItem.append(dfs0File.ItemInfo[j].DataType == DfsSimpleType.Float)
+
+        fdata = np.array([0], np.float32)
+        ddata = np.array([0], np.float64)
+
+        for i in range(len(times)):
+            time = data[i,0];
+            for j in range(itemCount):
+                if isFloatItem[j]:
+                    fdata[0] = data[i, j+1]
+                    dfs0File.WriteItemTimeStepNext(time, fdata)
+                else:
+                    ddata[0] = data[i, j+1]
+                    dfs0File.WriteItemTimeStepNext(time, ddata)

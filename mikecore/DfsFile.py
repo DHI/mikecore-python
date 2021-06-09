@@ -1159,9 +1159,28 @@ class DfsFile:
         if data.dtype != np.float64:
             raise Exception("Type of input data is incorrect. Must be float(64), but is: " + str(data.dtype))
 
-        success = DfsDLL.MCCUWrapper.WriteDfs0DataDouble(
-            self.headPointer, self.filePointer, data.ctypes.data, numTimeSteps
-        )
+        if os.name == 'nt':
+            success = DfsDLL.MCCUWrapper.WriteDfs0DataDouble(
+                self.headPointer, self.filePointer, data.ctypes.data, numTimeSteps
+            )
+        else:
+            isFloatItem = []
+            for j in range(numItems):
+                isFloatItem.append(self.ItemInfo[j].DataType == DfsSimpleType.Float)
+
+            fdata = np.array([0], np.float32)
+            ddata = np.array([0], np.float64)
+
+            for i in range(numTimeSteps):
+                time = data[i,0];
+                for j in range(numItems):
+                    if isFloatItem[j]:
+                        fdata[0] = data[i, j+1]
+                        self.WriteItemTimeStepNext(time, fdata)
+                    else:
+                        ddata[0] = data[i, j+1]
+                        self.WriteItemTimeStepNext(time, ddata)
+            success = True;
 
         return success;
 
