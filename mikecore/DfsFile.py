@@ -1091,7 +1091,7 @@ class DfsFile:
         return item.CreateEmptyItemData(reshape)
 
 
-    def ReadDfs0DataDouble(self, data = None, itemsToLoad = None):
+    def ReadDfs0DataDouble(self, itemsToLoad=None):
         """
         Bulk read the times and data for a dfs0 file, putting it all in
         a matrix structure.
@@ -1118,23 +1118,40 @@ class DfsFile:
 
         npSize = (numItemsToLoad+1) * numTimeSteps;
 
-        if data is None or data.size < npSize:
+        if os.name == 'nt':
             data = np.zeros(npSize, dtype=np.float64)
-
-        if (itemsToLoad is None):
-            success = DfsDLL.MCCUWrapper.ReadDfs0DataDouble(
-                self.headPointer, self.filePointer, data.ctypes.data
-            )
+            if (itemsToLoad is None):
+                success = DfsDLL.MCCUWrapper.ReadDfs0DataDouble(
+                    self.headPointer, self.filePointer, data.ctypes.data
+                )
+            else:
+                success = DfsDLL.MCCUWrapper.ReadDfs0ItemsDouble(
+                    self.headPointer, self.filePointer, data.ctypes.data, itemsToLoad.ctypes.data, numItemsToLoad
+                )
+            if success != 0:
+                return None
+            
+            data = data.reshape( (numTimeSteps, numItemsToLoad + 1))
         else:
-            success = DfsDLL.MCCUWrapper.ReadDfs0ItemsDouble(
-                self.headPointer, self.filePointer, data.ctypes.data, itemsToLoad.ctypes.data, numItemsToLoad
-            )
+            data = np.zeros(shape=(numTimeSteps, numItemsToLoad + 1), dtype=np.float64)
 
-        if success != 0:
-            return None
+            # Preload a set of item data
+            if itemsToLoad is None:
+                itemsToLoad = list(range(numItems))
+            itemDatas = []
+            for j in itemsToLoad:
+                itemDatas.append(self.CreateEmptyItemData(j + 1))
 
-        if data.size == npSize:
-            data = data.reshape( (numTimeSteps, numItemsToLoad+1))
+            self.Reset()
+
+            for i in range(numTimeSteps):
+                for j in range(numItemsToLoad):
+                    itemData = itemDatas[j]
+                    self.ReadItemTimeStep(itemData, i)
+                    if j == 0:
+                        data[i, 0] = itemData.Time
+
+                    data[i, j + 1] = itemData.Data[0]            
 
         return data
 
@@ -1152,14 +1169,14 @@ class DfsFile:
         # Size of matrix is numTimeSteps x (numItems + 1)
         numItems = len(self.ItemInfo)
         numTimeSteps = data.shape[0]
-        npSize = (numItems+1) * numTimeSteps;
-
+        
         if data.shape[1] != numItems+1:
             raise Exception("Number of items in file does not match number of items in data")
         if data.dtype != np.float64:
             raise Exception("Type of input data is incorrect. Must be float(64), but is: " + str(data.dtype))
-
+        
         if os.name == 'nt':
+            data = np.require(data, requirements=['C'])
             success = DfsDLL.MCCUWrapper.WriteDfs0DataDouble(
                 self.headPointer, self.filePointer, data.ctypes.data, numTimeSteps
             )
