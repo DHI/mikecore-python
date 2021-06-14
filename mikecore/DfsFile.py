@@ -1197,9 +1197,10 @@ class DfsFile:
                     else:
                         ddata[0] = data[i, j+1]
                         self.WriteItemTimeStepNext(time, ddata)
-            success = True;
+            
+            success = 0 # consistent with DfsDLL
 
-        return success;
+        return success
 
 
     def __CheckIfOpen(self):
