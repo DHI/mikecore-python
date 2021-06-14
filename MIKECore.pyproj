@@ -20,6 +20,7 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="mikecore\Dfs0Util.py" />
     <Compile Include="mikecore\Dfs123File.py">
       <SubType>Code</SubType>
     </Compile>

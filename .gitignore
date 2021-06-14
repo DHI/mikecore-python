@@ -80,9 +80,12 @@ venv.bak/
 
 .vscode/
 .vs
+*.user
 _ReSharper.Caches
 /testdata/testtmp
 /packages
 bin
 /htmlcov
 /dist
+x64
+/tmp/

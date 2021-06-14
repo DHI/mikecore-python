@@ -1090,6 +1090,118 @@ class DfsFile:
             item = self.ItemInfo[item-1]
         return item.CreateEmptyItemData(reshape)
 
+
+    def ReadDfs0DataDouble(self, itemsToLoad=None):
+        """
+        Bulk read the times and data for a dfs0 file, putting it all in
+        a matrix structure.
+
+        First column in the result are the times, then a column for each
+        item in the file to load. There are as many rows as there are timesteps.
+        All item data are converted to doubles.
+
+        :param itemsToLoad: npArray of item numbers (1-based, integers) to store in data array. Can be null to store all items.
+        """
+
+        self.__CheckIfOpen();
+
+        # Size of matrix is numTimeSteps x (numItems + 1)
+        numItems = len(self.ItemInfo)
+        numTimeSteps = self.FileInfo.TimeAxis.NumberOfTimeSteps
+        if (itemsToLoad is None):
+            numItemsToLoad = numItems
+        elif (type(itemsToLoad) is list):
+            itemsToLoad = np.array(itemsToLoad, dtype=np.int32)
+            numItemsToLoad = len(itemsToLoad)
+        else:
+            numItemsToLoad = len(itemsToLoad)
+
+        npSize = (numItemsToLoad+1) * numTimeSteps;
+
+        if os.name == 'nt':
+            data = np.zeros(npSize, dtype=np.float64)
+            if (itemsToLoad is None):
+                success = DfsDLL.MCCUWrapper.ReadDfs0DataDouble(
+                    self.headPointer, self.filePointer, data.ctypes.data
+                )
+            else:
+                success = DfsDLL.MCCUWrapper.ReadDfs0ItemsDouble(
+                    self.headPointer, self.filePointer, data.ctypes.data, itemsToLoad.ctypes.data, numItemsToLoad
+                )
+            if success != 0:
+                return None
+            
+            data = data.reshape( (numTimeSteps, numItemsToLoad + 1))
+        else:
+            data = np.zeros(shape=(numTimeSteps, numItemsToLoad + 1), dtype=np.float64)
+
+            # Preload a set of item data
+            if itemsToLoad is None:
+                itemsToLoad = list(range(numItems))
+            itemDatas = []
+            for j in itemsToLoad:
+                itemDatas.append(self.CreateEmptyItemData(j + 1))
+
+            self.Reset()
+
+            for i in range(numTimeSteps):
+                for j in range(numItemsToLoad):
+                    itemData = itemDatas[j]
+                    self.ReadItemTimeStep(itemData, i)
+                    if j == 0:
+                        data[i, 0] = itemData.Time
+
+                    data[i, j + 1] = itemData.Data[0]            
+
+        return data
+
+    def WriteDfs0DataDouble(self, data):
+        """
+        Bulk write the times and data for a dfs0 file, loading it all data from a matrix structure.
+
+        First column in the result are the times, then a column for each
+        item in the file. There are as many rows as there are timesteps.
+        All item data are converted to doubles.
+        """
+
+        self.__CheckIfOpen();
+
+        # Size of matrix is numTimeSteps x (numItems + 1)
+        numItems = len(self.ItemInfo)
+        numTimeSteps = data.shape[0]
+        
+        if data.shape[1] != numItems+1:
+            raise Exception("Number of items in file does not match number of items in data")
+        if data.dtype != np.float64:
+            raise Exception("Type of input data is incorrect. Must be float(64), but is: " + str(data.dtype))
+        
+        if os.name == 'nt':
+            data = np.require(data, requirements=['C'])
+            success = DfsDLL.MCCUWrapper.WriteDfs0DataDouble(
+                self.headPointer, self.filePointer, data.ctypes.data, numTimeSteps
+            )
+        else:
+            isFloatItem = []
+            for j in range(numItems):
+                isFloatItem.append(self.ItemInfo[j].DataType == DfsSimpleType.Float)
+
+            fdata = np.array([0], np.float32)
+            ddata = np.array([0], np.float64)
+
+            for i in range(numTimeSteps):
+                time = data[i,0];
+                for j in range(numItems):
+                    if isFloatItem[j]:
+                        fdata[0] = data[i, j+1]
+                        self.WriteItemTimeStepNext(time, fdata)
+                    else:
+                        ddata[0] = data[i, j+1]
+                        self.WriteItemTimeStepNext(time, ddata)
+            success = True;
+
+        return success;
+
+
     def __CheckIfOpen(self):
         if self.filePointer.value == None:
             raise IOError("File is closed")
