@@ -3,7 +3,7 @@ from mikecore.DfsFileFactory import DfsFileFactory
 from mikecore.DfsFile import *
 from numpy.testing import *
 from shutil import copyfile
-import os, sys, stat
+from tests.test_util import *
 
 class Test_dfs_temporal_axis(unittest.TestCase):
 
@@ -11,8 +11,7 @@ class Test_dfs_temporal_axis(unittest.TestCase):
         sourcefilename = "testdata/TemporalEqCal.dfs0";
         filename = "testdata/testtmp/test_temporal_modifyEqCal.dfs0";
 
-        copyfile(sourcefilename, filename)
-        os.chmod(filename, stat.S_IWRITE)
+        testUtil.copy_file(sourcefilename, filename)
 
         dfsFile = DfsFileFactory.DfsGenericOpen(filename);
         timeAxis = dfsFile.FileInfo.TimeAxis;
