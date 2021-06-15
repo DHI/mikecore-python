@@ -2,6 +2,7 @@ import tests.test_eum
 import tests.test_projections
 import tests.test_miketools
 import tests.test_dfs_basic
+import tests.test_dfs_temporal_axis
 import tests.test_dfs_custom_block
 import tests.test_dfs_spatial_axis
 import tests.test_dfs_static_item
@@ -47,10 +48,15 @@ miketools_tests.test_Dfs0ToAscii();
 print("-- dfs misc --------------------------------------")
 tests.test_dfs_basic.test_error_reporting()
 
+print("-- dfs temporal axis -----------------------------")
+custom_temporal_axis = tests.test_dfs_temporal_axis.Test_dfs_temporal_axis()
+custom_temporal_axis.test_ModifyEqCalTest()
+
 print("-- dfs custom blocks -----------------------------")
 custom_block_tests = tests.test_dfs_custom_block.Test_dfs_custom_block()
 custom_block_tests.test_dfs2()
 custom_block_tests.test_dfsu()
+custom_block_tests.test_UpdateCustomBlockDataTest()
 
 print("-- dfs static items ------------------------------")
 static_item_tests = tests.test_dfs_static_item.Test_dfs_static_item()

@@ -97,6 +97,7 @@
     <Compile Include="tests\test_dfsu_file.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="tests\test_dfs_temporal_axis.py" />
     <Compile Include="tests\test_eum.py">
       <SubType>Code</SubType>
     </Compile>

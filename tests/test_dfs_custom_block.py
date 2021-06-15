@@ -2,6 +2,7 @@ import unittest
 from mikecore.DfsFileFactory import DfsFileFactory
 from mikecore.DfsFile import *
 from numpy.testing import *
+from tests.test_util import *
 
 class Test_dfs_custom_block(unittest.TestCase):
 
@@ -42,3 +43,30 @@ class Test_dfs_custom_block(unittest.TestCase):
 
         dfsFile.Close()
 
+    def test_UpdateCustomBlockDataTest(self):
+
+        originalFilename = "testdata/OresundHD.dfs2";
+        filename = "testdata/testtmp/test_copy_OresundHD_cb.dfs2";
+
+        testUtil.copy_file(originalFilename, filename)
+
+        # Check initial value
+        dfsFile = DfsFileFactory.DfsGenericOpen(filename);
+        fileInfo = dfsFile.FileInfo;
+        customBlock = fileInfo.CustomBlocks[0];
+        assert_equal(10, customBlock.Values[3]);
+        dfsFile.Close();
+
+        # Modify value
+        dfsFile = DfsFileFactory.DfsGenericOpenEdit(filename);
+        fileInfo = dfsFile.FileInfo;
+        customBlock = fileInfo.CustomBlocks[0];
+        customBlock.Values[3] = 25;
+        dfsFile.Close();
+
+        # Check new value
+        dfsFile = DfsFileFactory.DfsGenericOpen(filename);
+        fileInfo = dfsFile.FileInfo;
+        customBlock = fileInfo.CustomBlocks[0];
+        assert_equal(25, customBlock.Values[3]);
+        dfsFile.Close();
