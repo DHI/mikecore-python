@@ -1698,45 +1698,38 @@ class DfsDLLUtil():
 
         if   dataType is DfsSimpleType.Float:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_float))
-            data  = np.zeros(size, dtype=np.float32)
-            for i in range(size):
-                data[i] = datap[i];
+            # wrap numpy array around C array
+            data  = np.ctypeslib.as_array(datap,shape=(size,))
 
         elif dataType is DfsSimpleType.Double:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_double))
-            data  = np.zeros(size, dtype=np.float64)
-            for i in range(size):
-                data[i] = datap[i];
+            # wrap numpy array around C array
+            data  = np.ctypeslib.as_array(datap,shape=(size,))
 
         elif dataType is DfsSimpleType.Byte:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_byte))
-            data  = np.zeros(size, dtype=np.int8)
-            for i in range(size):
-                data[i] = datap[i];
+            # wrap numpy array around C array
+            data  = np.ctypeslib.as_array(datap,shape=(size,))
 
         elif dataType is DfsSimpleType.Int:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_int32))
-            data  = np.zeros(size, dtype=np.int32)
-            for i in range(size):
-                data[i] = datap[i];
+            # wrap numpy array around C array
+            data  = np.ctypeslib.as_array(datap,shape=(size,))
 
         elif dataType is DfsSimpleType.UInt:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_uint32))
-            data  = np.zeros(size, dtype=np.uint32)
-            for i in range(size):
-                data[i] = datap[i];
+            # wrap numpy array around C array
+            data  = np.ctypeslib.as_array(datap,shape=(size,))
 
         elif dataType is DfsSimpleType.Short:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_uint16))
-            data  = np.zeros(size, dtype=np.uint16)
-            for i in range(size):
-                data[i] = datap[i];
+            # wrap numpy array around C array
+            data  = np.ctypeslib.as_array(datap,shape=(size,))
 
         elif dataType is DfsSimpleType.UShort:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_uint16))
-            data  = np.zeros(size, dtype=np.uint16)
-            for i in range(size):
-                data[i] = datap[i];
+            # wrap numpy array around C array
+            data  = np.ctypeslib.as_array(datap,shape=(size,))
 
 
         customBlock = DfsCustomBlock(

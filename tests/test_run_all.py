@@ -56,6 +56,7 @@ print("-- dfs custom blocks -----------------------------")
 custom_block_tests = tests.test_dfs_custom_block.Test_dfs_custom_block()
 custom_block_tests.test_dfs2()
 custom_block_tests.test_dfsu()
+custom_block_tests.test_UpdateCustomBlockDataTest()
 
 print("-- dfs static items ------------------------------")
 static_item_tests = tests.test_dfs_static_item.Test_dfs_static_item()
