@@ -63,14 +63,14 @@ class DfsBuilder():
     def __CheckBuildStage1(self):
         '''Check whether the builder is in stage 1, and throws an exception if not.'''
         if (self.isFileCreated):
-            if (self.DfsFile == None):
+            if (self.DfsFile is None):
                 raise Exception("File has been returned, action is not allowed");
             raise Exception("CreateFile has been called, action is not allowed");
 
 
     def __CheckBuildStage2(self):
         '''Check whether the builder is in stage 2, and throws an exception if not.'''
-        if (self.DfsFile == None):
+        if (self.DfsFile is None):
             if (self.isFileCreated):
                 raise Exception("File has been returned, action is not allowed");
             raise Exception("CreateFile has not yet been called, action is not allowed");
@@ -78,14 +78,14 @@ class DfsBuilder():
 
     def SetFileTitle(self, fileTitle):
         self.__CheckBuildStage1();
-        if (fileTitle == None):
+        if (fileTitle is None):
             fileTitle = ""
         self.FileInfo.FileTitle = fileTitle;
 
 
     def SetApplicationTitle(self, appTitle):
         self.__CheckBuildStage1()
-        if (appTitle == None):
+        if (appTitle is None):
             appTitle = "";
         self.FileInfo.ApplicationTitle = appTitle;
 
@@ -230,7 +230,7 @@ class DfsBuilder():
 
     def AddCreateCustomBlock(self, name, arrayData):
         self.__CheckBuildStage1()
-        if (name == None):
+        if (name is None):
             raise Exception("Name of custom block can not be null or empty");
 
         datatype = DfsDLLUtil.GetDfsType(arrayData);
@@ -255,7 +255,7 @@ class DfsBuilder():
         fileIsCompressed = self.FileInfo.IsFileCompressed
 
         for customBlock in self.FileInfo.CustomBlocks:
-            if (customBlock.Name == None or customBlock.Name == ""):
+            if (customBlock.Name is None or customBlock.Name == ""):
                 errors.append("Custom block name can not be null or empty");
             if (len(customBlock.Values) == 0):
                 errors.append("Custom block without data (count is zero) is invalid");
@@ -264,9 +264,9 @@ class DfsBuilder():
             errors.append("No dynamic items defined")
 
         for i, itemInfo in enumerate(self.DynamicItems):
-            if (itemInfo.Name == None or itemInfo.Name == ""):
+            if (itemInfo.Name is None or itemInfo.Name == ""):
                 errors.append("Name of dynamic item number {} is null or empty".format(i + 1));
-            if (itemInfo.SpatialAxis == None):
+            if (itemInfo.SpatialAxis is None):
                 errors.append("Spatial axis of dynamic item number {} can not be null".format(i+1));
                 continue;
 
@@ -275,9 +275,9 @@ class DfsBuilder():
                 axis = itemInfo.SpatialAxis;
                 xKey, yKey, zKey = self.FileInfo.GetEncodeKey()
                 encodeKeysize = len(xKey)
-                xSize = axis.SizeOfDimension(1);
-                ySize = axis.SizeOfDimension(2);
-                zSize = axis.SizeOfDimension(3);
+                xSize = axis.Shape[0];
+                ySize = axis.Shape[1];
+                zSize = axis.Shape[2];
                 ok = True;
                 for j in range(encodeKeysize):
                     if (xKey[i] >= xSize or yKey[i] >= ySize or zKey[i] >= zSize):
@@ -364,7 +364,7 @@ class DfsBuilder():
         DfsDLL.Wrapper.dfsSetDeleteValUnsignedInt(headerPointer, ctypes.c_uint32(self.FileInfo.DeleteValueUnsignedInt));
 
         projection = self.FileInfo.Projection;
-        if (projection == None or projection.Type == ProjectionType.Undefined):
+        if (projection is None or projection.Type == ProjectionType.Undefined):
             rok = DfsDLL.Wrapper.dfsSetGeoInfoUndefined(headerPointer);
             DfsDLL.CheckReturnCode(rok)
         else:
@@ -387,9 +387,9 @@ class DfsBuilder():
             xkey, ykey, zkey = self.FileInfo.GetEncodeKey();
             rok = DfsDLL.Wrapper.dfsSetEncodeKey(
                 headerPointer, 
-                xkey.ctypes.data, 
-                ykey.ctypes.data, 
-                zkey.ctypes.data, 
+                xkey, 
+                ykey, 
+                zkey, 
                 ctypes.c_int32(len(zkey)));
             DfsDLL.CheckReturnCode(rok)
   
@@ -425,9 +425,9 @@ class DfsBuilder():
         '''
         self.__CheckBuildStage2();
 
-        if (staticItem == None):
+        if (staticItem is None):
             raise Exception("staticItem");
-        if (staticItem.Name == None or staticItem.Name == ""):
+        if (staticItem.Name is None or staticItem.Name == ""):
             raise Exception("Name of static item is null or empty.", "staticItem");
 
         staticVectorPointer = ctypes.c_void_p(0)
@@ -437,7 +437,7 @@ class DfsBuilder():
             # Create a new static item
             rok = DfsDLL.Wrapper.dfsStaticCreate(ctypes.byref(staticVectorPointer));
             DfsDLL.CheckReturnCode(rok)
-            if (staticVectorPointer.value == None):
+            if (staticVectorPointer.value is None):
                 raise Exception("Unknown error creating a static item (DfsDLL.Wrapper.dfsStaticCreate returned null)");
 
             # Copy values to the new static item
@@ -478,7 +478,7 @@ class DfsBuilder():
 
 
     def GetFile(self):
-        if (self.DfsFile == None):
+        if (self.DfsFile is None):
             if (self.isFileCreated):
                 raise Exception("File has been returned, action is not allowed");
             raise Exception("CreateFile has not yet been called. Can not return any file");
@@ -493,9 +493,9 @@ class DfsBuilder():
     @staticmethod
     def Create(fileTitle = None, appTitle = "MIKE Core Python", appVersionNo = 1):
 
-        if (fileTitle == None):
+        if (fileTitle is None):
             fileTitle = "";
-        if (appTitle == None):
+        if (appTitle is None):
             appTitle = "";
 
         builder = DfsBuilder(fileTitle, appTitle, appVersionNo);
@@ -625,7 +625,7 @@ class DfsDynamicItemBuilder(DfsAbstractItemBuilder):
         self.isSetDataValueType = True;
 
     def SetAssociatedStaticItem(self, staticItemNumber):
-        if (self.ItemInfo.AssociatedStaticItemNumbers == None):
+        if (self.ItemInfo.AssociatedStaticItemNumbers is None):
             self.ItemInfo.AssociatedStaticItemNumbers = [];
         self.ItemInfo.AssociatedStaticItemNumbers.append(staticItemNumber);
 

@@ -1,5 +1,6 @@
 import os
 import ctypes
+import numpy as np
 from enum import IntEnum
 
 class DfsError(IntEnum):
@@ -136,6 +137,22 @@ class DfsDLL:
                 ctypes.POINTER(ctypes.c_int32),
                 ctypes.POINTER(ctypes.c_int32),
             ]
+
+            DfsDLL.Wrapper.dfsGetEncodeKey.argtypes = [
+                ctypes.c_void_p,
+                np.ctypeslib.ndpointer(dtype=np.int32,ndim=1),
+                np.ctypeslib.ndpointer(dtype=np.int32,ndim=1),
+                np.ctypeslib.ndpointer(dtype=np.int32,ndim=1)
+            ]
+            DfsDLL.Wrapper.dfsGetEncodeKey.restype = ctypes.c_int32
+            DfsDLL.Wrapper.dfsSetEncodeKey.argtypes = [
+                ctypes.c_void_p,
+                np.ctypeslib.ndpointer(dtype=np.int32,ndim=1),
+                np.ctypeslib.ndpointer(dtype=np.int32,ndim=1),
+                np.ctypeslib.ndpointer(dtype=np.int32,ndim=1),
+                ctypes.c_int32
+            ]
+            DfsDLL.Wrapper.dfsSetEncodeKey.restype = ctypes.c_int32
 
             # Last argument is just a pointer to the memory that can be many different types, though mostly
             DfsDLL.Wrapper.dfsReadItemTimeStep.argtypes = [

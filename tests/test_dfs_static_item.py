@@ -12,7 +12,7 @@ class Test_dfs_static_item(unittest.TestCase):
         staticItemNumber = 1;
         while (True):
             varstaticItem = dfsFile.ReadStaticItem(staticItemNumber);
-            if (varstaticItem == None):
+            if (varstaticItem is None):
                 break;
             staticItems.append(varstaticItem);
             staticItemNumber += 1

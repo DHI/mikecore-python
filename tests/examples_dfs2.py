@@ -243,7 +243,7 @@ class ExamplesDfs2:
 #        sourceStaticItem;
 #        while(True):
 #            sourceStaticItem = source.ReadStaticItemNext()
-#            if sourceStaticItem == None:
+#            if sourceStaticItem is None:
 #                break;
 #        builder.AddCreateStaticItem(sourceStaticItem.Name, sourceStaticItem.Quantity, sourceStaticItem.Data);
 #

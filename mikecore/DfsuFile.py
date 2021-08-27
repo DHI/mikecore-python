@@ -4,7 +4,7 @@ from mikecore.eum import *
 from mikecore.DfsFile import *
 
 def CheckForNull(obj):
-  if (obj == None):
+  if (obj is None):
     raise Exception("File is not a valid dfsu file. It can not be opened");
 
 class DfsuFileType(IntEnum):
