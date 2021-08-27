@@ -91,7 +91,7 @@ dfs2_tests.test_ModifyLanduseDataTest()
 
 print("-- dfs3 tests ------------------------------------")
 dfs3_tests = tests.test_dfs3.Dfs3Tests()
-dfs3_tests.test_FirstExample()
+dfs3_tests.test_EncodeKeys()
 dfs3_tests.test_CopyDfs3()
 
 print("-- dfsu2D tests ----------------------------------")
