@@ -160,7 +160,7 @@ class Dfs2Tests(unittest.TestCase):
         # Add data for all item-timesteps
         while (True):
             sourceData = source.ReadItemTimeStepNext()
-            if (sourceData == None):
+            if (sourceData is None):
                 break;
             file.WriteItemTimeStepNext(sourceData.Time, sourceData.Data);
 
@@ -227,7 +227,7 @@ class Dfs2Tests(unittest.TestCase):
 #        # Check all static items
 #        while (True):
 #            staticItem = dfs2File.ReadStaticItemNext()
-#            if (staticItem == None):
+#            if (staticItem is None):
 #                break;
 #            axisEqD2 = staticItem.SpatialAxis;
 #            assert_equal( 55, axisEqD2.X0);
@@ -359,7 +359,7 @@ class Dfs2Tests(unittest.TestCase):
         # Add data for all item-timesteps
         while (True):
             sourceData = source.ReadItemTimeStepNext()
-            if (sourceData == None):
+            if (sourceData is None):
                 break;
             file.WriteItemTimeStepNext(sourceData.Time, sourceData.Data);
 

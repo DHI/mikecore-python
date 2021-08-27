@@ -13,6 +13,7 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>Global|PythonCore|3.8</InterpreterId>
     <Name>MIKECore-Python</Name>
+    <TestFramework>Pytest</TestFramework>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -20,7 +21,6 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="mikecore\Dfs0Util.py" />
     <Compile Include="mikecore\Dfs123File.py">
       <SubType>Code</SubType>
     </Compile>
@@ -45,6 +45,8 @@
     <Compile Include="mikecore\eum.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="mikecore\MeshBuilder.py" />
+    <Compile Include="mikecore\MeshFile.py" />
     <Compile Include="mikecore\Projections.py">
       <SubType>Code</SubType>
     </Compile>
@@ -72,9 +74,16 @@
     <Compile Include="tests\examples_dfsu.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="tests\examples_misc.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tests\Test.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="tests\test_dfs3.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_dfsbuilder.py" />
     <Compile Include="tests\test_dfs_basic.py" />
     <Compile Include="tests\test_dfs_custom_block.py">
       <SubType>Code</SubType>
@@ -101,6 +110,7 @@
     <Compile Include="tests\test_eum.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="tests\test_mesh.py" />
     <Compile Include="tests\test_miketools.py">
       <SubType>Code</SubType>
     </Compile>

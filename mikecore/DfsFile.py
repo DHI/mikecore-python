@@ -155,13 +155,13 @@ class DfsProjection:
     
     @staticmethod
     def Create(wktString: str):
-        if (wktString == None or wktString == ""):
+        if (wktString is None or wktString == ""):
             raise Exception("Projection string can not be null or empty");
         return DfsProjection(ProjectionType.Projection, wktString, 0.0, 0.0, 0.0)
     
     @staticmethod
     def CreateWithGeoOrigin(wktString: str, lon0: float, lat0: float, orientation: float):
-        if (wktString == None or wktString == ""):
+        if (wktString is None or wktString == ""):
             raise Exception("Projection string can not be null or empty");
         return DfsProjection(ProjectionType.Projection, wktString, lon0, lat0, orientation)
 
@@ -624,25 +624,28 @@ class DfsFileInfo:
             self.zKey = np.zeros(encodeKeySize, dtype=np.int32)
             DfsDLL.Wrapper.dfsGetEncodeKey(
                 headerPointer,
-                self.xKey.ctypes.data,
-                self.yKey.ctypes.data,
-                self.zKey.ctypes.data,
+                self.xKey,
+                self.yKey,
+                self.zKey
             )
 
     def GetEncodeKey(self):
         return self.xKey, self.yKey, self.zKey
 
     def SetEncodingKey(self, xKey, yKey, zKey):
-        if xKey == None:
+        if xKey is None:
             raise ArgumentNullException("xKey")
-        if yKey == None:
+        if yKey is None:
             raise ArgumentNullException("yKey")
-        if zKey == None:
+        if zKey is None:
             raise ArgumentNullException("zKey")
 
         encodeKeySize = len(xKey)
         if encodeKeySize != len(yKey) or encodeKeySize != len(zKey):
             raise ValueError("Encoding key arguments must have same length")
+
+        if encodeKeySize > 0:
+          self.IsFileCompressed = True;
 
         self.xKey = xKey
         self.yKey = yKey
@@ -1286,7 +1289,7 @@ class DfsFile:
 
 
     def __CheckIfOpen(self):
-        if self.filePointer.value == None:
+        if self.filePointer.value is None:
             raise IOError("File is closed")
 
     def __FpFindBlockDynamic(self):
@@ -1352,7 +1355,7 @@ class DfsFile:
         staticVectorPointer = DfsDLL.Wrapper.dfsStaticRead(self.filePointer, ctypes.byref(fioError));
         DfsDLL.CheckReturnCode(fioError.value);
 
-        if (staticVectorPointer == None):
+        if (staticVectorPointer is None):
             return (None);
 
         # Get pointer to static item info

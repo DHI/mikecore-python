@@ -1255,7 +1255,7 @@ class eumQuantity:
 
     @staticmethod
     def UnDefined():
-        if None == eumQuantity.__undefined:
+        if eumQuantity.__undefined is None:
             eumQuantity.__undefined = eumQuantity()
         return eumQuantity.__undefined
 

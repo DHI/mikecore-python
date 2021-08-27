@@ -1386,7 +1386,7 @@ class Cartography:
     #/ Get the map projection that this cartography object uses.
     #/ </summary>
     def Projection(self):
-        if (self._myProjection == None):
+        if (self._myProjection is None):
           self._myProjection = MapProjection(None, MzCartDLL.MzCartGetMapProjection(self._mzCartPointer), objectHolder=self);
         return (self._myProjection);
 

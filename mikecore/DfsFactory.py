@@ -15,7 +15,7 @@ class DfsFactory:
     #region Projection factory methods
 
     def CreateProjection(self, wktProjectionString):
-      if (wktProjectionString == None or wktProjectionString == ""):
+      if (wktProjectionString is None or wktProjectionString == ""):
           raise Exception("Projection string can not be null or empty");
       return (DfsProjection.Create(wktProjectionString));
 

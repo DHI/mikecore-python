@@ -227,7 +227,7 @@ class MeshFile:
                 proj = groups[3]                
 
             # If not successfull, try match the 2011 header line format
-            if proj == None:
+            if proj is None:
                 match = header2011(line)    
                 if match:
                     self.EumQuantity = eumQuantity(eumItem.eumIBathymetry, eumUnit.eumUmeter)
@@ -235,7 +235,7 @@ class MeshFile:
                     noNodes = int(groups[0])
                     proj = groups[1]    
             
-            if proj == None:
+            if proj is None:
                 raise IOError("Can not load mesh file (failed reading mesh file header line): {0}".format(filename))
             
             self.ProjectionString = proj.strip()
@@ -249,7 +249,7 @@ class MeshFile:
             try:
                 for i in range(noNodes):
                     line = reader.readline().strip()
-                    if line == None:
+                    if line is None:
                         raise IOError("Unexpected end of file") # used as inner exception
                     strings = re.split(r"\s+",line)
                     self.NodeIds[i] = int(strings[0])

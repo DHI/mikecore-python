@@ -10,6 +10,7 @@ import tests.examples_dfs2
 import tests.examples_dfs0
 import tests.test_dfs0
 import tests.test_dfs2
+import tests.test_dfs3
 import tests.test_dfsu2D
 import tests.test_dfsu_file
 import os
@@ -87,6 +88,11 @@ dfs2_tests.test_CreateOresundBathy900Test()
 ##dfs2_tests.test_ModifyAxisTest()
 ##dfs2_tests.test_ModifyLanduseItemInfoTest()
 dfs2_tests.test_ModifyLanduseDataTest()
+
+print("-- dfs3 tests ------------------------------------")
+dfs3_tests = tests.test_dfs3.Dfs3Tests()
+dfs3_tests.test_FirstExample()
+dfs3_tests.test_CopyDfs3()
 
 print("-- dfsu2D tests ----------------------------------")
 dfsu2D_tests = tests.test_dfsu2D.Dfsu2DTests()

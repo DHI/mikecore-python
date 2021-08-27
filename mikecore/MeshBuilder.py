@@ -74,7 +74,7 @@ class MeshBuilder:
       self.__isSetNodes = True
 
     def SetElements(self, connectivity):
-        if connectivity == None:
+        if connectivity is None:
             raise TypeError("connectivity")
         if len(connectivity) == 0:
             raise ValueError("Element table has no rows. There must be at least one row")
@@ -125,15 +125,15 @@ class MeshBuilder:
         self.Validate(dieOnError=True)
 
         # Creating default eumQuantity in meters
-        if self.__eumQuantity == None: 
+        if self.__eumQuantity is None: 
             self.__eumQuantity = eumQuantity(eumItem.eumIBathymetry, eumUnit.eumUmeter);
 
         # Creating default node id's, if empty
-        if self.__nodeIds == None:
+        if self.__nodeIds is None:
             self.__nodeIds = np.arange(len(self.__x)) + 1            
         
         # Creating default element id's, if empty
-        if self.__elementIds == None:            
+        if self.__elementIds is None:            
             self.__elementIds = np.arange(len(self.__connectivity)) + 1
             
         # Creating additional element information
