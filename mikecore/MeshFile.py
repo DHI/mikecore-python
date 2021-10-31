@@ -304,7 +304,7 @@ class MeshFile:
                         if nodeNumber > 0:
                             nodesInElement[j] = nodeNumber
                     
-                    self.ElementTable.append(nodesInElement)
+                    self.ElementTable.append(nodesInElement[nodesInElement>0])
 
                     # Get element type from number of nodes
                     if len(self.ElementTable[i]) == 3:
