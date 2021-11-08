@@ -2,7 +2,7 @@ import os
 import platform
 from pathlib import Path
 
-__version__ = "0.1.0"
+__version__ = "0.1.3"
 
 p = platform.architecture()
 if not "64" in p[0]:
