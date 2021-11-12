@@ -189,6 +189,11 @@ class DfsuFile(object):
             for j in range(nodesInElement):
               self.ElementTable[i][j] = connectivityArray[k];
               k += 1
+          
+          frequency = self.dfsFile.ReadStaticItemNext(); 
+          self.Frequency = None if frequency is None else frequency.Data
+          direction = self.dfsFile.ReadStaticItemNext();
+          self.Direction = None if direction is None else direction.Data
 
       self.NumberOfNodes = self.NodeIds.size; 
       self.ItemInfo = self.dfsFile.ItemInfo
