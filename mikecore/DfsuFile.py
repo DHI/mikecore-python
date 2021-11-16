@@ -129,6 +129,9 @@ class DfsuFile(object):
       if (dimensions == 1):
         if (self.NumberOfLayers > 0):
           self.DfsuFileType = DfsuFileType.DfsuVerticalColumn;
+        elif (self.FileInfo.DataType == 2001 and (self.NumberOfFrequencies == numberOfElmts or self.NumberOfDirections == numberOfElmts)):
+          # Spectral Frequency-Direction (Rose-plot) geometry
+          self.DfsuFileType = DfsuFileType.DfsuSpectral0D;
         elif (self.FileInfo.DataType == 2002 and self.IsSpectral):
           # Spectral Frequency or Direction geometry
           self.DfsuFileType = DfsuFileType.DfsuSpectral1D;
@@ -139,6 +142,8 @@ class DfsuFile(object):
         if (self.FileInfo.DataType == 2001 and (self.NumberOfFrequencies*self.NumberOfDirections == numberOfElmts)):
           # Spectral Frequency-Direction (Rose-plot) geometry
           self.DfsuFileType = DfsuFileType.DfsuSpectral0D;
+        elif self.FileInfo.DataType == 2003:
+          self.DfsuFileType = DfsuFileType.DfsuSpectral2D;
         elif (self.NumberOfLayers == 0):
           self.DfsuFileType = DfsuFileType.Dfsu2D;
         elif (self.NumberOfLayers == self.NumberOfSigmaLayers):
