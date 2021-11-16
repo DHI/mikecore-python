@@ -129,7 +129,7 @@ class DfsuFile(object):
       if (dimensions == 1):
         if (self.NumberOfLayers > 0):
           self.DfsuFileType = DfsuFileType.DfsuVerticalColumn;
-        elif (self.FileInfo.DataType == 2001 and self.IsSpectral):
+        elif (self.FileInfo.DataType == 2002 and self.IsSpectral):
           # Spectral Frequency or Direction geometry
           self.DfsuFileType = DfsuFileType.DfsuSpectral1D;
         else:
@@ -227,10 +227,10 @@ class DfsuFile(object):
           # Spectral Dfsu
           if (self.NumberOfFrequencies):
               frequency = self.dfsFile.ReadStaticItemNext(); CheckForNull(frequency);
-              self.Frequency = frequency.Data
+              self.Frequencies = frequency.Data
           if (self.NumberOfDirections):
               direction = self.dfsFile.ReadStaticItemNext(); CheckForNull(direction);
-              self.Direction = direction.Data
+              self.Directions = direction.Data
 
       self.NumberOfNodes = self.NodeIds.size; 
       self.ItemInfo = self.dfsFile.ItemInfo
