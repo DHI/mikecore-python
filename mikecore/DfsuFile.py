@@ -27,6 +27,15 @@ class DfsuFileType(IntEnum):
     # 3D file with sigma and Z coordinates, i.e. a varying number of layers.
     Dfsu3DSigmaZ = 6,
 
+    # 0D point series of spectral data (frequency, direction)
+    DfsuSpectral0D = 7
+
+    # 1D line series of spectral data (nodes, frequency, direction)
+    DfsuSpectral1D = 8
+
+    # 2D area series of spectral data (elements, frequency, direction)
+    DfsuSpectral2D = 9
+    
 class DfsuFile(object):
     """
     Class for exposing data from a dfsu file. 
@@ -190,17 +199,45 @@ class DfsuFile(object):
               self.ElementTable[i][j] = connectivityArray[k];
               k += 1
           
-          frequency = self.dfsFile.ReadStaticItemNext(); 
-          self.Frequency = None if frequency is None else frequency.Data
-          direction = self.dfsFile.ReadStaticItemNext();
-          self.Direction = None if direction is None else direction.Data
+          # Spectral Dfsu
+          frequency = self.dfsFile.ReadStaticItemNext() 
+          direction = self.dfsFile.ReadStaticItemNext()
+          if self.FileInfo.DataType in (2002, 2003) or ((frequency is not None) and (direction is not None)):
+            self.Frequency = frequency.Data
+            self.Direction = direction.Data
+
+            if (direction.Name != "Direction") or (frequency.Name != "Frequency"):
+              raise Exception("File is not a valid spectral dfsu file. It cannot be opened")
+
+            self.NumberOfFrequencies = len(self.Frequency) #customBlock[4]
+            self.NumberOfDirections = len(self.Direction) #customBlock[5]
+            
+            n2d = (self.NumberOfFrequencies + 1)*(self.NumberOfDirections + 1)
+            numberOfNodes = customBlock[0]
+            if (self.FileInfo.DataType == 2001): 
+              if (dimensions == 2) and (n2d == numberOfNodes):
+                # This is a point spectrum file
+                # the mesh is not a real geographical mesh, but an artificial one 
+                # made for plotting in MIKE Zero 
+                dimensions = 0
+              else: 
+                raise Exception("File is not a point spectrum dfsu file. It cannot be opened")
+
+            self.NumberOfLayers = 0
+            self.NumberOfSigmaLayers = 0
+            
+            if dimensions == 0:
+              self.DfsuFileType = DfsuFileType.DfsuSpectral0D
+            elif dimensions == 1:
+              self.DfsuFileType = DfsuFileType.DfsuSpectral1D
+            elif dimensions == 2:
+              self.DfsuFileType = DfsuFileType.DfsuSpectral2D
 
       self.NumberOfNodes = self.NodeIds.size; 
       self.ItemInfo = self.dfsFile.ItemInfo
 
       self.NumberOfElements = self.ElementIds.size
-      #self.NumberOfNodes = self.X.size
-
+      
       if (not build):
          # In append mode, move the file pointer to end of file
          # It was moved elsewhere when reading static data...
