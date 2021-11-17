@@ -9,34 +9,43 @@ def CheckForNull(obj):
 
 class DfsuFileType(IntEnum):
 
+    # 1D series
+    Dfsu1D = 1,
+
     # 2D area series
-    Dfsu2D = 1,
+    Dfsu2D = 2,
 
     # 1D vertical column
-    DfsuVerticalColumn = 2,
+    DfsuVerticalColumn = 3,
 
     # 2D vertical slice through a Dfsu3DSigma
-    DfsuVerticalProfileSigma = 3,
+    DfsuVerticalProfileSigma = 4,
 
     # 2D vertical slice through a Dfsu3DSigmaZ
-    DfsuVerticalProfileSigmaZ = 4,
+    DfsuVerticalProfileSigmaZ = 5,
 
     # 3D file with sigma coordinates, i.e., a constant number of layers.
-    Dfsu3DSigma = 5,
+    Dfsu3DSigma = 6,
 
     # 3D file with sigma and Z coordinates, i.e. a varying number of layers.
-    Dfsu3DSigmaZ = 6,
+    Dfsu3DSigmaZ = 7,
+
+    # 0D point series of spectral data (frequency, direction)
+    DfsuSpectral0D = 8
+
+    # 1D line series of spectral data (node, frequency, direction)
+    DfsuSpectral1D = 9
+
+    # 2D area series of spectral data (elmt, frequency, direction)
+    DfsuSpectral2D = 10
+
 
 class DfsuFile(object):
     """
     Class for exposing data from a dfsu file. 
-
     Use the DfsFileFactory to open an existing dfsu file.
-
     Use the DfsuBuilder to create a new dfsu file.
-
     You can read, write and append item-timesteps to the file. 
-
     The geometry can be altered, by moving the nodes, but the element connectivity can not be changed.
     """
 
@@ -46,6 +55,8 @@ class DfsuFile(object):
         self.DfsuFileType = DfsuFileType.Dfsu2D;
         self.NumberOfLayers = -1;
         self.NumberOfSigmaLayers = -1;
+        self.NumberOfFrequencies = -1;
+        self.NumberOfDirections = -1;
 
         # Static item
         self.__nodeIdItem = None;
@@ -69,6 +80,10 @@ class DfsuFile(object):
         self.ElementIds = None; # this can be null, then set default id's, starting from 1
         self.ElementType = None;
         self.ElementTable = [];
+
+        # Spectral definition
+        self.Frequencies = None;
+        self.Directions = None;
 
         if (not dfsFile is None):
             self.__Init(dfsFile)
@@ -103,19 +118,40 @@ class DfsuFile(object):
       else:
         self.NumberOfSigmaLayers = self.NumberOfLayers;
 
+      if (self.FileInfo.DataType in (2002, 2003) or (self.FileInfo.DataType == 2001 and (customBlock.Count == 6))):
+        self.NumberOfFrequencies = customBlock[4];
+        self.NumberOfDirections = customBlock[5];
+      else:
+        self.NumberOfFrequencies = 0;
+        self.NumberOfDirections = 0;
+
       # Figuring out dfsu file type from custom block MIKE_FM
       if (dimensions == 1):
-        self.DfsuFileType = DfsuFileType.DfsuVerticalColumn;
+        if (self.NumberOfLayers > 0):
+          self.DfsuFileType = DfsuFileType.DfsuVerticalColumn;
+        elif (self.FileInfo.DataType == 2001 and (self.NumberOfFrequencies == numberOfElmts or self.NumberOfDirections == numberOfElmts)):
+          # Spectral Frequency-Direction (Rose-plot) geometry
+          self.DfsuFileType = DfsuFileType.DfsuSpectral0D;
+        elif (self.FileInfo.DataType == 2002 and self.IsSpectral):
+          # Spectral Frequency or Direction geometry
+          self.DfsuFileType = DfsuFileType.DfsuSpectral1D;
+        else:
+          self.DfsuFileType = DfsuFileType.Dfsu1D;
+
       elif (dimensions == 2):
-        if (self.NumberOfLayers == 0):
+        if (self.FileInfo.DataType == 2001 and (self.NumberOfFrequencies*self.NumberOfDirections == numberOfElmts)):
+          # Spectral Frequency-Direction (Rose-plot) geometry
+          self.DfsuFileType = DfsuFileType.DfsuSpectral0D;
+        elif self.FileInfo.DataType == 2003:
+          self.DfsuFileType = DfsuFileType.DfsuSpectral2D;
+        elif (self.NumberOfLayers == 0):
           self.DfsuFileType = DfsuFileType.Dfsu2D;
         elif (self.NumberOfLayers == self.NumberOfSigmaLayers):
           self.DfsuFileType = DfsuFileType.DfsuVerticalProfileSigma;
         else:
           self.DfsuFileType = DfsuFileType.DfsuVerticalProfileSigmaZ;
- 
-      elif (dimensions == 3):
 
+      elif (dimensions == 3):
         if (self.NumberOfLayers == self.NumberOfSigmaLayers):
           self.DfsuFileType = DfsuFileType.Dfsu3DSigma;
         else:
@@ -133,6 +169,9 @@ class DfsuFile(object):
           # "Element type"  , int
           # "No of nodes"   , int
           # "Connectivity"  , int
+          # For spectral files also at least one of:
+          # "Frequency"     , double
+          # "Direction"     , double
 
           self.__nodeIdItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__nodeIdItem);
           self.NodeIds = self.__nodeIdItem.Data
@@ -189,6 +228,14 @@ class DfsuFile(object):
             for j in range(nodesInElement):
               self.ElementTable[i][j] = connectivityArray[k];
               k += 1
+          
+          # Spectral Dfsu
+          if (self.NumberOfFrequencies):
+              frequency = self.dfsFile.ReadStaticItemNext(); CheckForNull(frequency);
+              self.Frequencies = frequency.Data
+          if (self.NumberOfDirections):
+              direction = self.dfsFile.ReadStaticItemNext(); CheckForNull(direction);
+              self.Directions = direction.Data
 
       self.NumberOfNodes = self.NodeIds.size; 
       self.ItemInfo = self.dfsFile.ItemInfo
@@ -366,6 +413,9 @@ class DfsuFile(object):
         self.FileInfo.DeleteValueFloat = value
     DeleteValueFloat = property(__GetDeleteValueFloat, __SetDeleteValueFloat)
 
+    @property
+    def IsSpectral(self):
+      return (self.NumberOfFrequencies > 0) or (self.NumberOfDirections > 0)
 
 
     @staticmethod
@@ -438,20 +488,15 @@ class DfsuUtil:
       """
       Find element indices (zero based) of the elements being the upper-most element
       in its column.
-
       Each column is identified by matching node id numbers. For 3D elements the
       last half of the node numbers of the bottom element must match the first half
       of the node numbers in the top element. For 2D vertical elements the order of 
       the node numbers in the bottom element (last half number of nodes) are reversed 
       compared to those in the top element (first half number of nodes).
-
       To find the number of elements in each column, assuming the result
       is stored in res:
-
       For the first column it is res[0]+1.
-
       For the i'th column, it is res[i]-res[i-1].
-
       :returns: A list of element indices of top layer elements
       """
 
@@ -504,17 +549,12 @@ class DfsuUtil:
       """
       Find element indices (zero based) of the elements being the upper-most element
       in its column.
-
       This method uses the element center (x,y) coordinate, and identifies
       each column by having the same element center (x,y) coordinate.
-
       To find the number of elements in each column, assuming the result
       is stored in res:
-
       For the first column it is res[0]+1.
-
       For the i'th column, it is res[i]-res[i-1].
-
       :returns: A list of element indices of top layer elements
       """
 
@@ -581,7 +621,6 @@ class DfsuUtil:
       """
       Find the maximum number of layers, based on the indices of
       all top layer elements.
-
       Assuming that the topLayerElements comes ordered.
       """
       # the first column has top-element-index + 1 layers
@@ -597,7 +636,6 @@ class DfsuUtil:
       """
       Find the minimum number of layers, based on the indices of
       all top layer elements.
-
       Assuming that the <paramref name="topLayerElements"/> comes
       ordered.
       """
@@ -608,4 +646,3 @@ class DfsuUtil:
         if (layers < minLayers):
           minLayers = layers;
       return (minLayers);
-
