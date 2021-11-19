@@ -1649,7 +1649,11 @@ class DfsDLLUtil():
                 ctypes.byref(y0), 
                 ctypes.byref(dx), 
                 ctypes.byref(dy))
-            axis = DfsAxisEqD2(eumUnit(eumUnitInt.value), xCount.value, x0.value, dx.value, yCount.value, y0.value, dy.value)
+            try:
+                spatial_axis_unit = eumUnit(eumUnitInt.value)
+            except:
+                spatial_axis_unit = eumUnit.eumUmeter
+            axis = DfsAxisEqD2(spatial_axis_unit, xCount.value, x0.value, dx.value, yCount.value, y0.value, dy.value)
             return (axis)
 
         if axisType == SpaceAxisType.NeqD2:
