@@ -89,3 +89,4 @@ bin
 /dist
 x64
 /tmp/
+/TestResults

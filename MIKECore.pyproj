@@ -56,6 +56,9 @@
     <Compile Include="mikecore\DfsFile.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="miketools\DfsShowInfo.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="setup.py">
       <SubType>Code</SubType>
     </Compile>

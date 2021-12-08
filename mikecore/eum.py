@@ -592,7 +592,10 @@ class eumItem(IntEnum):
     eumIMassPerLengthPerTime = 110306
     eumINearBedLoadPerLength = 110307
     eumISubstancePerUnitArea = 110308
-    eumIAccNearBedLoadPerLength =     110309
+    eumIAccNearBedLoadPerLength =  110309
+    eumIThermalConductivity = 110310
+    eumIDirectionalVariance = 110311
+    eumISpecificDissipationRate = 110312
 
 # Predefined enums of EUM units.
 #
@@ -782,6 +785,7 @@ class eumUnit(IntEnum):
     eumUdegree = 2401
     eumUDegreeNorth50 = 2402
     eumUdegreesquared = 2403
+    eumUradiansquared = 2404
     eumUdegreePerMeter = 2500
     eumUradianPerMeter = 2501
     eumUdegreePerSecond = 2510
@@ -1189,6 +1193,8 @@ class eumUnit(IntEnum):
     eumUmegaWattPerMeter = 99202
     eumUgigaWattPerMeter = 99203
     eumUkiloWattPerFeet = 99204
+    eumUWattPerMeterPerDegreeCelsius = 99220
+    eumUWattPerFeetPerDegreeFahrenheit = 99221
     eumUsiemens = 99250
     eumUmilliSiemens = 99251
     eumUmicroSiemens = 99252

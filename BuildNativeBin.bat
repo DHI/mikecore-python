@@ -10,3 +10,5 @@ for /d %%i in (packages\*) do (
 for /d %%i in (packages\*) do ( 
   IF EXIST "%%i\runtimes\linux-x64\native" (
     copy /y "%%i\runtimes\linux-x64\native" mikecore\bin\linux))
+
+pause
