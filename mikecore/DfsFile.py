@@ -1215,8 +1215,17 @@ class DfsFile:
                 )
             if success != 0:
                 return None
-            
+
             data = data.reshape( (numTimeSteps, numItemsToLoad + 1))
+
+            # Need to handle StartTimeOffset similar to in __GetTime
+            timeaxis = self.FileInfo.TimeAxis;
+            if timeaxis.TimeAxisType == TimeAxisType.TimeEquidistant:
+                if timeaxis.StartTimeOffset != 0.0:
+                    data[:,0] = data[:,0] + timeaxis.StartTimeOffset 
+            elif timeaxis.TimeAxisType == TimeAxisType.CalendarEquidistant:
+                if timeaxis.StartTimeOffset != 0.0:
+                    data[:,0] = data[:,0] + timeaxis.StartTimeOffset 
         else:
             data = np.zeros(shape=(numTimeSteps, numItemsToLoad + 1), dtype=np.float64)
 
