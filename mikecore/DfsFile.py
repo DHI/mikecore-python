@@ -1203,49 +1203,28 @@ class DfsFile:
 
         npSize = (numItemsToLoad+1) * numTimeSteps;
 
-        if os.name == 'nt':
-            data = np.zeros(npSize, dtype=np.float64)
-            if (itemsToLoad is None):
-                success = DfsDLL.MCCUWrapper.ReadDfs0DataDouble(
-                    self.headPointer, self.filePointer, data.ctypes.data
-                )
-            else:
-                success = DfsDLL.MCCUWrapper.ReadDfs0ItemsDouble(
-                    self.headPointer, self.filePointer, data.ctypes.data, itemsToLoad.ctypes.data, numItemsToLoad
-                )
-            if success != 0:
-                return None
-
-            data = data.reshape( (numTimeSteps, numItemsToLoad + 1))
-
-            # Need to handle StartTimeOffset similar to in __GetTime
-            timeaxis = self.FileInfo.TimeAxis;
-            if timeaxis.TimeAxisType == TimeAxisType.TimeEquidistant:
-                if timeaxis.StartTimeOffset != 0.0:
-                    data[:,0] = data[:,0] + timeaxis.StartTimeOffset 
-            elif timeaxis.TimeAxisType == TimeAxisType.CalendarEquidistant:
-                if timeaxis.StartTimeOffset != 0.0:
-                    data[:,0] = data[:,0] + timeaxis.StartTimeOffset 
+        data = np.zeros(npSize, dtype=np.float64)
+        if (itemsToLoad is None):
+            success = DfsDLL.Wrapper.dfsReadDfs0DataDouble(
+                self.headPointer, self.filePointer, data.ctypes.data
+            )
         else:
-            data = np.zeros(shape=(numTimeSteps, numItemsToLoad + 1), dtype=np.float64)
+            success = DfsDLL.Wrapper.dfsReadDfs0ItemsDouble(
+                self.headPointer, self.filePointer, data.ctypes.data, itemsToLoad.ctypes.data, numItemsToLoad
+            )
+        if success != 0:
+            return None
 
-            # Preload a set of item data
-            if itemsToLoad is None:
-                itemsToLoad = list(range(numItems))
-            itemDatas = []
-            for j in itemsToLoad:
-                itemDatas.append(self.CreateEmptyItemData(j + 1))
+        data = data.reshape( (numTimeSteps, numItemsToLoad + 1))
 
-            self.Reset()
-
-            for i in range(numTimeSteps):
-                for j in range(numItemsToLoad):
-                    itemData = itemDatas[j]
-                    self.ReadItemTimeStep(itemData, i)
-                    if j == 0:
-                        data[i, 0] = itemData.Time
-
-                    data[i, j + 1] = itemData.Data[0]            
+        # Need to handle StartTimeOffset similar to in __GetTime
+        timeaxis = self.FileInfo.TimeAxis;
+        if timeaxis.TimeAxisType == TimeAxisType.TimeEquidistant:
+            if timeaxis.StartTimeOffset != 0.0:
+                data[:,0] = data[:,0] + timeaxis.StartTimeOffset 
+        elif timeaxis.TimeAxisType == TimeAxisType.CalendarEquidistant:
+            if timeaxis.StartTimeOffset != 0.0:
+                data[:,0] = data[:,0] + timeaxis.StartTimeOffset 
 
         return data
 
@@ -1268,31 +1247,11 @@ class DfsFile:
             raise Exception("Number of items in file does not match number of items in data")
         if data.dtype != np.float64:
             raise Exception("Type of input data is incorrect. Must be float(64), but is: " + str(data.dtype))
-        
-        if os.name == 'nt':
-            data = np.require(data, requirements=['C'])
-            success = DfsDLL.MCCUWrapper.WriteDfs0DataDouble(
-                self.headPointer, self.filePointer, data.ctypes.data, numTimeSteps
-            )
-        else:
-            isFloatItem = []
-            for j in range(numItems):
-                isFloatItem.append(self.ItemInfo[j].DataType == DfsSimpleType.Float)
 
-            fdata = np.array([0], np.float32)
-            ddata = np.array([0], np.float64)
-
-            for i in range(numTimeSteps):
-                time = data[i,0];
-                for j in range(numItems):
-                    if isFloatItem[j]:
-                        fdata[0] = data[i, j+1]
-                        self.WriteItemTimeStepNext(time, fdata)
-                    else:
-                        ddata[0] = data[i, j+1]
-                        self.WriteItemTimeStepNext(time, ddata)
-            
-            success = 0 # consistent with DfsDLL
+        data = np.require(data, requirements=['C'])
+        success = DfsDLL.Wrapper.dfsWriteDfs0DataDouble(
+            self.headPointer, self.filePointer, data.ctypes.data, numTimeSteps
+        )
 
         return success
 
