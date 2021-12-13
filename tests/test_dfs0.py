@@ -60,9 +60,11 @@ class Dfs0Tests(unittest.TestCase):
         if (calendarAxis):
             FileTemporalEqCalDfs0.TimeAxisTester(dfsFile, False);
             FileTemporalEqCalDfs0.ReadTester(dfsFile, False);
+            FileTemporalEqCalDfs0.ReadAllTester(dfsFile, False);
         else:
             FileTemporalEqTimeDfs0.TimeAxisTester(dfsFile);
             FileTemporalEqTimeDfs0.ReadTester(dfsFile);
+            FileTemporalEqTimeDfs0.ReadAllTester(dfsFile);
 
         dfsFile.Close();
 
@@ -79,9 +81,11 @@ class Dfs0Tests(unittest.TestCase):
         if (calendarAxis):
             FileTemporalEqCalDfs0.TimeAxisTester(dfsFile, modifyTimes);
             FileTemporalEqCalDfs0.ReadTester(dfsFile, modifyTimes);
+            FileTemporalEqCalDfs0.ReadAllTester(dfsFile, modifyTimes);
         else:
             FileTemporalEqTimeDfs0.TimeAxisTester(dfsFile);
             FileTemporalEqTimeDfs0.ReadTester(dfsFile);
+            FileTemporalEqTimeDfs0.ReadAllTester(dfsFile);
 
         dfsFile.Close();
 
@@ -187,9 +191,11 @@ class Dfs0Tests(unittest.TestCase):
         if (calendarAxis):
             FileTemporalNeqCalDfs0.TimeAxisTester(dfsFile, False);
             FileTemporalNeqCalDfs0.ReadTester(dfsFile, False);
+            FileTemporalNeqCalDfs0.ReadAllTester(dfsFile, False);
         else:
             FileTemporalNeqTimeDfs0.TimeAxisTester(dfsFile, False);
             FileTemporalNeqTimeDfs0.ReadTester(dfsFile, False);
+            FileTemporalNeqTimeDfs0.ReadAllTester(dfsFile, False);
 
         dfsFile.Close();
 
@@ -206,9 +212,11 @@ class Dfs0Tests(unittest.TestCase):
         if (calendarAxis):
             FileTemporalNeqCalDfs0.TimeAxisTester(dfsFile, modifyTimes);
             FileTemporalNeqCalDfs0.ReadTester(dfsFile, modifyTimes);
+            FileTemporalNeqCalDfs0.ReadAllTester(dfsFile, modifyTimes);
         else:
             FileTemporalNeqTimeDfs0.TimeAxisTester(dfsFile, modifyTimes);
             FileTemporalNeqTimeDfs0.ReadTester(dfsFile, modifyTimes);
+            FileTemporalNeqTimeDfs0.ReadAllTester(dfsFile, modifyTimes);
 
         dfsFile.Close();
 
@@ -486,6 +494,27 @@ class FileTemporalEqTimeDfs0:
         assert_equal(83, itemData.Time);
         assert_equal(1, itemData.Data.size);
         assert_equal(12, itemData.Data[0]);
+
+    @staticmethod
+    def ReadAllTester(dfsFile):
+
+        itemData = dfsFile.ReadDfs0DataDouble();
+        assert_equal(10, itemData.shape[0]);
+        assert_equal(3, itemData.shape[1]);
+
+        assert_equal(  3, itemData[0,0]);
+        assert_equal( 13, itemData[1,0]);
+        assert_equal( 23, itemData[2,0]);
+
+        assert_equal(  0, itemData[0,1]);
+        assert_equal(  1, itemData[1,1]);
+        assert_equal(  2, itemData[2,1]);
+
+        assert_equal(100, itemData[0,2]);
+        assert_equal(101, itemData[1,2]);
+        assert_equal(102, itemData[2,2]);
+
+
   
 class FileTemporalEqCalDfs0:
     @staticmethod
@@ -591,6 +620,24 @@ class FileTemporalEqCalDfs0:
         assert_equal(1, itemData.Data.size);
         assert_equal(12, itemData.Data[0]);
 
+    @staticmethod
+    def ReadAllTester(dfsFile, modifiedTimes):
+
+        itemData = dfsFile.ReadDfs0DataDouble();
+        assert_equal(10, itemData.shape[0]);
+        assert_equal(3, itemData.shape[1]);
+
+        assert_equal( 0 if modifiedTimes else  4, itemData[0,0]);
+        assert_equal(10 if modifiedTimes else 14, itemData[1,0]);
+        assert_equal(20 if modifiedTimes else 24, itemData[2,0]);
+
+        assert_equal(  0, itemData[0,1]);
+        assert_equal(  1, itemData[1,1]);
+        assert_equal(  2, itemData[2,1]);
+
+        assert_equal(100, itemData[0,2]);
+        assert_equal(101, itemData[1,2]);
+        assert_equal(102, itemData[2,2]);
 
 # class testing the file TemporalNeqTime.dfs0.
 # File was creating by the TsEditor.exe.
@@ -691,6 +738,32 @@ class FileTemporalNeqTimeDfs0:
         assert_allclose(75.0 + offset, itemData.Time, 1e-5);
         assert_equal(1, itemData.Data.size);
         assert_equal(10, itemData.Data[0]);
+
+    @staticmethod
+    def ReadAllTester(dfsFile, modifiedTimes):
+
+        offset = 0 if (modifiedTimes) else 3;
+
+        itemData = dfsFile.ReadDfs0DataDouble();
+        assert_equal(10, itemData.shape[0]);
+        assert_equal(3, itemData.shape[1]);
+
+        assert_equal( 0+offset, itemData[0,0]);
+        assert_equal(10+offset, itemData[1,0]);
+        assert_equal(20+offset, itemData[2,0]);
+        assert_equal(35+offset, itemData[3,0]);
+        assert_equal(50+offset, itemData[4,0]);
+        assert_equal(60+offset, itemData[5,0]);
+        assert_equal(75+offset, itemData[6,0]);
+
+        assert_equal(  0, itemData[0,1]);
+        assert_equal(  1, itemData[1,1]);
+        assert_equal(  2, itemData[2,1]);
+
+        assert_equal(100, itemData[0,2]);
+        assert_equal(101, itemData[1,2]);
+        assert_equal(102, itemData[2,2]);
+
 
 # class testing the file TemporalNeqCal.dfs0.
 # File was creating by the TsEditor.exe.
@@ -811,6 +884,30 @@ class FileTemporalNeqCalDfs0:
         assert_equal(10, itemData.Data[0]);
 
 
+    @staticmethod
+    def ReadAllTester(dfsFile, modifyTimes):
+  
+        offset = 0 if (modifyTimes) else 3;
+
+        itemData = dfsFile.ReadDfs0DataDouble();
+        assert_equal(10, itemData.shape[0]);
+        assert_equal(3, itemData.shape[1]);
+
+        assert_equal( 0+offset, itemData[0,0]);
+        assert_equal(10+offset, itemData[1,0]);
+        assert_equal(20+offset, itemData[2,0]);
+        assert_equal(35+offset, itemData[3,0]);
+        assert_equal(50+offset, itemData[4,0]);
+        assert_equal(60+offset, itemData[5,0]);
+        assert_equal(75+offset, itemData[6,0]);
+
+        assert_equal(  0, itemData[0,1]);
+        assert_equal(  1, itemData[1,1]);
+        assert_equal(  2, itemData[2,1]);
+
+        assert_equal(100, itemData[0,2]);
+        assert_equal(101, itemData[1,2]);
+        assert_equal(102, itemData[2,2]);
 
 if __name__ == '__main__':
     unittest.main()

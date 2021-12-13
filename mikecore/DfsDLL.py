@@ -199,31 +199,54 @@ class DfsDLL:
                 ctypes.c_void_p,
             ]
 
-        # MIKE Core C Util should be loaded only once and only on Windows
-        if DfsDLL.MCCUWrapper is None and os.name == "nt":
-            DfsDLL.MCCUWrapper = ctypes.CDLL(os.path.join(DfsDLL.libfilepath, "MIKECoreCUtil.dll"))
+            DfsDLL.Wrapper.dfsReadDfs0DataDouble.restype = ctypes.c_int32
+            DfsDLL.Wrapper.dfsReadDfs0DataDouble.argtypes = [
+                ctypes.c_void_p,
+                ctypes.c_void_p,
+                ctypes.c_void_p,
+            ]
+            DfsDLL.Wrapper.dfsReadDfs0ItemsDouble.restype = ctypes.c_int32
+            DfsDLL.Wrapper.dfsReadDfs0ItemsDouble.argtypes = [
+                ctypes.c_void_p,
+                ctypes.c_void_p,
+                ctypes.c_void_p,
+                ctypes.c_void_p,
+                ctypes.c_int32,
+            ]
+            DfsDLL.Wrapper.dfsWriteDfs0DataDouble.restype = ctypes.c_int32
+            DfsDLL.Wrapper.dfsWriteDfs0DataDouble.argtypes = [
+                ctypes.c_void_p,
+                ctypes.c_void_p,
+                ctypes.c_void_p,
+                ctypes.c_int32,
+            ]
 
-            DfsDLL.MCCUWrapper.ReadDfs0DataDouble.restype = ctypes.c_int32
-            DfsDLL.MCCUWrapper.ReadDfs0DataDouble.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-            ]
-            DfsDLL.MCCUWrapper.ReadDfs0ItemsDouble.restype = ctypes.c_int32
-            DfsDLL.MCCUWrapper.ReadDfs0ItemsDouble.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-            ]
-            DfsDLL.MCCUWrapper.WriteDfs0DataDouble.restype = ctypes.c_int32
-            DfsDLL.MCCUWrapper.WriteDfs0DataDouble.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-            ]
+
+#        # MIKE Core C Util should be loaded only once and only on Windows
+#        if DfsDLL.MCCUWrapper is None and os.name == "nt":
+#            DfsDLL.MCCUWrapper = ctypes.CDLL(os.path.join(DfsDLL.libfilepath, "MIKECoreCUtil.dll"))
+#
+#            DfsDLL.MCCUWrapper.ReadDfs0DataDouble.restype = ctypes.c_int32
+#            DfsDLL.MCCUWrapper.ReadDfs0DataDouble.argtypes = [
+#                ctypes.c_void_p,
+#                ctypes.c_void_p,
+#                ctypes.c_void_p,
+#            ]
+#            DfsDLL.MCCUWrapper.ReadDfs0ItemsDouble.restype = ctypes.c_int32
+#            DfsDLL.MCCUWrapper.ReadDfs0ItemsDouble.argtypes = [
+#                ctypes.c_void_p,
+#                ctypes.c_void_p,
+#                ctypes.c_void_p,
+#                ctypes.c_void_p,
+#                ctypes.c_int32,
+#            ]
+#            DfsDLL.MCCUWrapper.WriteDfs0DataDouble.restype = ctypes.c_int32
+#            DfsDLL.MCCUWrapper.WriteDfs0DataDouble.argtypes = [
+#                ctypes.c_void_p,
+#                ctypes.c_void_p,
+#                ctypes.c_void_p,
+#                ctypes.c_int32,
+#            ]
 
 
 
