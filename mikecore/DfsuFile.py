@@ -219,16 +219,13 @@ class DfsuFile(object):
           connectivityArray = connectivityItem.Data
 
           # TODO Validate data
-
-          self.ElementTable = np.empty(numberOfElmts,dtype=object);
-          k = 0;
+          self.ElementTable = np.empty(numberOfElmts,dtype=object)
+          k1 = 0
           for i in range(numberOfElmts):
-            nodesInElement = nodesPerElement[i];
-            self.ElementTable[i] = np.empty(nodesInElement,dtype=np.int32);
-            for j in range(nodesInElement):
-              self.ElementTable[i][j] = connectivityArray[k];
-              k += 1
-          
+            k2 = k1 + nodesPerElement[i]
+            self.ElementTable[i] = np.asarray(connectivityArray[k1:k2], dtype=np.int32)
+            k1 = k2
+            
           # Spectral Dfsu
           if (self.NumberOfFrequencies):
               frequency = self.dfsFile.ReadStaticItemNext(); CheckForNull(frequency);
