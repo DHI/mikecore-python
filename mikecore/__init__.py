@@ -2,7 +2,7 @@ import os
 import platform
 from pathlib import Path
 
-__version__ = "0.1.4"
+__version__ = "0.2.1"
 
 p = platform.architecture()
 if not "64" in p[0]:
@@ -16,7 +16,12 @@ elif platform.system() == "Linux":
 else:
     raise Exception("Unsupported platform: " + platform.system())
 
-os.environ["LD_LIBRARY_PATH"] = mikebin
+if "LD_LIBRARY_PATH" in os.environ:
+    ld_library_path = os.environ["LD_LIBRARY_PATH"]
+    if mikebin not in ld_library_path:
+        os.environ["LD_LIBRARY_PATH"] += ":" + mikebin
+else:
+    os.environ["LD_LIBRARY_PATH"] = mikebin
 
 from mikecore.DfsDLL import DfsDLL
 from mikecore.eum import eumDLL
