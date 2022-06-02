@@ -19,8 +19,8 @@ jobs:
         nuget-version: '5.x'
     - name: Install nuget packages
       run: |
-       nuget install DHI.DFS -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
-       nuget install DHI.Projections -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
+       nuget install DHI.DFS -Version 20.0.0 -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
+       nuget install DHI.Projections -Version 20.0.0 -OutputDirectory packages -Source "https://api.nuget.org/v3/index.json"
     
     - name: Install packages into directory
       shell: cmd
