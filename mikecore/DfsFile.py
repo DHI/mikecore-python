@@ -707,7 +707,7 @@ class DfsFile:
             self.Close()
 
         if (not os.path.isfile(filename)):
-            raise Exception("File not found {}".format(filename))
+            raise FileNotFoundError("File not found {}".format(filename))
 
         # Check if trying to edit a read-only file.
         if ((mode == DfsFileMode.Edit or mode == DfsFileMode.Append) 
