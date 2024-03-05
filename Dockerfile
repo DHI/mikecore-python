@@ -1,4 +1,4 @@
-FROM python:3.9.4-slim
+FROM python:3.13.0a3-slim
 
 RUN apt-get update -y && apt-get install curl -y && apt-get install unzip -y
 RUN curl -o bin.zip https://globalcdn.nuget.org/packages/dhi.mikecore.linux.rhel7.20.0.0.nupkg && \
