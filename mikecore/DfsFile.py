@@ -1390,6 +1390,14 @@ class DfsFile:
 class DfsDLLUtil():
     """Utilities class, creating various Dfs classes based on pointers to DFS native data"""
 
+    # In case of incorrect eumUnitInt then return eumUmeter, the default axis unit
+    @staticmethod
+    def ToEumAxisUnit(eumUnitInt: int):
+        try:
+            spatial_axis_unit = eumUnit(eumUnitInt)
+        except:
+            spatial_axis_unit = eumUnit.eumUmeter
+
     @staticmethod
     def GetDfsType(arrayData):
         if   (arrayData.dtype == np.float32):
@@ -1576,7 +1584,7 @@ class DfsDLLUtil():
             eumUnitInt = ctypes.c_int32()
             eumUnitDescr = ctypes.c_char_p()
             DfsDLL.Wrapper.dfsGetItemAxisEqD0(itemPointer, ctypes.byref(eumUnitInt), ctypes.byref(eumUnitDescr))
-            axis = DfsAxisEqD0(eumUnit(eumUnitInt.value))
+            axis = DfsAxisEqD0(DfsDLLUtil.ToEumAxisUnit(eumUnitInt.value))
             return (axis)
 
         if axisType == SpaceAxisType.EqD1:
@@ -1592,7 +1600,7 @@ class DfsDLLUtil():
                 ctypes.byref(xCount),
                 ctypes.byref(x0), 
                 ctypes.byref(dx))
-            axis = DfsAxisEqD1(eumUnit(eumUnitInt.value), xCount.value, x0.value, dx.value)
+            axis = DfsAxisEqD1(DfsDLLUtil.ToEumAxisUnit(eumUnitInt.value), xCount.value, x0.value, dx.value)
             return (axis)
 
         if axisType == SpaceAxisType.NeqD1:
@@ -1617,7 +1625,7 @@ class DfsDLLUtil():
                 ctypes.byref(y0), 
                 ctypes.byref(dx), 
                 ctypes.byref(dy))
-            axis = DfsAxisEqD2(eumUnit(eumUnitInt.value), xCount.value, x0.value, dx.value, yCount.value, y0.value, dy.value)
+            axis = DfsAxisEqD2(DfsDLLUtil.ToEumAxisUnit(eumUnitInt.value), xCount.value, x0.value, dx.value, yCount.value, y0.value, dy.value)
             return (axis)
 
         if axisType == SpaceAxisType.NeqD2:
@@ -1649,7 +1657,7 @@ class DfsDLLUtil():
                 ctypes.byref(dy),
                 ctypes.byref(dz),
                 )
-            axis = DfsAxisEqD3(eumUnit(eumUnitInt.value), xCount.value, x0.value, dx.value, yCount.value, y0.value, dy.value, zCount.value, z0.value, dz.value)
+            axis = DfsAxisEqD3(DfsDLLUtil.ToEumAxisUnit(eumUnitInt.value), xCount.value, x0.value, dx.value, yCount.value, y0.value, dy.value, zCount.value, z0.value, dz.value)
             return axis
 
         if axisType == SpaceAxisType.NeqD3:
