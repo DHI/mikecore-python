@@ -1397,6 +1397,7 @@ class DfsDLLUtil():
             spatial_axis_unit = eumUnit(eumUnitInt)
         except:
             spatial_axis_unit = eumUnit.eumUmeter
+        return spatial_axis_unit
 
     @staticmethod
     def GetDfsType(arrayData):

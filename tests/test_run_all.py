@@ -87,7 +87,7 @@ import os
 #dfs2_tests.test_CreateOresundBathy900Test()
 ##dfs2_tests.test_ModifyAxisTest()
 ##dfs2_tests.test_ModifyLanduseItemInfoTest()
-dfs2_tests.test_ModifyLanduseDataTest()
+#dfs2_tests.test_ModifyLanduseDataTest()
 
 #print("-- dfs3 tests ------------------------------------")
 #dfs3_tests = tests.test_dfs3.Dfs3Tests()
