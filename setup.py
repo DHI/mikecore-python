@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="mikecore",
-    version="0.2.1",
+    version="0.2.2",
     install_requires=["numpy"],
     author="DHI",
     author_email="mike@dhigroup.com",
@@ -19,6 +19,6 @@ setuptools.setup(
         "License :: OSI Approved :: BSD License",
         "Programming Language :: Python :: 3",
     ],
-    python_requires=">=3.5<",
+    python_requires=">=3.5",
     include_package_data=True,
 )
