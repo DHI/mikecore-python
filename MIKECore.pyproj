@@ -21,6 +21,9 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="buildUtil\eumXMLProcess.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="mikecore\Dfs123File.py">
       <SubType>Code</SubType>
     </Compile>
@@ -131,6 +134,7 @@
   <ItemGroup>
     <Folder Include="mikecore\" />
     <Folder Include="miketools\" />
+    <Folder Include="buildUtil\" />
     <Folder Include="tests\" />
   </ItemGroup>
   <ItemGroup>
