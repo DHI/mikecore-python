@@ -1713,12 +1713,12 @@ class eumWrapper:
     #/ <see cref="eumUnit.eumUUnitUndefined"/> gives the first unit in the system. 
     #/ </summary>        
     @staticmethod
-    def eumGetNextUnit(prevUnitKey: eumUnit) -> Tuple[bool, eumUnit, str]:
+    def eumGetNextUnit(prevUnitKey: int) -> Tuple[bool, int, str]:
       unitKey = ctypes.c_int32();
       lpUnitDesc = ctypes.c_char_p();
       if (0 != eumDLL.Wrapper.eumGetNextUnit(prevUnitKey, ctypes.byref(unitKey), ctypes.byref(lpUnitDesc))):
-        return True, eumUnit(unitKey.value), lpUnitDesc.value.decode("ascii");
-      return False, eumUnit.eumUUnitUndefined, "";
+        return True, unitKey.value, lpUnitDesc.value.decode("ascii");
+      return False, eumUnit.eumUUnitUndefined.value, "";
 
     #/ <summary>
     #/ Get the next unit defined in the eum-system which is equivalent 
