@@ -7,6 +7,7 @@ from enum import IntEnum
 # Predefined enums of EUM item types.
 #
 # Must be updated with every new release, or if the EUM.xml is updated
+# Run buildUtil\eumXMLProcess.py to create the lists
 class eumItem(IntEnum):
     eumIItemUndefined = 999
     eumIWaterLevel = 100000
@@ -592,10 +593,18 @@ class eumItem(IntEnum):
     eumIMassPerLengthPerTime = 110306
     eumINearBedLoadPerLength = 110307
     eumISubstancePerUnitArea = 110308
-    eumIAccNearBedLoadPerLength =  110309
+    eumIAccNearBedLoadPerLength = 110309
     eumIThermalConductivity = 110310
     eumIDirectionalVariance = 110311
     eumISpecificDissipationRate = 110312
+    eumIAngularFrequency = 110313
+    eumIStemDiameter = 110314
+    eumIVegetationDensity = 110315
+    eumIElasticModulus = 110316
+    eumIBladeWidth = 110317
+    eumIBladeThickness = 110318
+    eumIPlantDensity = 110319
+    eumIThickness = 110320
 
 # Predefined enums of EUM units.
 #
@@ -768,6 +777,7 @@ class eumUnit(IntEnum):
     eumUouncePerYardUS3 = 2219
     eumUouncePerSquareFeet = 2220
     eumUouncePerSquareFeetUS = 2221
+    eumUgramPerCubicCentimeter = 2222
     eumUKiloGramPerMeterPerSecond = 2300
     eumUPascalSecond = 2301
     eumUkilogramPerMeterPerDay = 2302
@@ -1054,6 +1064,7 @@ class eumUnit(IntEnum):
     eumUmilliBar = 6108
     eumUmicroPascal = 6109
     eumUdeciBar = 6110
+    eumUGigaPascal = 6111
     eumUdB_re_1muPa2second = 6150
     eumUdBperLambda = 6160
     eumUPSU = 6200
@@ -1122,6 +1133,7 @@ class eumUnit(IntEnum):
     eumUPerAcre = 9301
     eumUPerHectar = 9302
     eumUperKm2 = 9303
+    eumUPerSquareFeet = 9304
     eumUPerCubicMeter = 9350
     eumUCurrencyPerCubicMeter = 9351
     eumUCurrencyPerCubicFeet = 9352
@@ -1701,12 +1713,12 @@ class eumWrapper:
     #/ <see cref="eumUnit.eumUUnitUndefined"/> gives the first unit in the system. 
     #/ </summary>        
     @staticmethod
-    def eumGetNextUnit(prevUnitKey: eumUnit) -> Tuple[bool, eumUnit, str]:
+    def eumGetNextUnit(prevUnitKey: int) -> Tuple[bool, int, str]:
       unitKey = ctypes.c_int32();
       lpUnitDesc = ctypes.c_char_p();
       if (0 != eumDLL.Wrapper.eumGetNextUnit(prevUnitKey, ctypes.byref(unitKey), ctypes.byref(lpUnitDesc))):
-        return True, eumUnit(unitKey.value), lpUnitDesc.value.decode("ascii");
-      return False, eumUnit.eumUUnitUndefined, "";
+        return True, unitKey.value, lpUnitDesc.value.decode("ascii");
+      return False, eumUnit.eumUUnitUndefined.value, "";
 
     #/ <summary>
     #/ Get the next unit defined in the eum-system which is equivalent 
