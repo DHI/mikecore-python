@@ -1,0 +1,62 @@
+project:
+  type: website
+
+website:
+  title: "MIKE Core"
+  page-footer: "© 2025 DHI Group"
+  repo-url: https://github.com/DHI/mikecore-python
+  repo-actions: [edit]
+  repo-subdir: docs
+  page-navigation: true
+  
+  navbar:
+    tools:
+    - icon: github
+      menu:
+      - text: Source Code
+        url:  https://github.com/DHI/mikecore-python
+      - text: Report a Bug
+        url:  https://github.com/DHI/mikecore-python/issues
+    left:
+      - href: index.qmd
+        text: Home
+      - href: api/index.qmd
+        text: API Reference       
+
+quartodoc:
+  style: pkgdown
+  title: API Reference
+  parser: sphinx
+  dir: api
+  package: mikecore
+  options:
+    include_inherited: true
+    include_empty: true
+  renderer:
+    style: markdown
+    display_name: relative
+
+  sidebar: "_sidebar.yml"
+
+  sections:
+    - title: Dfs
+      desc: ""
+      
+      contents:
+      - DfsFile.DfsFile
+      - Dfs123File.Dfs123File
+      - DfsFactory.DfsFactory
+      - DfsFileFactory.DfsFileFactory
+    - title: Mesh
+      desc: ""
+      contents:
+      - MeshBuilder.MeshBuilder
+      - MeshFile.MeshFile
+  
+format:
+  html:
+    theme: cosmo
+    toc: true
+  ipynb: 
+    theme: cosmo
+    toc: true
