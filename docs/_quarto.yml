@@ -39,19 +39,18 @@ quartodoc:
   sidebar: "_sidebar.yml"
 
   sections:
-    - title: Dfs
-      desc: ""
-      
-      contents:
-      - DfsFile.DfsFile
-      - Dfs123File.Dfs123File
-      - DfsFactory.DfsFactory
-      - DfsFileFactory.DfsFileFactory
-    - title: Mesh
+    - title: MIKE Core
       desc: ""
       contents:
-      - MeshBuilder.MeshBuilder
-      - MeshFile.MeshFile
+      - DfsFile
+      - DfsBuilder
+      - DfsuFile
+      - DfsuBuilder
+      - MeshFile
+      - MeshBuilder
+      - Projections
+      - eum
+      - DfsDLL
   
 format:
   html:
