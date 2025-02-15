@@ -1,9 +1,11 @@
 ---
 toc: false
+format-links: falses
 ---
 
 
-# MIKE Core
+# MIKE Core for Python
+
 ![](https://badge.fury.io/py/mikecore.svg)
 
 
@@ -14,31 +16,31 @@ toc: false
 
 Using MIKE Core gives you the ability to build your own Python application using dfs files.
 
+Also available in a [**.NET/C# version**](http://docs.mikepoweredbydhi.com/core_libraries/core-libraries/)
+:::
 
+::: {.g-col-6}
+## **Associated packages**
+Most users will want to use our higher level libraries **MIKE IO** and **MIKE IO 1D**.
+
+[**MIKE IO**](https://dhi.github.io/mikeio/)
+[**MIKE IO 1D**](https://dhi.github.io/mikeio1d/)
+:::
+
+::: {.g-col-6}
 ## **It's just Python**
 
 Low level access to read, write and manipulate dfs0, dfs1, dfs2, dfs3, dfsu and mesh files. 
 
 [**API Reference**](api/index.qmd)
-
 :::
 
 ::: {.g-col-6}
-
-## **Associated packages**
-
-See our higher level libraries **MIKE IO** and **MIKE IO 1D**.
-
-[**MIKE IO**](https://dhi.github.io/mikeio/)
-[**MIKE IO 1D**](https://dhi.github.io/mikeio1d/)
-
-
 ## **Open Source**
 
-MIKE Core is licensed under BSD-3-Clause license and available on [GitHub](https://github.com/DHI/mikecore-python)
+MIKE Core is licensed under BSD-3-Clause license and is available on [GitHub](https://github.com/DHI/mikecore-python)
 
 [**License**](license.qmd)
-
 :::
 
 :::

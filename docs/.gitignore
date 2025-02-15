@@ -1,1 +1,6 @@
 /.quarto/
+/_site/
+/api/
+debug.log
+objects.json
+_sidebar.yml

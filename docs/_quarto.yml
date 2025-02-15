@@ -39,16 +39,23 @@ quartodoc:
   sidebar: "_sidebar.yml"
 
   sections:
-    - title: MIKE Core
+    - title: Modules
       desc: ""
       contents:
-      - DfsFile
-      - DfsBuilder
-      - DfsuFile
-      - DfsuBuilder
-      - MeshFile
-      - MeshBuilder
-      - Projections
+      - name: DfsFile  
+        children: separate
+      - name: DfsBuilder
+        children: separate
+      - name: DfsuFile
+        children: separate
+      - name: DfsuBuilder
+        children: separate
+      - name: MeshFile
+        children: separate
+      - name: MeshBuilder
+        children: separate
+      - name: Projections
+        children: separate
       - eum
       - DfsDLL
   
