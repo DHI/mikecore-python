@@ -474,7 +474,16 @@ class DfsuBuilder:
         #else
           # Set axis to have meter unit (not necessary, just to make file exactly equal)
         # TODO adjust size of spatial axis for spectral data {n_nodes, n_elements} * n_freq * n_dir
-        dfsItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, len(self.__connectivity), 0, 1))
+        if self.__dfsuFileType == DfsuFileType.DfsuSpectral1D:
+          size = self.__x.size
+          if self.__frequencies is not None:
+            size *= len(self.__frequencies)
+          if self.__directions is not None:
+             size *= len(self.__directions)
+
+          dfsItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, size, 0, 1)) 
+        else:
+          dfsItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, len(self.__connectivity), 0, 1))
         # Set to default ufs delete values (not used anyway, just to make file exactly equal)
         dfsItem.SetReferenceCoordinates(-1e-35, -1e-35, -1e-35)
         dfsItem.SetOrientation(-1e-35, -1e-35, -1e-35)
