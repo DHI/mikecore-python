@@ -433,10 +433,10 @@ class DfsuBuilder:
       elif self.__dfsuFileType == DfsuFileType.Dfsu3DSigmaZ:
           maxNumberOfLayers = DfsuUtil.FindMaxNumberOfLayers(DfsuUtil.FindTopLayerElements(self.__connectivity))
           dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, len(self.__connectivity), 3, maxNumberOfLayers, self.__numberOfSigmaLayers ], np.int32))
-      elif self.__dfsuFileType in (DfsuFileType.DfsuSpectral0D, DfsuFileType.DfsuSpectral1D, DfsuFileType.DfsuSpectral2D):
-         # TODO should "nlayers" be 0, 1, 2 for point, line, area?
-         nlayers = 1 
-         dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, len(self.__connectivity), nlayers, 0, len(self.__frequencies), len(self.__directions)], np.int32))
+      elif self.__dfsuFileType == DfsuFileType.DfsuSpectral1D:
+         dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, len(self.__connectivity), 1, 0, len(self.__frequencies), len(self.__directions)], np.int32))
+      elif self.__dfsuFileType == DfsuFileType.DfsuSpectral2D:
+          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, len(self.__connectivity), 2, 0, len(self.__frequencies), len(self.__directions)], np.int32))
       else:
           raise Exception()
 
@@ -473,9 +473,15 @@ class DfsuBuilder:
         #  dfsItem.SetAxis(factory.CreateAxisDummy(len(self.__connectivity)))
         #else
           # Set axis to have meter unit (not necessary, just to make file exactly equal)
-        # TODO adjust size of spatial axis for spectral data {n_nodes, n_elements} * n_freq * n_dir
         if self.__dfsuFileType == DfsuFileType.DfsuSpectral1D:
           size = self.__x.size
+          if self.__frequencies is not None:
+            size *= len(self.__frequencies)
+          if self.__directions is not None:
+             size *= len(self.__directions)
+
+        if self.__dfsuFileType == DfsuFileType.DfsuSpectral2D:
+          size = len(self.__connectivity)
           if self.__frequencies is not None:
             size *= len(self.__frequencies)
           if self.__directions is not None:
@@ -550,7 +556,6 @@ class DfsuBuilder:
       connectivityItem = dfsBuilder.AddCreateStaticItem("Connectivity", intCode, connectivityArray)
 
       # Spectral
-      
       frequencyItem =  dfsBuilder.AddCreateStaticItem("Frequency", eumQuantity(eumItem.eumIFrequency, eumUnit.eumUhertz), self.__frequencies) if self.__frequencies is not None else None
 
       # TODO unit
