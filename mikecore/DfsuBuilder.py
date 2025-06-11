@@ -473,20 +473,18 @@ class DfsuBuilder:
         #  dfsItem.SetAxis(factory.CreateAxisDummy(len(self.__connectivity)))
         #else
           # Set axis to have meter unit (not necessary, just to make file exactly equal)
-        if self.__dfsuFileType == DfsuFileType.DfsuSpectral1D:
-          size = self.__x.size
+        
+        if self.__dfsuFileType in (DfsuFileType.DfsuSpectral1D, DfsuFileType.DfsuSpectral2D): 
+          if self.__dfsuFileType == DfsuFileType.DfsuSpectral1D:
+            size = self.__x.size
+          if self.__dfsuFileType == DfsuFileType.DfsuSpectral2D:
+            size = len(self.__connectivity)
+
           if self.__frequencies is not None:
             size *= len(self.__frequencies)
           if self.__directions is not None:
              size *= len(self.__directions)
-
-        if self.__dfsuFileType == DfsuFileType.DfsuSpectral2D:
-          size = len(self.__connectivity)
-          if self.__frequencies is not None:
-            size *= len(self.__frequencies)
-          if self.__directions is not None:
-             size *= len(self.__directions)
-
+        
           dfsItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, size, 0, 1)) 
         else:
           dfsItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, len(self.__connectivity), 0, 1))
