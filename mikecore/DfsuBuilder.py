@@ -66,6 +66,10 @@ class DfsuBuilder:
       # Dynamic item information
       self.__dynamicItemData = []
 
+      # spectral
+      self.__frequencies = None
+      self.__directions = None
+
       self.__dfsuFileType = dfsuFileType
       if dfsuFileType == DfsuFileType.Dfsu2D:
           self.FileTitle = "Area Series"
@@ -112,6 +116,13 @@ class DfsuBuilder:
           self.__isSetNumberOfSigmaLayers = True
       else:
           raise Exception("dfsuFileType")
+
+    def SetFrequencies(self, frequencies):
+       self.__frequencies = frequencies
+
+    def SetDirections(self, directions):
+       self.__directions = directions
+
 
     #/ <summary>
     #/ Set a non-standard temporal axis for the dfsu file. WARNING: The dfsu file will not be valid in all contexts.
@@ -278,7 +289,7 @@ class DfsuBuilder:
         errors.append("Nodes have not been set")
       if (not self.__isSetConnectivity):
         errors.append("Elements have not been set")
-      if (not self.__isSetNumberOfSigmaLayers and self.__dfsuFileType != DfsuFileType.Dfsu2D):
+      if (not self.__isSetNumberOfSigmaLayers and self.__dfsuFileType in (DfsuFileType.Dfsu3DSigma, DfsuFileType.Dfsu3DSigmaZ, DfsuFileType.DfsuVerticalColumn, DfsuFileType.DfsuVerticalProfileSigma, DfsuFileType.DfsuVerticalProfileSigmaZ)):
         errors.append("Number of sigma layers has not been set")
 
       # Check that all nodenumbers are within the range of
@@ -326,7 +337,11 @@ class DfsuBuilder:
             minNumberOfLayers = DfsuUtil.FindMinNumberOfLayers(topLayerElements)
             if (minNumberOfLayers < self.__numberOfSigmaLayers):
               errors.append("The minimum number of layers is smaller than the number of sigma layers. Element table is invalid")
+      elif self.__dfsuFileType in (DfsuFileType.DfsuSpectral0D, DfsuFileType.DfsuSpectral1D, DfsuFileType.DfsuSpectral2D):
+         # TODO do we need to check frequency or directions?
+         pass
       else:
+          
           raise Exception("Dfsu file type {} not supported".format(self.__dfsuFileType))
 
 
@@ -384,7 +399,15 @@ class DfsuBuilder:
       factory = DfsFactory()
       dfsBuilder = DfsBuilder.Create(self.FileTitle, self.ApplicationTitle, self.ApplicationVersion)
 
-      dfsBuilder.SetDataType(2001)
+      if self.__dfsuFileType == DfsuFileType.DfsuSpectral1D:
+         dfsBuilder.SetDataType(2002)
+      elif self.__dfsuFileType == DfsuFileType.DfsuSpectral2D:
+         dfsBuilder.SetDataType(2003)        
+      else:
+        dfsBuilder.SetDataType(2001)
+
+
+
       dfsBuilder.SetGeographicalProjection(self.__dfsProjection)
       if (self.__timeAxis != None):
         dfsBuilder.SetTemporalAxis(self.__timeAxis)
@@ -410,6 +433,10 @@ class DfsuBuilder:
       elif self.__dfsuFileType == DfsuFileType.Dfsu3DSigmaZ:
           maxNumberOfLayers = DfsuUtil.FindMaxNumberOfLayers(DfsuUtil.FindTopLayerElements(self.__connectivity))
           dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, len(self.__connectivity), 3, maxNumberOfLayers, self.__numberOfSigmaLayers ], np.int32))
+      elif self.__dfsuFileType == DfsuFileType.DfsuSpectral1D:
+         dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, len(self.__connectivity), 1, 0, len(self.__frequencies), len(self.__directions)], np.int32))
+      elif self.__dfsuFileType == DfsuFileType.DfsuSpectral2D:
+          dfsBuilder.AddCreateCustomBlock("MIKE_FM",np.array([ self.__x.size, len(self.__connectivity), 2, 0, len(self.__frequencies), len(self.__directions)], np.int32))
       else:
           raise Exception()
 
@@ -446,7 +473,21 @@ class DfsuBuilder:
         #  dfsItem.SetAxis(factory.CreateAxisDummy(len(self.__connectivity)))
         #else
           # Set axis to have meter unit (not necessary, just to make file exactly equal)
-        dfsItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, len(self.__connectivity), 0, 1))
+        
+        if self.__dfsuFileType in (DfsuFileType.DfsuSpectral1D, DfsuFileType.DfsuSpectral2D): 
+          if self.__dfsuFileType == DfsuFileType.DfsuSpectral1D:
+            size = self.__x.size
+          if self.__dfsuFileType == DfsuFileType.DfsuSpectral2D:
+            size = len(self.__connectivity)
+
+          if self.__frequencies is not None:
+            size *= len(self.__frequencies)
+          if self.__directions is not None:
+             size *= len(self.__directions)
+        
+          dfsItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, size, 0, 1)) 
+        else:
+          dfsItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, len(self.__connectivity), 0, 1))
         # Set to default ufs delete values (not used anyway, just to make file exactly equal)
         dfsItem.SetReferenceCoordinates(-1e-35, -1e-35, -1e-35)
         dfsItem.SetOrientation(-1e-35, -1e-35, -1e-35)
@@ -479,6 +520,7 @@ class DfsuBuilder:
 
       intCode = eumQuantity(eumItem.eumIIntegerCode, eumUnit.eumUintCode)
       xyQuantity = eumQuantity(eumItem.eumIGeographicalCoordinate, eumUnit.eumUmeter)
+
       # TODO: reenable:
       #if (MapProjection.IsValid(self.__dfsProjection.WKTString)):
       #    if (MapProjection.IsGeographical(self.__dfsProjection.WKTString)):
@@ -511,6 +553,12 @@ class DfsuBuilder:
       # Connectivity
       connectivityItem = dfsBuilder.AddCreateStaticItem("Connectivity", intCode, connectivityArray)
 
+      # Spectral
+      frequencyItem =  dfsBuilder.AddCreateStaticItem("Frequency", eumQuantity(eumItem.eumIFrequency, eumUnit.eumUhertz), self.__frequencies) if self.__frequencies is not None else None
+
+      # TODO unit
+      directionItem = dfsBuilder.AddCreateStaticItem("Direction", eumQuantity(eumItem.eumIDirection, eumUnit.eumUradian), self.__directions)  if self.__directions is not None else None
+
       dfsFile = dfsBuilder.GetFile()
 
       dfsuFile = DfsuFile()
@@ -530,7 +578,9 @@ class DfsuBuilder:
         self.__elementIds,
         elementType,
         self.__connectivity,
-        self.__zUnit
+        self.__zUnit,
+        frequencyItem,
+        directionItem
       )
 
       return (dfsuFile)

@@ -67,6 +67,9 @@ class DfsuFile(object):
 
         self.__elmtIdItem = None;
 
+        self.__freqItem = None
+        self.__dirItem = None
+
         # Node variables
         self.NodeIds = None;
         self.X = None;
@@ -326,7 +329,9 @@ class DfsuFile(object):
       elementIds,
       elementType,
       connectivity,
-      zUnit
+      zUnit,
+      freqItem,
+      dirItem,
       ):
 
       self.dfsFile = dfsFile;
@@ -345,6 +350,8 @@ class DfsuFile(object):
       self.ElementType = elementType;
       self.ElementTable = connectivity;
       self.ZUnit = zUnit;
+      self.__freqItem = freqItem
+      self.__dirItem = dirItem
       self.__Init(dfsFile, build = True)
 
 
