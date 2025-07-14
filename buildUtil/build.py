@@ -1,8 +1,14 @@
-import zipfile
-import urllib.request
+from __future__ import annotations
+
 import shutil
-from pathlib import Path
+import urllib.request
 import xml.etree.ElementTree as ET
+import zipfile
+from pathlib import Path
+from typing import Any
+
+from hatchling.builders.hooks.plugin.interface import BuildHookInterface
+
 
 def download_nuget_package(
     package_id: str,
@@ -67,8 +73,21 @@ def read_packages_config(filepath: str | Path) -> list[tuple[str, str]]:
         for pkg in root.findall("package")
     ]
 
-if __name__ == "__main__":
+def setup():
+    """Setup function to download NuGet packages and copy native libraries into bin folder.
+    """
     packages = read_packages_config("buildUtil/packages.config")
     for name, version in packages:
         download_nuget_package(name, version, output_dir="packages")
     copy_native_libs_to_bin("packages", "mikecore/bin")
+
+
+class BuildHook(BuildHookInterface):
+    """Custom build hook to run setup during the build process."""
+    
+    def initialize(self, version: str, build_data: dict[str : Any]) -> None:
+        """Initialize the build hook."""
+        setup()
+
+if __name__ == "__main__":
+    setup()

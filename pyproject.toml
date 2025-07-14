@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.hooks.custom]
+path = "buildUtil/build.py"
+
+[tool.hatch.build.targets.sdist.force-include]
+"mikecore/bin" = "mikecore/bin"
+
+[tool.hatch.build.targets.wheel.force-include]
+"mikecore/bin" = "mikecore/bin"
+
+[project]
+name = "mikecore"
+version = "0.3.0a0"
+description = "MIKE Core contains core libraries, like DFS (Data File System), EUM and more."
+readme = "README.md"
+license = { file = "LICENSE.txt" }
+authors = [
+    { name = "DHI", email = "mike@dhigroup.com" }
+]
+requires-python = ">=3.5"
+dependencies = [
+    "numpy"
+]
+classifiers = [
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3"
+]
+
+[project.urls]
+Homepage = "https://github.com/DHI/mikecore-python"
+
+[dependency-groups]
+dev = [
+    "pytest>=6.1.2",
+]
