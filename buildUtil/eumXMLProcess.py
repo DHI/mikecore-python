@@ -12,7 +12,7 @@
 import re
 
 # Using readlines()
-eumFile = open('build/lib/mikecore/bin/windows/EUM.xml', 'r')
+eumFile = open('mikecore/bin/windows/EUM.xml', 'r')
 eumLines = eumFile.readlines()
 eumFile.close()
 
