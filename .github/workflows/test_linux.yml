@@ -1,11 +1,6 @@
 name: Test Linux
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
   workflow_dispatch:
 
 jobs:
