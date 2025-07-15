@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 from typing import Any
+import subprocess
+import platform
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
@@ -73,6 +75,15 @@ def read_packages_config(filepath: str | Path) -> list[tuple[str, str]]:
         for pkg in root.findall("package")
     ]
 
+def modify_linux_so_rpath(bin_folder: str | Path):
+    patchelf_path = shutil.which("patchelf")
+    for so in Path(bin_folder).glob("*.so*"):
+        print(f"Setting RUNPATH for {so} to '$ORIGIN'")
+        subprocess.run(
+            [patchelf_path, "--set-rpath", "$ORIGIN", str(so.absolute())],
+            check=True,
+        )
+
 def setup():
     """Setup function to download NuGet packages and copy native libraries into bin folder.
     """
@@ -80,6 +91,9 @@ def setup():
     for name, version in packages:
         download_nuget_package(name, version, output_dir="packages")
     copy_native_libs_to_bin("packages", "mikecore/bin")
+
+    if platform.system().lower() == "linux":
+        modify_linux_so_rpath("mikecore/bin/linux")
 
 
 class BuildHook(BuildHookInterface):

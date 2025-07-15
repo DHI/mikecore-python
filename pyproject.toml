@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "patchelf"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.hooks.custom]
