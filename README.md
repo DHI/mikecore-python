@@ -16,6 +16,33 @@ This library is the foundation for [MIKE IO](https://github.com/DHI/mikeio).
 ## Installation
 
 ```pip install mikecore```
-```
+
+## Development
+
+All commands are run from the project root.
+
+1.  **Sync & Build**
+    ```bash
+    uv sync
+    # Use 'uv sync --reinstall' to force-rebuild native components.
+    ```
+
+2.  **Update EUM Types** (for new release, or whenever EUM.xml changes)
+    ```bash
+    # Generate definitions from the new native build
+    uv run ./buildUtil/eumXMLProcess.py > eumItemUnit.txt
+
+    # Use a diff tool to merge changes into mikecore/eum.py.
+    ```
+
+3.  **Run Tests**
+    ```bash
+    uv run pytest
+    ```
+
+4.  **Build Packages** (Optional)
+    ```bash
+    uv build
+    ```
 
 

@@ -90,3 +90,4 @@ bin
 x64
 /tmp/
 /TestResults
+uv.lock
