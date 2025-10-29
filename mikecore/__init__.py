@@ -2,7 +2,7 @@ import os
 import platform
 from pathlib import Path
 
-__version__ = "0.3.0a0"
+__version__ = "0.3.0"
 
 p = platform.architecture()
 if not "64" in p[0]:
@@ -34,4 +34,3 @@ eumDLL.libfilepath = mikebin
 eumDLL.Init()
 MzCartDLL.Init(mikebin)
 DfsDLL.Init(mikebin)
-
