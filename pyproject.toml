@@ -13,7 +13,7 @@ path = "buildUtil/build.py"
 
 [project]
 name = "mikecore"
-version = "0.3.0a0"
+version = "0.3.0"
 description = "MIKE Core contains core libraries, like DFS (Data File System), EUM and more."
 readme = "README.md"
 license = { file = "LICENSE.txt" }
