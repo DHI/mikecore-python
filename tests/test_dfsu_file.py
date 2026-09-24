@@ -186,6 +186,147 @@ class DfsuFileTests(unittest.TestCase):
 
     #endregion
 
+    #region Submesh files
+
+    # From version 2027, the "MIKE_FM" custom block of a dfsu 2001 file may
+    # have 6 values (previously 4 or 5), the 6th being the submesh type
+    # (1 = local refinement submesh, 0 otherwise):
+    #
+    #   [NumberOfNodes, NumberOfElements, Dimension, NumberOfLayers, NumberOfSigmaLayers, SubMesh]
+    #
+    # Data types 2002, 2003 and 2004 have always had 6 values, with their own
+    # layouts, and are unaffected. The problem is that a 6 value custom block
+    # in a 2001 file was taken to mean a legacy spectral (rose-plot) file:
+    #
+    #   [NumberOfNodes, NumberOfElements, Dimension, NumberOfLayers, NumberOfFrequencies, NumberOfDirections]
+    #
+    # See the DFSU file specification, section 4.3 "Custom Block", and
+    # https://github.com/DHI/mikecore-python/issues/54
+    #
+    # Test files in testdata/submesh, all data type 2001, named by dfsu file
+    # type, number of custom block values and submesh type:
+    #
+    #   File                                              MIKE_FM custom block
+    #   Dfsu2D_CustomBlock5.dfsu                          [  9,   4, 2, 0,  0]
+    #   Dfsu2D_CustomBlock6_Submesh0.dfsu                 [  9,   4, 2, 0,  0,  0]
+    #   Dfsu2D_CustomBlock6_Submesh1_LocallyRefined.dfsu  [ 31,  40, 2, 0,  0,  1]
+    #   Dfsu3DSigmaZ_CustomBlock5.dfsu                    [ 30,   8, 3, 3,  1]
+    #   Dfsu3DSigmaZ_CustomBlock6_Submesh0.dfsu           [ 30,   8, 3, 3,  1,  0]
+    #   DfsuSpectral0D_CustomBlock6_Legacy.dfsu           [416, 400, 2, 0, 25, 16]
+    #
+    # The CustomBlock5 and CustomBlock6_Submesh0 files of each pair hold the
+    # same mesh and data, and differ only in the custom block. The Legacy
+    # spectral file is a rose-plot file with 25 frequencies and 16 directions
+    # (25*16 = 400 elements), which must still read as spectral.
+
+    #/ <summary>
+    #/ Reading a 2D dfsu file with submesh type 0. It must read the
+    #/ same as the old format file with a 5 value custom block.
+    #/ </summary>
+    def test_Read2DSubmesh0Test(self):
+      self.SubmeshCustomBlockTester("testdata/submesh/Dfsu2D_CustomBlock5.dfsu", [9, 4, 2, 0, 0]);
+      self.SubmeshCustomBlockTester("testdata/submesh/Dfsu2D_CustomBlock6_Submesh0.dfsu", [9, 4, 2, 0, 0, 0]);
+
+      oldFile = DfsuFile.Open("testdata/submesh/Dfsu2D_CustomBlock5.dfsu");
+      newFile = DfsuFile.Open("testdata/submesh/Dfsu2D_CustomBlock6_Submesh0.dfsu");
+
+      Assert.AreEqual(DfsuFileType.Dfsu2D, newFile.DfsuFileType);
+      Assert.AreEqual(oldFile.NumberOfNodes, newFile.NumberOfNodes);
+      Assert.AreEqual(oldFile.NumberOfElements, newFile.NumberOfElements);
+      Assert.AreEqual(oldFile.NumberOfFrequencies, newFile.NumberOfFrequencies);
+      Assert.AreEqual(oldFile.NumberOfDirections, newFile.NumberOfDirections);
+      assert_array_equal(oldFile.ReadItemTimeStep(1, 0).Data, newFile.ReadItemTimeStep(1, 0).Data);
+
+      oldFile.Close();
+      newFile.Close();
+
+    #/ <summary>
+    #/ Reading a 3D sigma-z dfsu file with submesh type 0. It must read the
+    #/ same as the old format file with a 5 value custom block.
+    #/ </summary>
+    def test_Read3DSubmesh0Test(self):
+      self.SubmeshCustomBlockTester("testdata/submesh/Dfsu3DSigmaZ_CustomBlock5.dfsu", [30, 8, 3, 3, 1]);
+      self.SubmeshCustomBlockTester("testdata/submesh/Dfsu3DSigmaZ_CustomBlock6_Submesh0.dfsu", [30, 8, 3, 3, 1, 0]);
+
+      oldFile = DfsuFile.Open("testdata/submesh/Dfsu3DSigmaZ_CustomBlock5.dfsu");
+      newFile = DfsuFile.Open("testdata/submesh/Dfsu3DSigmaZ_CustomBlock6_Submesh0.dfsu");
+
+      Assert.AreEqual(DfsuFileType.Dfsu3DSigmaZ, newFile.DfsuFileType);
+      Assert.AreEqual(oldFile.NumberOfNodes, newFile.NumberOfNodes);
+      Assert.AreEqual(oldFile.NumberOfElements, newFile.NumberOfElements);
+      Assert.AreEqual(oldFile.NumberOfLayers, newFile.NumberOfLayers);
+      Assert.AreEqual(oldFile.NumberOfSigmaLayers, newFile.NumberOfSigmaLayers);
+      Assert.AreEqual(oldFile.NumberOfFrequencies, newFile.NumberOfFrequencies);
+      Assert.AreEqual(oldFile.NumberOfDirections, newFile.NumberOfDirections);
+      assert_array_equal(oldFile.ReadItemTimeStep(1, 0).Data, newFile.ReadItemTimeStep(1, 0).Data);
+
+      oldFile.Close();
+      newFile.Close();
+
+    #/ <summary>
+    #/ Reading a locally refined 2D dfsu file, submesh type 1.
+    #/ </summary>
+    # TODO: This test is limited in scope to backwards compatibility: a file
+    # with submesh type 1 must open and read as an ordinary 2D mesh. It does
+    # not test full support of submesh files. The expected values come from
+    # the file's own custom block, not from an independent reference.
+    def test_Read2DSubmesh1LocallyRefinedTest(self):
+      self.SubmeshCustomBlockTester("testdata/submesh/Dfsu2D_CustomBlock6_Submesh1_LocallyRefined.dfsu", [31, 40, 2, 0, 0, 1]);
+
+      dfsFile = DfsuFile.Open("testdata/submesh/Dfsu2D_CustomBlock6_Submesh1_LocallyRefined.dfsu");
+
+      Assert.AreEqual(DfsuFileType.Dfsu2D, dfsFile.DfsuFileType);
+      Assert.AreEqual(31, dfsFile.NumberOfNodes);
+      Assert.AreEqual(40, dfsFile.NumberOfElements);
+      Assert.AreEqual(0, dfsFile.NumberOfFrequencies);
+      Assert.AreEqual(0, dfsFile.NumberOfDirections);
+      Assert.AreEqual(40, dfsFile.ReadItemTimeStep(1, 0).Data.size);
+
+      dfsFile.Close();
+
+    #/ <summary>
+    #/ Reading a legacy spectral (rose-plot) 2001 dfsu file, whose 6 value
+    #/ custom block holds the number of frequencies and directions, not a
+    #/ submesh type. It must not be mistaken for a submesh file.
+    #/ </summary>
+    def test_ReadLegacySpectral0DTest(self):
+      self.SubmeshCustomBlockTester("testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu", [416, 400, 2, 0, 25, 16]);
+
+      dfsFile = DfsuFile.Open("testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu");
+
+      Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType);
+      Assert.AreEqual(416, dfsFile.NumberOfNodes);
+      Assert.AreEqual(400, dfsFile.NumberOfElements);
+      Assert.AreEqual(25, dfsFile.NumberOfFrequencies);
+      Assert.AreEqual(16, dfsFile.NumberOfDirections);
+      Assert.AreEqual(25, len(dfsFile.Frequencies));
+      Assert.AreEqual(16, len(dfsFile.Directions));
+      Assert.AreEqual(400, dfsFile.ReadItemTimeStep(1, 0).Data.size);
+
+      dfsFile.Close();
+
+    #/ <summary>
+    #/ Checks the "MIKE_FM" custom block of a data type 2001 file. Opened as a
+    #/ generic dfs file, so it does not depend on how DfsuFile interprets it.
+    #/ </summary>
+    def SubmeshCustomBlockTester(self, filename, expectedValues):
+      dfsFile = DfsFileFactory.DfsGenericOpen(filename);
+      fileInfo = dfsFile.FileInfo;
+
+      Assert.AreEqual(2001, fileInfo.DataType);
+      Assert.AreEqual(1, len(fileInfo.CustomBlocks));
+
+      customBlock = fileInfo.CustomBlocks[0];
+      Assert.AreEqual(DfsSimpleType.Int, customBlock.SimpleType);
+      Assert.AreEqual("MIKE_FM", customBlock.Name);
+      Assert.AreEqual(len(expectedValues), customBlock.Count);
+      for i in range(customBlock.Count):
+        Assert.AreEqual(expectedValues[i], customBlock[i]);
+
+      dfsFile.Close();
+
+    #endregion
+
     def CreateDfsu3DFromSource(self, sourcefilename, filename):
       source = DfsuFile.Open(sourcefilename);
 
