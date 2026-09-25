@@ -1,0 +1,37 @@
+name: Build package
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Builds a single py3-none-any wheel bundling both Windows and Linux binaries.
+    # Must run on Linux: the build hook only patches the .so RPATHs there.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install libnsl2
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnsl2
+
+      - name: Build package
+        run: uv build
+
+      - name: Run tests
+        run: |
+          uv sync
+          uv run pytest
+
+      - name: Upload python package
+        uses: actions/upload-artifact@v4
+        with:
+          name: mikecore
+          path: dist
