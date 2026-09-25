@@ -2,8 +2,11 @@ name: Build package
 
 on:
   release:
-    types: [created]
+    types: [published]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -25,7 +28,7 @@ jobs:
           sudo apt-get install -y libnsl2
 
       - name: Build package
-        run: uv build
+        run: uv build --wheel
 
       # Run from a copy of tests/ outside the repo so pytest imports the built
       # wheel rather than the source tree.
@@ -43,3 +46,19 @@ jobs:
         with:
           name: mikecore
           path: dist
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mikecore
+          path: dist
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
