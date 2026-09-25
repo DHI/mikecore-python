@@ -1,0 +1,62 @@
+# Runs the MIKE IO test suite against this version of mikecore.
+# Manually triggered only, so it never blocks pull requests.
+
+name: Test downstream MIKE IO
+
+on:
+  workflow_dispatch:
+    inputs:
+      mikeio-ref:
+        description: "MIKE IO branch, tag or commit to test against"
+        default: "main"
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.12", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: mikecore
+
+      - uses: actions/checkout@v4
+        with:
+          repository: DHI/mikeio
+          ref: ${{ inputs.mikeio-ref }}
+          path: mikeio
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install libnsl2 (Linux only)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnsl2
+
+      - name: Install MIKE IO
+        working-directory: mikeio
+        run: uv sync --group test --no-dev
+
+      - name: Replace mikecore with this checkout
+        working-directory: mikeio
+        run: |
+          uv pip install --reinstall-package mikecore ../mikecore
+          uv run --no-sync python -c "import mikecore; print('mikecore', mikecore.__version__, mikecore.__file__)"
+
+      # --no-sync keeps uv from reinstalling mikecore from MIKE IO's lockfile
+      - name: Run MIKE IO tests
+        working-directory: mikeio
+        run: uv run --no-sync pytest
