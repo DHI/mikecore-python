@@ -16,6 +16,8 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.7.21"
 
       - name: Install libnsl2
         run: |
@@ -25,10 +27,16 @@ jobs:
       - name: Build package
         run: uv build
 
-      - name: Run tests
+      # Run from a copy of tests/ outside the repo so pytest imports the built
+      # wheel rather than the source tree.
+      - name: Test built wheel
         run: |
-          uv sync
-          uv run pytest
+          uv venv "$RUNNER_TEMP/venv"
+          uv pip install -p "$RUNNER_TEMP/venv" dist/*.whl pytest
+          mkdir "$RUNNER_TEMP/wheeltest"
+          cp -r tests testdata "$RUNNER_TEMP/wheeltest/"
+          cd "$RUNNER_TEMP/wheeltest"
+          "$RUNNER_TEMP/venv/bin/python" -m pytest
 
       - name: Upload python package
         uses: actions/upload-artifact@v4
