@@ -116,23 +116,35 @@ class DfsuFile(object):
 
       dimensions = customBlock[2];
       self.NumberOfLayers = customBlock[3];
-      if (customBlock.Count == 5):
-        self.NumberOfSigmaLayers = customBlock[4];
-      else:
+      if (self.FileInfo.DataType in (2002, 2003)):
         self.NumberOfSigmaLayers = self.NumberOfLayers;
-
-      if (self.FileInfo.DataType in (2002, 2003) or (self.FileInfo.DataType == 2001 and (customBlock.Count == 6))):
         self.NumberOfFrequencies = customBlock[4];
         self.NumberOfDirections = customBlock[5];
       else:
+        if (customBlock.Count >= 5):
+          self.NumberOfSigmaLayers = customBlock[4];
+        else:
+          self.NumberOfSigmaLayers = self.NumberOfLayers;
         self.NumberOfFrequencies = 0;
         self.NumberOfDirections = 0;
+
+      # A 6 value custom block in a 2001 file is either a legacy spectral
+      # file, [..., NumberOfFrequencies, NumberOfDirections], or, from
+      # version 2027, [..., NumberOfSigmaLayers, SubMesh]. Legacy spectral
+      # files are identified by their frequency and direction static items.
+      if (self.FileInfo.DataType == 2001 and customBlock.Count == 6):
+        legacyFrequencies = customBlock[4];
+        legacyDirections = customBlock[5];
+      else:
+        legacyFrequencies = 0;
+        legacyDirections = 0;
 
       # Figuring out dfsu file type from custom block MIKE_FM
       if (dimensions == 1):
         if (self.NumberOfLayers > 0):
           self.DfsuFileType = DfsuFileType.DfsuVerticalColumn;
-        elif (self.FileInfo.DataType == 2001 and (self.NumberOfFrequencies == numberOfElmts or self.NumberOfDirections == numberOfElmts)):
+        elif ((legacyFrequencies == numberOfElmts or legacyDirections == numberOfElmts)
+              and self.__HasSpectralStaticItems(legacyFrequencies, legacyDirections, build)):
           # Spectral Frequency-Direction (Rose-plot) geometry
           self.DfsuFileType = DfsuFileType.DfsuSpectral0D;
         elif (self.FileInfo.DataType == 2002 and self.IsSpectral):
@@ -142,7 +154,8 @@ class DfsuFile(object):
           self.DfsuFileType = DfsuFileType.Dfsu1D;
 
       elif (dimensions == 2):
-        if (self.FileInfo.DataType == 2001 and (self.NumberOfFrequencies*self.NumberOfDirections == numberOfElmts)):
+        if (legacyFrequencies*legacyDirections == numberOfElmts
+            and self.__HasSpectralStaticItems(legacyFrequencies, legacyDirections, build)):
           # Spectral Frequency-Direction (Rose-plot) geometry
           self.DfsuFileType = DfsuFileType.DfsuSpectral0D;
         elif self.FileInfo.DataType == 2003:
@@ -160,6 +173,11 @@ class DfsuFile(object):
         else:
           self.DfsuFileType = DfsuFileType.Dfsu3DSigmaZ;
 
+      if (self.DfsuFileType == DfsuFileType.DfsuSpectral0D):
+        self.NumberOfSigmaLayers = self.NumberOfLayers;
+        self.NumberOfFrequencies = legacyFrequencies;
+        self.NumberOfDirections = legacyDirections;
+
 
       # Do not read static items when building, they are already set
       if (not build):
@@ -176,7 +194,9 @@ class DfsuFile(object):
           # "Frequency"     , double
           # "Direction"     , double
 
-          self.__nodeIdItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__nodeIdItem);
+          # Read by number, the file pointer may have been moved by
+          # __HasSpectralStaticItems
+          self.__nodeIdItem = self.dfsFile.ReadStaticItem(1); CheckForNull(self.__nodeIdItem);
           self.NodeIds = self.__nodeIdItem.Data
 
           # X can be in doubles or in floats. Floats are converted to doubles
@@ -249,6 +269,40 @@ class DfsuFile(object):
          if (self.dfsFile.FileMode == DfsFileMode.Append):
             self.dfsFile.FindTimeStep(self.NumberOfTimeSteps);
 
+
+    # Frequency and direction static items, as written by MIKE and by DfsuBuilder
+    __frequencyItemTypes = (eumItem.eumIWaveFrequency, eumItem.eumIFrequency)
+    __directionItemTypes = (eumItem.eumIWaveDirection, eumItem.eumIDirection)
+
+    def __HasSpectralStaticItems(self, numberOfFrequencies, numberOfDirections, build):
+      """
+      Check if a 2001 file with a 6 value custom block is a spectral file:
+      static item 10 (and 11) must be the frequency and/or direction items,
+      matching the number of frequencies and directions in the custom block.
+      Units are not checked, directions may be in degrees or radians.
+      """
+      if (numberOfFrequencies <= 0 and numberOfDirections <= 0):
+        return False
+
+      if (build):
+        return ((numberOfFrequencies > 0) == (self.__freqItem is not None)
+            and (numberOfDirections > 0) == (self.__dirItem is not None))
+
+      itemNumber = 10
+      if (numberOfFrequencies > 0):
+        item = self.dfsFile.ReadStaticItem(itemNumber)
+        if (item is None
+            or item.Quantity.Item not in self.__frequencyItemTypes
+            or item.ElementCount != numberOfFrequencies):
+          return False
+        itemNumber += 1
+      if (numberOfDirections > 0):
+        item = self.dfsFile.ReadStaticItem(itemNumber)
+        if (item is None
+            or item.Quantity.Item not in self.__directionItemTypes
+            or item.ElementCount != numberOfDirections):
+          return False
+      return True
 
     def Dispose(self):
       """
