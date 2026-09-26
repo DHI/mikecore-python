@@ -242,7 +242,13 @@ class MeshFile:
             self.NodeIds = np.zeros(noNodes, dtype=np.int32)
             self.X = np.zeros(noNodes, dtype=np.float64)
             self.Y = np.zeros(noNodes, dtype=np.float64)
-            self.Z = np.zeros(noNodes, dtype=np.float64) # TODO or np.float32 ?
+            # float64 is correct here, and deliberate. A .mesh stores coordinates
+            # as text, so the file imposes no width and can carry more precision
+            # than float32 holds. MeshBuilder.SetNodes narrows Z to float32
+            # because that is the path towards a dfsu, where node Z occupies four
+            # bytes; reading a file is not that path. Narrowing here would
+            # silently drop digits the file actually contains.
+            self.Z = np.zeros(noNodes, dtype=np.float64)
             self.Code = np.zeros(noNodes, dtype=np.int32)
 
             # Read nodes
@@ -275,10 +281,10 @@ class MeshFile:
             except Exception as ex:            
                 raise Exception("Can not load mesh file (failed reading element header line): {0}. {1}".format(filename, ex))
             
-            # Element code must be 21 or 25 (21 for triangular meshes, 25 for mixed meshes)
-            if (elmtCode != 21) or (elmtCode != 25):
-                pass # TODO?? Do we care?
-            
+            # elmtCode is the element code from the header: 21 for a triangular
+            # mesh, 25 for a mixed one. It is read but not acted on; ElementType
+            # is derived per element from the corner count below.
+
             # Allocate memory for elements
             self.ElementIds = np.zeros(noElements, dtype=np.int32)
             self.ElementType = np.zeros(noElements, dtype=np.int32)
