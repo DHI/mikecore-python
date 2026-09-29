@@ -110,7 +110,7 @@ class Test_dfs_static_item(unittest.TestCase):
         axis = staticItem.SpatialAxis;
         assert SpaceAxisType.EqD1 == axis.AxisType
         assert 1 == axis.Dimension
-        # TODO: Assert.AreEqual(eumUnit.eumUmeter, axis.AxisUnit
+        assert eumUnit.eumUmeter == axis.AxisUnit
         assert 3 * 3636 == axis.XCount
         assert 0 == axis.X0
         assert 1 == axis.Dx

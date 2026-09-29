@@ -401,7 +401,8 @@ class FileOresundHDDfsu:
       axis = staticItem.SpatialAxis;
       Assert.IsNotNull(axis);
       Assert.AreEqual(1, axis.Dimension);
-      # TODO: Assert.AreEqual(eumUnit.eumUmeter, axis.AxisUnit);
+      # Only called on built files; engine-written files use eumUmeter here.
+      Assert.AreEqual(eumUnit.eumUUnitUndefined, axis.AxisUnit);
       Assert.AreEqual(2057, axis.XCount);
       Assert.AreEqual(0, axis.X0);
       Assert.AreEqual(1, axis.Dx);
@@ -466,7 +467,7 @@ class FileOresundHDDfsu:
       axis = staticItem.SpatialAxis;
       Assert.IsNotNull(axis);
       Assert.AreEqual(1, axis.Dimension);
-      # TODO: Assert.AreEqual(eumUnit.eumUmeter, axis.AxisUnit);
+      Assert.AreEqual(eumUnit.eumUUnitUndefined, axis.AxisUnit);
       Assert.AreEqual(3 * 3636, axis.XCount);
       Assert.AreEqual(0, axis.X0);
       Assert.AreEqual(1, axis.Dx);
@@ -803,12 +804,10 @@ class FileOdenseHD2DDfsu:
       for j in range(13):
         for i in range(3):
           itemData = itemDatas[i];
-          # TODO: Implement?
-          #dfsFile.ReadItemTimeStep(itemData, j);
-          itemData = dfsFile.ReadItemTimeStep(i+1, j);
-          itemDatas[i] = itemData;
+          Assert.IsTrue(itemData is dfsFile.ReadItemTimeStep(itemData, j));
           Assert.AreEqual(i + 1, itemData.ItemNumber);
           Assert.AreEqual(j * 86400, itemData.Time);
+          Assert.AreEqual(j, itemData.TimeStepIndex);
       
       Assert.AreEqual(np.float32(0.22424224), itemDatas[0].Data[0]);
       Assert.AreEqual(np.float32(-0.0129399123), itemDatas[1].Data[0]);
