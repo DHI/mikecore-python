@@ -183,9 +183,7 @@ class DfsuFile(object):
           # "Frequency"     , double
           # "Direction"     , double
 
-          # Read by number, the file pointer may have been moved by
-          # __HasSpectralStaticItems
-          self.__nodeIdItem = self.dfsFile.ReadStaticItem(1); CheckForNull(self.__nodeIdItem);
+          self.__nodeIdItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__nodeIdItem);
           self.NodeIds = self.__nodeIdItem.Data
 
           # X can be in doubles or in floats. Floats are converted to doubles
@@ -259,39 +257,45 @@ class DfsuFile(object):
             self.dfsFile.FindTimeStep(self.NumberOfTimeSteps);
 
 
-    # Frequency and direction static items, as written by MIKE and by DfsuBuilder
-    __frequencyItemTypes = (eumItem.eumIWaveFrequency, eumItem.eumIFrequency)
-    __directionItemTypes = (eumItem.eumIWaveDirection, eumItem.eumIDirection)
-
     def __HasSpectralStaticItems(self, numberOfFrequencies, numberOfDirections, build):
       """
       Check if a 2001 file with a 6 value custom block is a spectral file:
       static item 10 (and 11) must be the frequency and/or direction items,
       matching the number of frequencies and directions in the custom block.
       Units are not checked, directions may be in degrees or radians.
+      The file pointer of the dfs file is restored before returning.
       """
       if (numberOfFrequencies <= 0 and numberOfDirections <= 0):
-        return False
+        return False;
 
+      # When building, static items are not read from file, they are already set
       if (build):
-        return ((numberOfFrequencies > 0) == (self.__freqItem is not None)
-            and (numberOfDirections > 0) == (self.__dirItem is not None))
+        return ((numberOfFrequencies > 0) == (self.__freqItem is not None) and (numberOfDirections > 0) == (self.__dirItem is not None));
 
-      itemNumber = 10
-      if (numberOfFrequencies > 0):
-        item = self.dfsFile.ReadStaticItem(itemNumber)
-        if (item is None
-            or item.Quantity.Item not in self.__frequencyItemTypes
-            or item.ElementCount != numberOfFrequencies):
-          return False
-        itemNumber += 1
-      if (numberOfDirections > 0):
-        item = self.dfsFile.ReadStaticItem(itemNumber)
-        if (item is None
-            or item.Quantity.Item not in self.__directionItemTypes
-            or item.ElementCount != numberOfDirections):
-          return False
-      return True
+      fpState = self.dfsFile.fpState;
+      fpItemNumber = self.dfsFile.fpItemNumber;
+      fpTimeStepIndex = self.dfsFile.fpTimeStepIndex;
+
+      try:
+        # Frequency and direction static items, as written by MIKE and by DfsuBuilder
+        itemNumber = 10;
+        if (numberOfFrequencies > 0):
+          frequency = self.dfsFile.ReadStaticItem(itemNumber);
+          if (frequency is None or frequency.Quantity.Item not in (eumItem.eumIWaveFrequency, eumItem.eumIFrequency) or frequency.ElementCount != numberOfFrequencies):
+            return False;
+          itemNumber += 1;
+        if (numberOfDirections > 0):
+          direction = self.dfsFile.ReadStaticItem(itemNumber);
+          if (direction is None or direction.Quantity.Item not in (eumItem.eumIWaveDirection, eumItem.eumIDirection) or direction.ElementCount != numberOfDirections):
+            return False;
+        return True;
+      finally:
+        # Move the file pointer back to where it was
+        if (fpState == DfsFilePointerState.StaticItem):
+          self.dfsFile.FindStaticItem(fpItemNumber);
+        else:
+          self.dfsFile.FindItem(fpItemNumber, fpTimeStepIndex);
+        self.dfsFile.fpTimeStepIndex = fpTimeStepIndex;
 
     def Dispose(self):
       """

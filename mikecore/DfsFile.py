@@ -1142,6 +1142,23 @@ class DfsFile:
         self.__CheckIfOpen()
         self.__FpFindTimeStep(timestepIndex)
 
+    def FindStaticItem(self, staticItemNo):
+        """
+        Positions the file pointer at the location in the file where the
+        specified static item starts, such that the next call to
+        `ReadStaticItemNext` returns that static item.
+        :param staticItemNo: Number of static item to find (1-based)
+        """
+        self.__CheckIfOpen()
+        if (self.fpState == DfsFilePointerState.CreatingItems):
+            raise Exception("Can not find static items when file is being created.")
+
+        if (self.fpState != DfsFilePointerState.StaticItem or self.fpItemNumber != staticItemNo):
+            DfsDLL.Wrapper.dfsFindItemStatic(self.headPointer, self.filePointer, staticItemNo)
+            self.fpState = DfsFilePointerState.StaticItem
+            self.fpItemNumber = staticItemNo
+            self.fpTimeStepIndex = -1
+
     def Flush(self):
         """
         Flush cached data to the file. This will especially update the header information, 
