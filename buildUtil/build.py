@@ -75,14 +75,30 @@ def read_packages_config(filepath: str | Path) -> list[tuple[str, str]]:
         for pkg in root.findall("package")
     ]
 
-def modify_linux_so_rpath(bin_folder: str | Path):
+LINUX_LIB_TAG = "-mikecore"
+
+
+def isolate_linux_libs(bin_folder: str | Path):
+    """Keep the bundled libraries from colliding with same-named ones from a
+    MIKE installation (issue #45), for example libeum.so -> libeum-mikecore.so:
+
+    - Unique file names, SONAMEs and NEEDED entries, so the loader never
+      shares a library with an engine that loaded its own copy by name.
+    - DT_RPATH $ORIGIN instead of DT_RUNPATH, so dependencies resolve to this
+      folder before LD_LIBRARY_PATH.
+    """
     patchelf_path = shutil.which("patchelf")
-    for so in Path(bin_folder).glob("*.so*"):
-        print(f"Setting RUNPATH for {so} to '$ORIGIN'")
-        subprocess.run(
-            [patchelf_path, "--set-rpath", "$ORIGIN", str(so.absolute())],
-            check=True,
-        )
+    libs = [so for so in Path(bin_folder).glob("*.so*") if LINUX_LIB_TAG not in so.name]
+    # libintlc.so.5 -> libintlc-mikecore.so.5
+    renames = {so.name: so.name.replace(".so", LINUX_LIB_TAG + ".so", 1) for so in libs}
+    for so in libs:
+        new_name = renames[so.name]
+        print(f"Isolating {so.name} as {new_name}")
+        args = [patchelf_path, "--force-rpath", "--set-rpath", "$ORIGIN", "--set-soname", new_name]
+        for old, new in renames.items():
+            args += ["--replace-needed", old, new]
+        subprocess.run(args + [str(so.absolute())], check=True)
+        so.replace(so.with_name(new_name))
 
 def setup():
     """Setup function to download NuGet packages and copy native libraries into bin folder.
@@ -93,7 +109,7 @@ def setup():
     copy_native_libs_to_bin("packages", "mikecore/bin")
 
     if platform.system().lower() == "linux":
-        modify_linux_so_rpath("mikecore/bin/linux")
+        isolate_linux_libs("mikecore/bin/linux")
 
 
 class BuildHook(BuildHookInterface):

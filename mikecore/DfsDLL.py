@@ -42,6 +42,7 @@ class DfsDLL:
     # Static variables
     Wrapper = None
     MCCUWrapper = None
+    libfilename = "libufs-mikecore.so"
 
     @staticmethod
     def Init(libfilepath=None):
@@ -57,7 +58,7 @@ class DfsDLL:
             if os.name == "nt":
                 DfsDLL.Wrapper = ctypes.CDLL(os.path.join(DfsDLL.libfilepath, "ufs.dll"))
             else:
-                DfsDLL.Wrapper = ctypes.CDLL(os.path.join(DfsDLL.libfilepath, "libufs.so"))
+                DfsDLL.Wrapper = ctypes.CDLL(os.path.join(DfsDLL.libfilepath, DfsDLL.libfilename))
             DfsDLL.Wrapper.dfsInitSystem()
 
             DfsDLL.Wrapper.dfsGetAppTitle.argtypes = [ctypes.c_void_p]

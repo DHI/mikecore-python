@@ -22,6 +22,7 @@ class MzCartDLL():
 
     # Static variables
     Wrapper = None
+    libfilename = "libMzCart-mikecore.so"
 
     _cartCreateCount = 0;
     _cartDestroyCount = 0;
@@ -44,7 +45,7 @@ class MzCartDLL():
             if os.name == "nt":
                 MzCartDLL.Wrapper = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, "MzCart.dll"))
             else:
-                MzCartDLL.Wrapper = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, "libMzCart.so"))
+                MzCartDLL.Wrapper = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, MzCartDLL.libfilename))
                 libfilepathe = MzCartDLL.libfilepath+"/";
                 libfilepatheP = ctypes.c_char_p(libfilepathe.encode("ascii"))
                 MzCartDLL.Wrapper.CARTSETUPLINUX(libfilepatheP, libfilepatheP);

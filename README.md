@@ -17,6 +17,15 @@ This library is the foundation for [MIKE IO](https://github.com/DHI/mikeio).
 
 ```pip install mikecore```
 
+### Using a MIKE installation's libraries
+
+mikecore uses its own bundled MIKE Core libraries, even when MIKE is installed.
+To use an installation's libraries instead, for example to share them with a
+MIKE engine in the same Python process, set `MIKECORE_PYTHON_BIN` to the
+installation's `bin` folder before importing mikecore. This is at your own risk:
+mikecore is only tested with its bundled libraries, although the MIKE Core API is
+generally stable across releases.
+
 ## Development
 
 All commands are run from the project root.
