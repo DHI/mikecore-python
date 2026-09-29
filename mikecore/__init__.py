@@ -1,27 +1,26 @@
+import contextlib
 import os
 import platform
+import sys
 from pathlib import Path
+
+from mikecore._native import installation_bin, load_linux_lib
 
 __version__ = "0.3.0a1"
 
-p = platform.architecture()
-if not "64" in p[0]:
-    raise Exception("This library is 64 bit only!!!! Please use 64 bit Python")
+if platform.machine().lower() not in ("x86_64", "amd64") or sys.maxsize <= 2**32:
+    raise Exception("This library requires 64 bit Python on an x86-64 CPU")
+
+if installation_bin and platform.system() != "Linux":
+    raise Exception("MIKECORE_BIN is only supported on Linux")
 
 if platform.system() == "Windows":
     mikebin = str(Path(__file__).parent / "bin/windows")
-    os.environ["PATH"] = mikebin + ";" + os.environ["PATH"]
 elif platform.system() == "Linux":
-    mikebin = str(Path(__file__).parent / "bin/linux")
+    # MIKECORE_BIN opts into a MIKE installation's libraries (see README)
+    mikebin = os.path.abspath(installation_bin) if installation_bin else str(Path(__file__).parent / "bin/linux")
 else:
     raise Exception("Unsupported platform: " + platform.system())
-
-if "LD_LIBRARY_PATH" in os.environ:
-    ld_library_path = os.environ["LD_LIBRARY_PATH"]
-    if mikebin not in ld_library_path:
-        os.environ["LD_LIBRARY_PATH"] += ":" + mikebin
-else:
-    os.environ["LD_LIBRARY_PATH"] = mikebin
 
 from mikecore.DfsDLL import DfsDLL
 from mikecore.eum import eumDLL
@@ -31,7 +30,16 @@ from mikecore.Projections import MzCartDLL
 DfsDLL.libfilepath = mikebin
 eumDLL.libfilepath = mikebin
 
-eumDLL.Init()
-MzCartDLL.Init(mikebin)
-DfsDLL.Init(mikebin)
-
+# On Windows, add mikebin to the process-wide DLL search path only while
+# mikecore loads its DLLs, so it doesn't affect other DLLs loaded later.
+# The DLLs' own LoadLibrary calls later on still work: the only bundled DLLs
+# they name are ones already loaded here, which Windows reuses by name.
+_dll_dir = os.add_dll_directory(mikebin) if platform.system() == "Windows" else contextlib.nullcontext()
+with _dll_dir:
+    if installation_bin:
+        # Recent libeum imports fnGetLanguage from libufs without linking to
+        # it, so load libufs, which pulls in libeum, first.
+        load_linux_lib(mikebin, "libufs")
+    eumDLL.Init()
+    MzCartDLL.Init(mikebin)
+    DfsDLL.Init(mikebin)

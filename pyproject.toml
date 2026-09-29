@@ -23,7 +23,7 @@ license = { file = "LICENSE.txt" }
 authors = [
     { name = "DHI", email = "mike@dhigroup.com" }
 ]
-requires-python = ">=3.5"
+requires-python = ">=3.8"
 dependencies = [
     "numpy"
 ]
