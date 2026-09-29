@@ -37,7 +37,7 @@ mikecore's libraries don't use OpenMP, so its bundled OpenMP runtime
 
 ### Using a MIKE installation's libraries (Linux and Windows)
 
-To share one set of MIKE Core libraries with an engine instead, or to check
+To share one set of MIKE Core libraries with an engine, or to check
 whether mikecore works with a MIKE installation, set `MIKECORE_PYTHON_BIN` to the
 installation's `bin` folder before importing mikecore:
 

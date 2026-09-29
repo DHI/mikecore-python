@@ -12,14 +12,15 @@ if platform.machine().lower() not in ("x86_64", "amd64") or sys.maxsize <= 2**32
     raise Exception("This library requires 64 bit Python on an x86-64 CPU")
 
 if platform.system() == "Windows":
-    bundled_bin = str(Path(__file__).parent / "bin/windows")
+    mikebin = str(Path(__file__).parent / "bin/windows")
 elif platform.system() == "Linux":
-    bundled_bin = str(Path(__file__).parent / "bin/linux")
+    mikebin = str(Path(__file__).parent / "bin/linux")
 else:
     raise Exception("Unsupported platform: " + platform.system())
 
-# MIKECORE_PYTHON_BIN opts into a MIKE installation's libraries (see README)
-mikebin = os.path.abspath(installation_bin) if installation_bin else bundled_bin
+if installation_bin:
+    # MIKECORE_PYTHON_BIN opts into a MIKE installation's libraries (see README)
+    mikebin = os.path.abspath(installation_bin)
 
 from mikecore.DfsDLL import DfsDLL
 from mikecore.eum import eumDLL
