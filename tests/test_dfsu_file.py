@@ -1,4 +1,6 @@
 import unittest
+import os
+import numpy as np
 from datetime import datetime
 from mikecore.DfsFileFactory import *
 from mikecore.DfsuBuilder import *
@@ -194,7 +196,7 @@ class DfsuFileTests(unittest.TestCase):
     #
     #   [NumberOfNodes, NumberOfElements, Dimension, NumberOfLayers, NumberOfSigmaLayers, SubMesh]
     #
-    # Data types 2002, 2003 and 2004 have always had 6 values, with their own
+    # Data types 2002 and 2003 have always had 6 values, with their own
     # layouts, and are unaffected. The problem is that a 6 value custom block
     # in a 2001 file was taken to mean a legacy spectral (rose-plot) file:
     #
@@ -304,6 +306,163 @@ class DfsuFileTests(unittest.TestCase):
       Assert.AreEqual(400, dfsFile.ReadItemTimeStep(1, 0).Data.size);
 
       dfsFile.Close();
+
+    #/ <summary>
+    #/ Legacy spectral files are identified by item type and element count of
+    #/ static items 10 and 11. Units and additional static items do not matter.
+    #/ </summary>
+    def test_ReadLegacySpectral0DStaticItemsTest(self):
+      source = "testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu";
+
+      def degrees(items):
+        items[10][1] = eumQuantity(eumItem.eumIWaveDirection, eumUnit.eumUdegree);
+        items[10][2] = np.degrees(items[10][2]);
+        return items;
+      def extraItem(items):
+        return items + [["Extra", eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined), np.zeros(3, np.float32)]];
+      def wrongItemType(items):
+        items[9][1] = eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined);
+        return items;
+
+      filename = "testdata/testtmp/test_legacy_spectral0D_degrees.dfsu";
+      self.CopyDfsuModified(source, filename, modifyStaticItems = degrees);
+      dfsFile = DfsuFile.Open(filename);
+      Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType);
+      Assert.AreEqual(25, dfsFile.NumberOfFrequencies);
+      Assert.AreEqual(16, dfsFile.NumberOfDirections);
+      dfsFile.Close();
+
+      filename = "testdata/testtmp/test_legacy_spectral0D_extra_item.dfsu";
+      self.CopyDfsuModified(source, filename, modifyStaticItems = extraItem);
+      dfsFile = DfsuFile.Open(filename);
+      Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType);
+      Assert.AreEqual(25, len(dfsFile.Frequencies));
+      Assert.AreEqual(16, len(dfsFile.Directions));
+      dfsFile.Close();
+
+      # Not a frequency item, so the custom block is read as a submesh custom block
+      filename = "testdata/testtmp/test_legacy_spectral0D_wrong_item_type.dfsu";
+      self.CopyDfsuModified(source, filename, modifyStaticItems = wrongItemType);
+      dfsFile = DfsuFile.Open(filename);
+      Assert.AreEqual(DfsuFileType.Dfsu2D, dfsFile.DfsuFileType);
+      Assert.IsFalse(dfsFile.IsSpectral);
+      dfsFile.Close();
+
+    #/ <summary>
+    #/ Legacy spectral files with only frequencies or only directions,
+    #/ having 10 static items.
+    #/ </summary>
+    def test_ReadLegacySpectral0DFrequencyOrDirectionOnlyTest(self):
+      source = "testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu";
+      frequency = ["Frequency", eumQuantity(eumItem.eumIWaveFrequency, eumUnit.eumUhertz), np.linspace(0.05, 0.5, 400)];
+      direction = ["Direction", eumQuantity(eumItem.eumIWaveDirection, eumUnit.eumUradian), np.linspace(0, 6, 400)];
+
+      filename = "testdata/testtmp/test_legacy_spectral0D_frequency.dfsu";
+      self.CopyDfsuModified(source, filename, [416, 400, 1, 0, 400, 0], modifyStaticItems = lambda items: items[:9] + [frequency]);
+      dfsFile = DfsuFile.Open(filename);
+      Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType);
+      Assert.AreEqual(400, dfsFile.NumberOfFrequencies);
+      Assert.AreEqual(0, dfsFile.NumberOfDirections);
+      Assert.AreEqual(400, len(dfsFile.Frequencies));
+      dfsFile.Close();
+
+      filename = "testdata/testtmp/test_legacy_spectral0D_direction.dfsu";
+      self.CopyDfsuModified(source, filename, [416, 400, 1, 0, 0, 400], modifyStaticItems = lambda items: items[:9] + [direction]);
+      dfsFile = DfsuFile.Open(filename);
+      Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType);
+      Assert.AreEqual(0, dfsFile.NumberOfFrequencies);
+      Assert.AreEqual(400, dfsFile.NumberOfDirections);
+      Assert.AreEqual(400, len(dfsFile.Directions));
+      dfsFile.Close();
+
+    #/ <summary>
+    #/ Reading a 3D sigma dfsu file with submesh type 0, where the number of
+    #/ sigma layers equals the number of layers.
+    #/ </summary>
+    def test_Read3DSigmaSubmesh0Test(self):
+      filename = "testdata/testtmp/test_submesh0_3DSigma.dfsu";
+      self.CopyDfsuModified("testdata/submesh/Dfsu3DSigmaZ_CustomBlock6_Submesh0.dfsu", filename, [30, 8, 3, 3, 3, 0]);
+
+      dfsFile = DfsuFile.Open(filename);
+      Assert.AreEqual(DfsuFileType.Dfsu3DSigma, dfsFile.DfsuFileType);
+      Assert.AreEqual(3, dfsFile.NumberOfLayers);
+      Assert.AreEqual(3, dfsFile.NumberOfSigmaLayers);
+      Assert.IsFalse(dfsFile.IsSpectral);
+      dfsFile.Close();
+
+    #/ <summary>
+    #/ Only data type 2001 files may have a submesh custom block. Other data
+    #/ types with 6 values keep NumberOfSigmaLayers equal to NumberOfLayers.
+    #/ </summary>
+    def test_ReadOtherDataType6ValuesTest(self):
+      filename = "testdata/testtmp/test_datatype2004_6values.dfsu";
+      self.CopyDfsuModified("testdata/submesh/Dfsu3DSigmaZ_CustomBlock6_Submesh0.dfsu", filename, dataType = 2004);
+
+      dfsFile = DfsuFile.Open(filename);
+      Assert.AreEqual(DfsuFileType.Dfsu3DSigma, dfsFile.DfsuFileType);
+      Assert.AreEqual(3, dfsFile.NumberOfSigmaLayers);
+      dfsFile.Close();
+
+    #/ <summary>
+    #/ Appending a time step to files with a submesh custom block.
+    #/ </summary>
+    def test_AppendSubmeshTest(self):
+      for source in ("testdata/submesh/Dfsu2D_CustomBlock6_Submesh1_LocallyRefined.dfsu",
+                     "testdata/submesh/Dfsu3DSigmaZ_CustomBlock6_Submesh0.dfsu"):
+        filename = "testdata/testtmp/test_append_" + os.path.basename(source);
+        testUtil.copy_file(source, filename);
+
+        dfsFile = DfsuFile.OpenAppend(filename);
+        numberOfTimeSteps = dfsFile.NumberOfTimeSteps;
+        for itemInfo in dfsFile.ItemInfo:
+          dfsFile.WriteItemTimeStepNext(0, np.zeros(itemInfo.ElementCount, np.float32));
+        dfsFile.Close();
+
+        dfsFile = DfsuFile.Open(filename);
+        Assert.AreEqual(numberOfTimeSteps + 1, dfsFile.NumberOfTimeSteps);
+        dfsFile.Close();
+
+    #/ <summary>
+    #/ Copy a dfsu file, generic dfs level, optionally with another custom
+    #/ block, data type or static items. modifyStaticItems takes and returns
+    #/ a list of [name, quantity, data].
+    #/ </summary>
+    def CopyDfsuModified(self, sourcefilename, filename, customBlock = None, dataType = None, modifyStaticItems = None):
+      source = DfsFileFactory.DfsGenericOpen(sourcefilename);
+      fileInfo = source.FileInfo;
+
+      builder = DfsBuilder.Create(fileInfo.FileTitle, fileInfo.ApplicationTitle, fileInfo.ApplicationVersion);
+      builder.SetDataType(fileInfo.DataType if dataType is None else dataType);
+      builder.SetGeographicalProjection(fileInfo.Projection);
+      builder.SetTemporalAxis(fileInfo.TimeAxis);
+      builder.DeleteValueFloat = fileInfo.DeleteValueFloat;
+      if (customBlock is None):
+        customBlock = list(fileInfo.CustomBlocks[0]);
+      builder.AddCreateCustomBlock("MIKE_FM", np.array(customBlock, np.int32));
+      for itemInfo in source.ItemInfo:
+        builder.AddCreateDynamicItem(itemInfo.Name, itemInfo.Quantity, itemInfo.DataType, itemInfo.ValueType, itemInfo.SpatialAxis);
+      builder.CreateFile(filename);
+
+      staticItems = [];
+      while (True):
+        staticItem = source.ReadStaticItemNext();
+        if (staticItem is None):
+          break;
+        staticItems.append([staticItem.Name, staticItem.Quantity, staticItem.Data]);
+      if (modifyStaticItems is not None):
+        staticItems = modifyStaticItems(staticItems);
+      for name, quantity, data in staticItems:
+        builder.AddCreateStaticItem(name, quantity, data);
+
+      file = builder.GetFile();
+      while (True):
+        sourceData = source.ReadItemTimeStepNext();
+        if (sourceData is None):
+          break;
+        file.WriteItemTimeStepNext(sourceData.Time, sourceData.Data);
+
+      source.Close();
+      file.Close();
 
     #/ <summary>
     #/ Checks the "MIKE_FM" custom block of a data type 2001 file. Opened as a

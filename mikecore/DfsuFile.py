@@ -116,35 +116,30 @@ class DfsuFile(object):
 
       dimensions = customBlock[2];
       self.NumberOfLayers = customBlock[3];
-      if (self.FileInfo.DataType in (2002, 2003)):
-        self.NumberOfSigmaLayers = self.NumberOfLayers;
-        self.NumberOfFrequencies = customBlock[4];
-        self.NumberOfDirections = customBlock[5];
-      else:
-        if (customBlock.Count >= 5):
-          self.NumberOfSigmaLayers = customBlock[4];
-        else:
-          self.NumberOfSigmaLayers = self.NumberOfLayers;
-        self.NumberOfFrequencies = 0;
-        self.NumberOfDirections = 0;
-
       # A 6 value custom block in a 2001 file is either a legacy spectral
       # file, [..., NumberOfFrequencies, NumberOfDirections], or, from
       # version 2027, [..., NumberOfSigmaLayers, SubMesh]. Legacy spectral
       # files are identified by their frequency and direction static items.
-      if (self.FileInfo.DataType == 2001 and customBlock.Count == 6):
-        legacyFrequencies = customBlock[4];
-        legacyDirections = customBlock[5];
+      subMesh = (self.FileInfo.DataType == 2001 and customBlock.Count == 6
+                 and not self.__HasSpectralStaticItems(customBlock[4], customBlock[5], build));
+
+      if (customBlock.Count == 5 or subMesh):
+        self.NumberOfSigmaLayers = customBlock[4];
       else:
-        legacyFrequencies = 0;
-        legacyDirections = 0;
+        self.NumberOfSigmaLayers = self.NumberOfLayers;
+
+      if (self.FileInfo.DataType in (2002, 2003) or (self.FileInfo.DataType == 2001 and (customBlock.Count == 6) and not subMesh)):
+        self.NumberOfFrequencies = customBlock[4];
+        self.NumberOfDirections = customBlock[5];
+      else:
+        self.NumberOfFrequencies = 0;
+        self.NumberOfDirections = 0;
 
       # Figuring out dfsu file type from custom block MIKE_FM
       if (dimensions == 1):
         if (self.NumberOfLayers > 0):
           self.DfsuFileType = DfsuFileType.DfsuVerticalColumn;
-        elif ((legacyFrequencies == numberOfElmts or legacyDirections == numberOfElmts)
-              and self.__HasSpectralStaticItems(legacyFrequencies, legacyDirections, build)):
+        elif (self.FileInfo.DataType == 2001 and (self.NumberOfFrequencies == numberOfElmts or self.NumberOfDirections == numberOfElmts)):
           # Spectral Frequency-Direction (Rose-plot) geometry
           self.DfsuFileType = DfsuFileType.DfsuSpectral0D;
         elif (self.FileInfo.DataType == 2002 and self.IsSpectral):
@@ -154,8 +149,7 @@ class DfsuFile(object):
           self.DfsuFileType = DfsuFileType.Dfsu1D;
 
       elif (dimensions == 2):
-        if (legacyFrequencies*legacyDirections == numberOfElmts
-            and self.__HasSpectralStaticItems(legacyFrequencies, legacyDirections, build)):
+        if (self.FileInfo.DataType == 2001 and (self.NumberOfFrequencies*self.NumberOfDirections == numberOfElmts)):
           # Spectral Frequency-Direction (Rose-plot) geometry
           self.DfsuFileType = DfsuFileType.DfsuSpectral0D;
         elif self.FileInfo.DataType == 2003:
@@ -172,11 +166,6 @@ class DfsuFile(object):
           self.DfsuFileType = DfsuFileType.Dfsu3DSigma;
         else:
           self.DfsuFileType = DfsuFileType.Dfsu3DSigmaZ;
-
-      if (self.DfsuFileType == DfsuFileType.DfsuSpectral0D):
-        self.NumberOfSigmaLayers = self.NumberOfLayers;
-        self.NumberOfFrequencies = legacyFrequencies;
-        self.NumberOfDirections = legacyDirections;
 
 
       # Do not read static items when building, they are already set
