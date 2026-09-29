@@ -219,7 +219,9 @@ class DfsuFileTests(unittest.TestCase):
     # The CustomBlock5 and CustomBlock6_Submesh0 files of each pair hold the
     # same mesh and data, and differ only in the custom block. The Legacy
     # spectral file is a rose-plot file with 25 frequencies and 16 directions
-    # (25*16 = 400 elements), which must still read as spectral.
+    # (25*16 = 400 elements), which must still read as spectral. Its static
+    # item 10 is the wave frequency in hertz and static item 11 is the wave
+    # direction in radians.
 
     #/ <summary>
     #/ Reading a 2D dfsu file with submesh type 0. It must read the
@@ -320,24 +322,34 @@ class DfsuFileTests(unittest.TestCase):
       dfsFile.Close();
 
     #/ <summary>
-    #/ Legacy spectral files are identified by item type and element count of
-    #/ static items 10 and 11. Units and additional static items do not matter.
+    #/ Legacy spectral files are identified by exactly 11 static items, where
+    #/ static item 10 is the wave frequency in hertz and static item 11 is the
+    #/ wave direction in radians. Any other static items means the 6 value
+    #/ custom block is read as a submesh custom block.
     #/ </summary>
     def test_ReadLegacySpectral0DStaticItemsTest(self):
       source = "testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu";
 
+      def unchanged(items):
+        return items;
       def degrees(items):
         items[10][1] = eumQuantity(eumItem.eumIWaveDirection, eumUnit.eumUdegree);
         items[10][2] = np.degrees(items[10][2]);
         return items;
       def extraItem(items):
         return items + [["Extra", eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined), np.zeros(3, np.float32)]];
-      def wrongItemType(items):
-        items[9][1] = eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined);
+      def frequencyItemType(items):
+        items[9][1] = eumQuantity(eumItem.eumIFrequency, eumUnit.eumUhertz);
         return items;
+      def directionItemType(items):
+        items[10][1] = eumQuantity(eumItem.eumIDirection, eumUnit.eumUradian);
+        return items;
+      def missingDirection(items):
+        return items[:10];
 
-      filename = "testdata/testtmp/test_legacy_spectral0D_degrees.dfsu";
-      self.CopyDfsuModified(source, filename, modifyStaticItems = degrees);
+      # A copy of the legacy file is still read as spectral
+      filename = "testdata/testtmp/test_legacy_spectral0D_unchanged.dfsu";
+      self.CopyDfsuModified(source, filename, modifyStaticItems = unchanged);
       dfsFile = DfsuFile.Open(filename);
       Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType);
       Assert.IsFalse(dfsFile.IsSubMesh);
@@ -345,29 +357,22 @@ class DfsuFileTests(unittest.TestCase):
       Assert.AreEqual(16, dfsFile.NumberOfDirections);
       dfsFile.Close();
 
-      filename = "testdata/testtmp/test_legacy_spectral0D_extra_item.dfsu";
-      self.CopyDfsuModified(source, filename, modifyStaticItems = extraItem);
-      dfsFile = DfsuFile.Open(filename);
-      Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType);
-      Assert.AreEqual(25, len(dfsFile.Frequencies));
-      Assert.AreEqual(16, len(dfsFile.Directions));
-      dfsFile.Close();
-
-      # Not a frequency item, so the custom block is read as a submesh custom block
-      filename = "testdata/testtmp/test_legacy_spectral0D_wrong_item_type.dfsu";
-      self.CopyDfsuModified(source, filename, modifyStaticItems = wrongItemType);
-      dfsFile = DfsuFile.Open(filename);
-      Assert.AreEqual(DfsuFileType.Dfsu2D, dfsFile.DfsuFileType);
-      Assert.IsFalse(dfsFile.IsSpectral);
-      Assert.IsTrue(dfsFile.IsSubMesh);
-      Assert.AreEqual(16, dfsFile.SubMeshType);
-      dfsFile.Close();
+      for name, modify in (("degrees", degrees), ("extra_item", extraItem),
+                           ("frequency_item_type", frequencyItemType), ("direction_item_type", directionItemType),
+                           ("missing_direction", missingDirection)):
+        filename = "testdata/testtmp/test_legacy_spectral0D_" + name + ".dfsu";
+        self.CopyDfsuModified(source, filename, modifyStaticItems = modify);
+        dfsFile = DfsuFile.Open(filename);
+        Assert.AreEqual(DfsuFileType.Dfsu2D, dfsFile.DfsuFileType);
+        Assert.IsFalse(dfsFile.IsSpectral);
+        Assert.IsTrue(dfsFile.IsSubMesh);
+        dfsFile.Close();
 
     #/ <summary>
-    #/ Legacy spectral files with only frequencies or only directions,
-    #/ having 10 static items.
+    #/ Files with only frequencies or only directions, having 10 static items,
+    #/ are not legacy spectral files, and are read as submesh files.
     #/ </summary>
-    def test_ReadLegacySpectral0DFrequencyOrDirectionOnlyTest(self):
+    def test_ReadFrequencyOrDirectionOnly6ValuesTest(self):
       source = "testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu";
       frequency = ["Frequency", eumQuantity(eumItem.eumIWaveFrequency, eumUnit.eumUhertz), np.linspace(0.05, 0.5, 400)];
       direction = ["Direction", eumQuantity(eumItem.eumIWaveDirection, eumUnit.eumUradian), np.linspace(0, 6, 400)];
@@ -375,21 +380,17 @@ class DfsuFileTests(unittest.TestCase):
       filename = "testdata/testtmp/test_legacy_spectral0D_frequency.dfsu";
       self.CopyDfsuModified(source, filename, [416, 400, 1, 0, 400, 0], modifyStaticItems = lambda items: items[:9] + [frequency]);
       dfsFile = DfsuFile.Open(filename);
-      Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType);
-      Assert.AreEqual(400, dfsFile.NumberOfFrequencies);
-      Assert.AreEqual(0, dfsFile.NumberOfDirections);
-      Assert.AreEqual(400, len(dfsFile.Frequencies));
-      Assert.IsFalse(dfsFile.IsSubMesh);
+      Assert.IsFalse(dfsFile.IsSpectral);
+      Assert.IsTrue(dfsFile.IsSubMesh);
+      Assert.AreEqual(0, dfsFile.SubMeshType);
       dfsFile.Close();
 
       filename = "testdata/testtmp/test_legacy_spectral0D_direction.dfsu";
       self.CopyDfsuModified(source, filename, [416, 400, 1, 0, 0, 400], modifyStaticItems = lambda items: items[:9] + [direction]);
       dfsFile = DfsuFile.Open(filename);
-      Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType);
-      Assert.AreEqual(0, dfsFile.NumberOfFrequencies);
-      Assert.AreEqual(400, dfsFile.NumberOfDirections);
-      Assert.AreEqual(400, len(dfsFile.Directions));
-      Assert.IsFalse(dfsFile.IsSubMesh);
+      Assert.IsFalse(dfsFile.IsSpectral);
+      Assert.IsTrue(dfsFile.IsSubMesh);
+      Assert.AreEqual(400, dfsFile.SubMeshType);
       dfsFile.Close();
 
     #/ <summary>
@@ -410,23 +411,24 @@ class DfsuFileTests(unittest.TestCase):
       dfsFile.Close();
 
     #/ <summary>
-    #/ Only data type 2001 files may have a submesh custom block. Other data
-    #/ types with 6 values keep NumberOfSigmaLayers equal to NumberOfLayers.
+    #/ Only data type 2001 files may have a submesh custom block. A 6 value
+    #/ custom block in any other data type is never read as a submesh custom
+    #/ block.
     #/ </summary>
     def test_ReadOtherDataType6ValuesTest(self):
       filename = "testdata/testtmp/test_datatype2004_6values.dfsu";
       self.CopyDfsuModified("testdata/submesh/Dfsu3DSigmaZ_CustomBlock6_Submesh0.dfsu", filename, dataType = 2004);
 
       dfsFile = DfsuFile.Open(filename);
-      Assert.AreEqual(DfsuFileType.Dfsu3DSigma, dfsFile.DfsuFileType);
-      Assert.AreEqual(3, dfsFile.NumberOfSigmaLayers);
       Assert.IsFalse(dfsFile.IsSubMesh);
+      Assert.AreEqual(-1, dfsFile.SubMeshType);
       dfsFile.Close();
 
     #/ <summary>
     #/ Appending a time step to files with a submesh custom block.
     #/ </summary>
     def test_AppendSubmeshTest(self):
+      os.makedirs("testdata/testtmp", exist_ok = True);
       for source in ("testdata/submesh/Dfsu2D_CustomBlock6_Submesh1_LocallyRefined.dfsu",
                      "testdata/submesh/Dfsu3DSigmaZ_CustomBlock6_Submesh0.dfsu"):
         filename = "testdata/testtmp/test_append_" + os.path.basename(source);

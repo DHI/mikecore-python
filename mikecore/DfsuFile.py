@@ -261,36 +261,46 @@ class DfsuFile(object):
       Check if the "MIKE_FM" custom block is a submesh custom block.
 
       From version 2027, a 2001 file may have a 6 value custom block,
-      [..., NumberOfSigmaLayers, SubMesh]. A legacy spectral 2001 file also
-      has a 6 value custom block, [..., NumberOfFrequencies, NumberOfDirections],
-      and is identified by its frequency and direction static items: static
-      item 10 (and 11) must be the frequency and/or direction items, matching
-      the number of frequencies and directions in the custom block. Units are
-      not checked, directions may be in degrees or radians.
+      [..., NumberOfSigmaLayers, SubMesh], and 9 static items.
+
+      Legacy spectral 2001 files are not in the dfsu file specification,
+      which only has spectral data in data types 2002 and 2003. Previously,
+      most 2001 files had a 5 value custom block and 9 static items, except
+      for some spectral files with a 6 value custom block,
+      [..., NumberOfFrequencies, NumberOfDirections], and 11 static items:
+      static item 10 is the wave frequency in hertz and static item 11 is the
+      wave direction in radians. A legacy spectral file is identified by
+      exactly these 11 static items, matching the number of frequencies and
+      directions in the custom block. Any other 6 value custom block is a
+      submesh custom block.
       """
       # Only a 2001 file with a 6 value custom block can be a submesh
       if (self.FileInfo.DataType != 2001 or customBlock.Count != 6):
         return False;
 
-      # No frequencies and no directions cannot be spectral, so it is a submesh
+      # A legacy spectral file has both frequencies and directions
       numberOfFrequencies = customBlock[4];
       numberOfDirections = customBlock[5];
-      if (numberOfFrequencies <= 0 and numberOfDirections <= 0):
+      if (numberOfFrequencies <= 0 or numberOfDirections <= 0):
         return True;
 
-      # Frequency and direction static items, as written by MIKE and by DfsuBuilder
-      itemNumber = 10;
       # Missing or mismatching frequency item means not spectral, so it is a submesh
-      if (numberOfFrequencies > 0):
-        frequency = self.dfsFile.ReadStaticItem(itemNumber);
-        if (frequency is None or frequency.Quantity.Item not in (eumItem.eumIWaveFrequency, eumItem.eumIFrequency) or frequency.ElementCount != numberOfFrequencies):
-          return True;
-        itemNumber += 1;
+      frequency = self.dfsFile.ReadStaticItem(10);
+      if (frequency is None
+          or frequency.Quantity.Item != eumItem.eumIWaveFrequency
+          or frequency.Quantity.Unit != eumUnit.eumUhertz
+          or frequency.ElementCount != numberOfFrequencies):
+        return True;
       # Missing or mismatching direction item means not spectral, so it is a submesh
-      if (numberOfDirections > 0):
-        direction = self.dfsFile.ReadStaticItem(itemNumber);
-        if (direction is None or direction.Quantity.Item not in (eumItem.eumIWaveDirection, eumItem.eumIDirection) or direction.ElementCount != numberOfDirections):
-          return True;
+      direction = self.dfsFile.ReadStaticItem(11);
+      if (direction is None
+          or direction.Quantity.Item != eumItem.eumIWaveDirection
+          or direction.Quantity.Unit != eumUnit.eumUradian
+          or direction.ElementCount != numberOfDirections):
+        return True;
+      # More than 11 static items means not spectral, so it is a submesh
+      if (self.dfsFile.ReadStaticItemNext() is not None):
+        return True;
       # Frequency and direction items match, so it is a legacy spectral file, not a submesh
       return False;
 
