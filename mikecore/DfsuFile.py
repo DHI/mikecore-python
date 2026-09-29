@@ -116,12 +116,7 @@ class DfsuFile(object):
 
       dimensions = customBlock[2];
       self.NumberOfLayers = customBlock[3];
-      # A 6 value custom block in a 2001 file is either a legacy spectral
-      # file, [..., NumberOfFrequencies, NumberOfDirections], or, from
-      # version 2027, [..., NumberOfSigmaLayers, SubMesh]. Legacy spectral
-      # files are identified by their frequency and direction static items.
-      subMesh = (self.FileInfo.DataType == 2001 and customBlock.Count == 6
-                 and not self.__HasSpectralStaticItems(customBlock[4], customBlock[5], build));
+      subMesh = self.__IsSubMesh(customBlock, build);
 
       if (customBlock.Count == 5 or subMesh):
         self.NumberOfSigmaLayers = customBlock[4];
@@ -257,19 +252,29 @@ class DfsuFile(object):
             self.dfsFile.FindTimeStep(self.NumberOfTimeSteps);
 
 
-    def __HasSpectralStaticItems(self, numberOfFrequencies, numberOfDirections, build):
+    def __IsSubMesh(self, customBlock, build):
       """
-      Check if a 2001 file with a 6 value custom block is a spectral file:
-      static item 10 (and 11) must be the frequency and/or direction items,
-      matching the number of frequencies and directions in the custom block.
-      Units are not checked, directions may be in degrees or radians.
+      Check if the "MIKE_FM" custom block is a submesh custom block.
+
+      From version 2027, a 2001 file may have a 6 value custom block,
+      [..., NumberOfSigmaLayers, SubMesh]. A legacy spectral 2001 file also
+      has a 6 value custom block, [..., NumberOfFrequencies, NumberOfDirections],
+      and is identified by its frequency and direction static items: static
+      item 10 (and 11) must be the frequency and/or direction items, matching
+      the number of frequencies and directions in the custom block. Units are
+      not checked, directions may be in degrees or radians.
       """
-      if (numberOfFrequencies <= 0 and numberOfDirections <= 0):
+      if (self.FileInfo.DataType != 2001 or customBlock.Count != 6):
         return False;
 
-      # When building, static items are not read from file, they are already set
+      # DfsuBuilder does not create files with a 6 value custom block
       if (build):
-        return ((numberOfFrequencies > 0) == (self.__freqItem is not None) and (numberOfDirections > 0) == (self.__dirItem is not None));
+        return False;
+
+      numberOfFrequencies = customBlock[4];
+      numberOfDirections = customBlock[5];
+      if (numberOfFrequencies <= 0 and numberOfDirections <= 0):
+        return True;
 
       # Read the static items from a separate dfs file, such that the file
       # pointer of this dfs file is not moved
@@ -281,13 +286,13 @@ class DfsuFile(object):
         if (numberOfFrequencies > 0):
           frequency = dfs.ReadStaticItem(itemNumber);
           if (frequency is None or frequency.Quantity.Item not in (eumItem.eumIWaveFrequency, eumItem.eumIFrequency) or frequency.ElementCount != numberOfFrequencies):
-            return False;
+            return True;
           itemNumber += 1;
         if (numberOfDirections > 0):
           direction = dfs.ReadStaticItem(itemNumber);
           if (direction is None or direction.Quantity.Item not in (eumItem.eumIWaveDirection, eumItem.eumIDirection) or direction.ElementCount != numberOfDirections):
-            return False;
-        return True;
+            return True;
+        return False;
       finally:
         dfs.Close();
 

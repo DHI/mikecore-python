@@ -423,23 +423,23 @@ class DfsuFileTests(unittest.TestCase):
         dfsFile.Close();
 
     #/ <summary>
-    #/ Checking for spectral static items must not change the file pointer
+    #/ Checking for a submesh custom block must not change the file pointer
     #/ of the dfs file, whether it is at a static or a dynamic item.
     #/ </summary>
-    def test_HasSpectralStaticItemsKeepsFilePointerTest(self):
-      for filename in ("testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu",
-                       "testdata/submesh/Dfsu2D_CustomBlock6_Submesh1_LocallyRefined.dfsu"):
+    def test_IsSubMeshKeepsFilePointerTest(self):
+      for filename, subMesh in (("testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu", False),
+                                ("testdata/submesh/Dfsu2D_CustomBlock6_Submesh1_LocallyRefined.dfsu", True)):
         dfsuFile = DfsuFile.Open(filename);
         dfs = dfsuFile.dfsFile;
         customBlock = dfs.FileInfo.CustomBlocks[0];
-        hasSpectralStaticItems = lambda: dfsuFile._DfsuFile__HasSpectralStaticItems(customBlock[4], customBlock[5], False);
+        isSubMesh = lambda: dfsuFile._DfsuFile__IsSubMesh(customBlock, False);
         filePointer = lambda: (dfs.fpState, dfs.fpItemNumber, dfs.fpTimeStepIndex);
 
         # At a static item
         expected = dfs.ReadStaticItem(3).Data;
         dfs.ReadStaticItem(2);
         before = filePointer();
-        hasSpectralStaticItems();
+        Assert.AreEqual(subMesh, isSubMesh());
         Assert.AreEqual(before, filePointer());
         assert_array_equal(expected, dfs.ReadStaticItemNext().Data);
 
@@ -448,7 +448,7 @@ class DfsuFileTests(unittest.TestCase):
         expected = dfs.ReadItemTimeStepNext().Data;
         dfs.ReadItemTimeStep(1, 0);
         before = filePointer();
-        hasSpectralStaticItems();
+        Assert.AreEqual(subMesh, isSubMesh());
         Assert.AreEqual(before, filePointer());
         assert_array_equal(expected, dfs.ReadItemTimeStepNext().Data);
 
