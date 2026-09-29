@@ -178,7 +178,8 @@ class DfsuFile(object):
           # "Frequency"     , double
           # "Direction"     , double
 
-          self.__nodeIdItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__nodeIdItem);
+          # Read by number, the file pointer may have been moved by __IsSubMesh
+          self.__nodeIdItem = self.dfsFile.ReadStaticItem(1); CheckForNull(self.__nodeIdItem);
           self.NodeIds = self.__nodeIdItem.Data
 
           # X can be in doubles or in floats. Floats are converted to doubles
@@ -276,25 +277,18 @@ class DfsuFile(object):
       if (numberOfFrequencies <= 0 and numberOfDirections <= 0):
         return True;
 
-      # Read the static items from a separate dfs file, such that the file
-      # pointer of this dfs file is not moved
-      dfs = DfsFile();
-      dfs.Open(self.dfsFile.FileName, DfsFileMode.Read);
-      try:
-        # Frequency and direction static items, as written by MIKE and by DfsuBuilder
-        itemNumber = 10;
-        if (numberOfFrequencies > 0):
-          frequency = dfs.ReadStaticItem(itemNumber);
-          if (frequency is None or frequency.Quantity.Item not in (eumItem.eumIWaveFrequency, eumItem.eumIFrequency) or frequency.ElementCount != numberOfFrequencies):
-            return True;
-          itemNumber += 1;
-        if (numberOfDirections > 0):
-          direction = dfs.ReadStaticItem(itemNumber);
-          if (direction is None or direction.Quantity.Item not in (eumItem.eumIWaveDirection, eumItem.eumIDirection) or direction.ElementCount != numberOfDirections):
-            return True;
-        return False;
-      finally:
-        dfs.Close();
+      # Frequency and direction static items, as written by MIKE and by DfsuBuilder
+      itemNumber = 10;
+      if (numberOfFrequencies > 0):
+        frequency = self.dfsFile.ReadStaticItem(itemNumber);
+        if (frequency is None or frequency.Quantity.Item not in (eumItem.eumIWaveFrequency, eumItem.eumIFrequency) or frequency.ElementCount != numberOfFrequencies):
+          return True;
+        itemNumber += 1;
+      if (numberOfDirections > 0):
+        direction = self.dfsFile.ReadStaticItem(itemNumber);
+        if (direction is None or direction.Quantity.Item not in (eumItem.eumIWaveDirection, eumItem.eumIDirection) or direction.ElementCount != numberOfDirections):
+          return True;
+      return False;
 
     def Dispose(self):
       """
