@@ -1505,7 +1505,7 @@ class eumWrapper:
     def CreateItemHashtable() -> dict:
       itemHash = dict();
       n = eumWrapper.eumGetItemTypeCount();
-      for i in range(1,n):
+      for i in range(1, n + 1):
         ok, key, desc = eumWrapper.eumGetItemTypeSeq(i);
         if (ok):
           itemHash[desc] = key;
@@ -1554,7 +1554,7 @@ class eumWrapper:
     def GetItemTypeTag(itemDesc: str) -> eumItem:
       found = False;
       itemKey = None;
-      for i in range(1, eumWrapper.eumGetItemTypeCount()):
+      for i in range(1, eumWrapper.eumGetItemTypeCount() + 1):
         ok, key, desc = eumWrapper.eumGetItemTypeSeq(i);
         if (ok and desc == itemDesc):
           found = True

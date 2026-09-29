@@ -1,3 +1,4 @@
+import ctypes
 import unittest
 from tests.test_util import *
 from mikecore.eum import *
@@ -73,6 +74,37 @@ class TestEUM(unittest.TestCase):
 
 
 
+
+    def test_item_enum_covers_native_table(self):
+        # One native id missing from eumItem makes eumGetItemTypeSeq raise,
+        # which takes down CreateItemHashtable for every caller (#52).
+        n = eumWrapper.eumGetItemTypeCount()
+        known = {m.value for m in eumItem}
+        missing = []
+        for i in range(1, n + 1):
+            key = ctypes.c_int32()
+            desc = ctypes.c_char_p()
+            eumDLL.Wrapper.eumGetItemTypeSeq(ctypes.c_int32(i), ctypes.byref(key), ctypes.byref(desc))
+            if key.value not in known:
+                missing.append((key.value, desc.value.decode("ascii")))
+        Assert.AreEqual([], missing)
+
+    def test_unit_enum_covers_native_table(self):
+        known = {m.value for m in eumUnit}
+        missing = []
+        ok, key, desc = eumWrapper.eumGetNextUnit(eumUnit.eumUUnitUndefined)
+        while ok:
+            if key not in known:
+                missing.append((key, desc))
+            ok, key, desc = eumWrapper.eumGetNextUnit(key)
+        Assert.AreEqual([], missing)
+
+    def test_item_lookups_include_last_item(self):
+        n = eumWrapper.eumGetItemTypeCount()
+        ok, key, desc = eumWrapper.eumGetItemTypeSeq(n)
+        Assert.IsTrue(ok)
+        Assert.AreEqual(key, eumWrapper.CreateItemHashtable()[desc])
+        Assert.AreEqual(key, eumWrapper.GetItemTypeTag(desc))
 
     def test_converter(self):
         uc = UnitConverter(eumUnit.eumUfeet, eumUnit.eumUmeter);
