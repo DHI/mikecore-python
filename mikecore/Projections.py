@@ -76,7 +76,7 @@ class MzCartDLL:
         else:
             lib = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, "libMzCart.so"))
             libfilepathe = MzCartDLL.libfilepath + "/"
-            libfilepatheP = ctypes.c_char_p(libfilepathe.encode("ascii"))
+            libfilepatheP = ctypes.c_char_p(os.fsencode(libfilepathe))
             lib.CARTSETUPLINUX(libfilepatheP, libfilepatheP)
 
         lib.C_MZC_GETPROJECTION.restype = ctypes.c_void_p

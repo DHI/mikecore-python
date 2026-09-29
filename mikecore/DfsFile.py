@@ -1,4 +1,3 @@
-import locale
 import os.path
 from enum import IntEnum
 import datetime
@@ -1577,11 +1576,13 @@ class DfsDLLUtil:
         try:
             return filename.encode("mbcs")
         except UnicodeEncodeError:
+            codePage = ctypes.windll.kernel32.GetACP()
             raise ValueError(
                 "File name can not be represented in the Windows ANSI code page "
-                "({}): {}. Rename the file or folder, or enable 'Beta: Use Unicode "
-                "UTF-8 for worldwide language support' in Windows region settings."
-                .format(locale.getpreferredencoding(False), filename)) from None
+                f"(cp{codePage}): {filename}. Rename the file or folder, or enable "
+                "'Beta: Use Unicode UTF-8 for worldwide language support' in Windows "
+                "region settings."
+            ) from None
 
     # In case of incorrect eumUnitInt then return eumUmeter, the default axis unit
     @staticmethod
