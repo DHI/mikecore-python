@@ -5,7 +5,7 @@ import platform
 import sys
 from pathlib import Path
 
-__version__ = "0.3.0a1"
+__version__ = "0.3.0a2.dev1"
 
 if platform.machine().lower() not in ("x86_64", "amd64") or sys.maxsize <= 2**32:
     raise Exception("This library requires 64 bit Python on an x86-64 CPU")
