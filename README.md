@@ -17,45 +17,14 @@ This library is the foundation for [MIKE IO](https://github.com/DHI/mikeio).
 
 ```pip install mikecore```
 
-### Using mikecore alongside a MIKE installation (Linux)
+### Using a MIKE installation's libraries
 
-mikecore always uses the MIKE Core libraries bundled with it (renamed to
-`lib*-mikecore.so`), even when a MIKE installation's `bin` is on
-`LD_LIBRARY_PATH`, for example after sourcing `mikevars.sh`. Importing mikecore
-doesn't change `LD_LIBRARY_PATH`, so MIKE programs started from Python use the
-installation's own libraries.
-
-A MIKE engine, or an engine-based Python library, can run in the same process
-as mikecore, but each side uses its own copy of the MIKE Core libraries. The
-copies don't share state: handles, pointers or settings (such as loaded EUM
-definitions) from one can't be passed to the other. Exchange data through files
-instead. Putting mikecore's `bin` folder first on `LD_LIBRARY_PATH` isn't needed
-anymore, and no longer makes the engine use mikecore's libraries.
-
-mikecore's libraries don't use OpenMP, so its bundled OpenMP runtime
-(`libiomp5`) never starts and doesn't conflict with an engine's.
-
-### Using a MIKE installation's libraries (Linux and Windows)
-
-To share one set of MIKE Core libraries with an engine, or to check
-whether mikecore works with a MIKE installation, set `MIKECORE_PYTHON_BIN` to the
-installation's `bin` folder before importing mikecore:
-
-```bash
-MIKECORE_PYTHON_BIN=/path/to/MIKE/bin python -c "import mikecore; print(mikecore.mikebin)"
-MIKECORE_PYTHON_BIN=/path/to/MIKE/bin uv run pytest   # smoke-test mikecore against that installation
-```
-
-On Windows (PowerShell), point it at the installation's `bin\x64` folder:
-
-```powershell
-$env:MIKECORE_PYTHON_BIN = "C:\path\to\MIKE\bin\x64"
-python -c "import mikecore; print(mikecore.mikebin)"
-```
-
-mikecore then loads the installation's libraries and `EUM.xml` instead of its own.
-This is at your own risk: mikecore is only tested with its bundled libraries, and
-an installation's release may not match mikecore's API or EUM definitions.
+mikecore uses its own bundled MIKE Core libraries, even when MIKE is installed.
+To use an installation's libraries instead, for example to share them with a
+MIKE engine in the same Python process, set `MIKECORE_PYTHON_BIN` to the
+installation's `bin` folder before importing mikecore. This is at your own risk:
+mikecore is only tested with its bundled libraries, although the MIKE Core API is
+generally stable across releases.
 
 ## Development
 
