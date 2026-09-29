@@ -807,6 +807,7 @@ class FileOdenseHD2DDfsu:
           Assert.IsTrue(itemData is dfsFile.ReadItemTimeStep(itemData, j));
           Assert.AreEqual(i + 1, itemData.ItemNumber);
           Assert.AreEqual(j * 86400, itemData.Time);
+          Assert.AreEqual(j, itemData.TimeStepIndex);
       
       Assert.AreEqual(np.float32(0.22424224), itemDatas[0].Data[0]);
       Assert.AreEqual(np.float32(-0.0129399123), itemDatas[1].Data[0]);
