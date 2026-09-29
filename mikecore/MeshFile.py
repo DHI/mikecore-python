@@ -275,10 +275,6 @@ class MeshFile:
             except Exception as ex:            
                 raise Exception("Can not load mesh file (failed reading element header line): {0}. {1}".format(filename, ex))
             
-            # Element code must be 21 or 25 (21 for triangular meshes, 25 for mixed meshes)
-            if (elmtCode != 21) or (elmtCode != 25):
-                pass # TODO?? Do we care?
-            
             # Allocate memory for elements
             self.ElementIds = np.zeros(noElements, dtype=np.int32)
             self.ElementType = np.zeros(noElements, dtype=np.int32)
