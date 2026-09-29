@@ -263,7 +263,6 @@ class DfsuFile(object):
       static item 10 (and 11) must be the frequency and/or direction items,
       matching the number of frequencies and directions in the custom block.
       Units are not checked, directions may be in degrees or radians.
-      The file pointer of the dfs file is restored before returning.
       """
       if (numberOfFrequencies <= 0 and numberOfDirections <= 0):
         return False;
@@ -272,30 +271,25 @@ class DfsuFile(object):
       if (build):
         return ((numberOfFrequencies > 0) == (self.__freqItem is not None) and (numberOfDirections > 0) == (self.__dirItem is not None));
 
-      fpState = self.dfsFile.fpState;
-      fpItemNumber = self.dfsFile.fpItemNumber;
-      fpTimeStepIndex = self.dfsFile.fpTimeStepIndex;
-
+      # Read the static items from a separate dfs file, such that the file
+      # pointer of this dfs file is not moved
+      dfs = DfsFile();
+      dfs.Open(self.dfsFile.FileName, DfsFileMode.Read);
       try:
         # Frequency and direction static items, as written by MIKE and by DfsuBuilder
         itemNumber = 10;
         if (numberOfFrequencies > 0):
-          frequency = self.dfsFile.ReadStaticItem(itemNumber);
+          frequency = dfs.ReadStaticItem(itemNumber);
           if (frequency is None or frequency.Quantity.Item not in (eumItem.eumIWaveFrequency, eumItem.eumIFrequency) or frequency.ElementCount != numberOfFrequencies):
             return False;
           itemNumber += 1;
         if (numberOfDirections > 0):
-          direction = self.dfsFile.ReadStaticItem(itemNumber);
+          direction = dfs.ReadStaticItem(itemNumber);
           if (direction is None or direction.Quantity.Item not in (eumItem.eumIWaveDirection, eumItem.eumIDirection) or direction.ElementCount != numberOfDirections):
             return False;
         return True;
       finally:
-        # Move the file pointer back to where it was
-        if (fpState == DfsFilePointerState.StaticItem):
-          self.dfsFile.FindStaticItem(fpItemNumber);
-        else:
-          self.dfsFile.FindItem(fpItemNumber, fpTimeStepIndex);
-        self.dfsFile.fpTimeStepIndex = fpTimeStepIndex;
+        dfs.Close();
 
     def Dispose(self):
       """
