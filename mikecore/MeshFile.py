@@ -271,7 +271,8 @@ class MeshFile:
                 raise IOError("Can not load mesh file (failed reading element header line): {0}".format(filename))
             try:            
                 noElements = int(strings[0])
-                elmtCode = int(strings[2])            
+                # Element code is parsed only to validate the header; element type comes from corner count.
+                int(strings[2])
             except Exception as ex:            
                 raise Exception("Can not load mesh file (failed reading element header line): {0}. {1}".format(filename, ex))
             
