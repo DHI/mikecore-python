@@ -1,10 +1,10 @@
-"""How mikecore loads its MIKE Core libraries on Linux (issue #45)."""
+"""How mikecore loads its MIKE Core libraries (issue #45)."""
 import ctypes
 import os
 
 # Opt-in, at the user's own risk: a MIKE installation's bin folder to load the
 # MIKE Core libraries from, instead of the ones bundled with mikecore.
-installation_bin = os.environ.get("MIKECORE_BIN") or None
+installation_bin = os.environ.get("MIKECORE_PYTHON_BIN") or None
 
 
 def load_linux_lib(folder, name):

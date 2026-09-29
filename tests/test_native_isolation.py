@@ -37,8 +37,8 @@ def mike_bin(tmp_path):
 
 
 def default_env(**env):
-    """The test process's environment, without the MIKECORE_BIN opt-in."""
-    base = {k: v for k, v in os.environ.items() if k not in ("MIKECORE_BIN", "LD_LIBRARY_PATH")}
+    """The test process's environment, without the MIKECORE_PYTHON_BIN opt-in."""
+    base = {k: v for k, v in os.environ.items() if k not in ("MIKECORE_PYTHON_BIN", "LD_LIBRARY_PATH")}
     return dict(base, **env)
 
 
@@ -106,14 +106,14 @@ def installation_bin(tmp_path):
 
 
 def test_mikecore_bin_uses_installation(installation_bin):
-    env = default_env(MIKECORE_BIN=str(installation_bin))
+    env = default_env(MIKECORE_PYTHON_BIN=str(installation_bin))
     code = USE_MIKECORE + "assert mikecore.mikebin == %r, mikecore.mikebin\n" % str(installation_bin)
     r = run_python(code, env)
     assert r.returncode == 0, r.stderr
 
 
 def test_mikecore_bin_does_not_fall_back_to_bundled(tmp_path):
-    env = default_env(MIKECORE_BIN=str(tmp_path))
+    env = default_env(MIKECORE_PYTHON_BIN=str(tmp_path))
     r = run_python("import mikecore", env)
     assert r.returncode != 0
     assert str(tmp_path / "libufs.so") in r.stderr

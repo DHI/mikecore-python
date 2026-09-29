@@ -35,19 +35,27 @@ anymore, and no longer makes the engine use mikecore's libraries.
 mikecore's libraries don't use OpenMP, so its bundled OpenMP runtime
 (`libiomp5`) never starts and doesn't conflict with an engine's.
 
+### Using a MIKE installation's libraries (Linux and Windows)
+
 To share one set of MIKE Core libraries with an engine instead, or to check
-whether mikecore works with a MIKE installation, set `MIKECORE_BIN` to the
+whether mikecore works with a MIKE installation, set `MIKECORE_PYTHON_BIN` to the
 installation's `bin` folder before importing mikecore:
 
 ```bash
-MIKECORE_BIN=/path/to/MIKE/bin python -c "import mikecore; print(mikecore.mikebin)"
-MIKECORE_BIN=/path/to/MIKE/bin uv run pytest   # smoke-test mikecore against that installation
+MIKECORE_PYTHON_BIN=/path/to/MIKE/bin python -c "import mikecore; print(mikecore.mikebin)"
+MIKECORE_PYTHON_BIN=/path/to/MIKE/bin uv run pytest   # smoke-test mikecore against that installation
+```
+
+On Windows (PowerShell), point it at the installation's `bin\x64` folder:
+
+```powershell
+$env:MIKECORE_PYTHON_BIN = "C:\path\to\MIKE\bin\x64"
+python -c "import mikecore; print(mikecore.mikebin)"
 ```
 
 mikecore then loads the installation's libraries and `EUM.xml` instead of its own.
 This is at your own risk: mikecore is only tested with its bundled libraries, and
 an installation's release may not match mikecore's API or EUM definitions.
-Linux only.
 
 ## Development
 
