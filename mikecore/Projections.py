@@ -46,7 +46,7 @@ class MzCartDLL():
             else:
                 MzCartDLL.Wrapper = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, "libMzCart.so"))
                 libfilepathe = MzCartDLL.libfilepath+"/";
-                libfilepatheP = ctypes.c_char_p(libfilepathe.encode("ascii"))
+                libfilepatheP = ctypes.c_char_p(os.fsencode(libfilepathe))
                 MzCartDLL.Wrapper.CARTSETUPLINUX(libfilepatheP, libfilepatheP);
 
 

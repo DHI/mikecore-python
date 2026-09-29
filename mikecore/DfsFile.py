@@ -723,7 +723,7 @@ class DfsFile:
         self.headPointer = ctypes.c_void_p()
         # Marshal filename string to C char*
         fnp = ctypes.c_char_p()
-        fnp.value = filename.encode("cp1252")
+        fnp.value = DfsDLLUtil.EncodeFileName(filename)
 
         if mode is DfsFileMode.Read:
             # Open file for reading
@@ -1389,6 +1389,22 @@ class DfsFile:
 
 class DfsDLLUtil():
     """Utilities class, creating various Dfs classes based on pointers to DFS native data"""
+
+    @staticmethod
+    def EncodeFileName(filename) -> bytes:
+        # The native library opens char* paths, which Windows interprets in the
+        # ANSI code page ("mbcs"), not UTF-8.
+        if os.name != "nt":
+            return os.fsencode(filename)
+        filename = os.fspath(filename)
+        try:
+            return filename.encode("mbcs")
+        except UnicodeEncodeError:
+            raise ValueError(
+                "File name can not be represented in the Windows ANSI code page "
+                "({}): {}. Rename the file or folder, or enable 'Beta: Use Unicode "
+                "UTF-8 for worldwide language support' in Windows region settings."
+                .format("cp%d" % ctypes.windll.kernel32.GetACP(), filename)) from None
 
     # In case of incorrect eumUnitInt then return eumUmeter, the default axis unit
     @staticmethod

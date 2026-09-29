@@ -1442,7 +1442,7 @@ class eumDLL(object):
                 eumDLL.Wrapper.eumSetupLoadLinux.argtypes = [ctypes.c_char_p]
                 # TODO: Should this not be simpler?
                 eumFilePath = eumDLL.libfilepath + "/EUM.xml"
-                eumFilePathP = ctypes.c_char_p(eumFilePath.encode("ascii"))
+                eumFilePathP = ctypes.c_char_p(os.fsencode(eumFilePath))
                 res = eumDLL.Wrapper.eumSetupLoadLinux(eumFilePathP);
 
             eumDLL.Wrapper.eumUnitGetParameters.argtypes = [ctypes.c_int32, 
