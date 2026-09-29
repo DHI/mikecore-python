@@ -1,4 +1,3 @@
-import locale
 import os.path
 from enum import IntEnum
 import datetime
@@ -1405,7 +1404,7 @@ class DfsDLLUtil():
                 "File name can not be represented in the Windows ANSI code page "
                 "({}): {}. Rename the file or folder, or enable 'Beta: Use Unicode "
                 "UTF-8 for worldwide language support' in Windows region settings."
-                .format(locale.getpreferredencoding(False), filename)) from None
+                .format("cp%d" % ctypes.windll.kernel32.GetACP(), filename)) from None
 
     # In case of incorrect eumUnitInt then return eumUmeter, the default axis unit
     @staticmethod
