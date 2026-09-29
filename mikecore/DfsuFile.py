@@ -57,6 +57,7 @@ class DfsuFile(object):
         self.NumberOfSigmaLayers = -1;
         self.NumberOfFrequencies = -1;
         self.NumberOfDirections = -1;
+        self.__subMeshType = -1;
 
         # Static item
         self.__nodeIdItem = None;
@@ -117,6 +118,7 @@ class DfsuFile(object):
       dimensions = customBlock[2];
       self.NumberOfLayers = customBlock[3];
       subMesh = self.__IsSubMesh(customBlock, build);
+      self.__subMeshType = customBlock[5] if subMesh else -1;
 
       if (customBlock.Count == 5 or subMesh):
         self.NumberOfSigmaLayers = customBlock[4];
@@ -460,6 +462,22 @@ class DfsuFile(object):
     @property
     def IsSpectral(self):
       return (self.NumberOfFrequencies > 0) or (self.NumberOfDirections > 0)
+
+    @property
+    def IsSubMesh(self):
+      """
+      True if the "MIKE_FM" custom block is a submesh custom block, as
+      written from version 2027, whatever the submesh type.
+      """
+      return self.__subMeshType >= 0
+
+    @property
+    def SubMeshType(self):
+      """
+      Submesh type from the submesh custom block, 1 for a local refinement
+      submesh, 0 otherwise. -1 if the file has no submesh custom block.
+      """
+      return self.__subMeshType
 
 
     @staticmethod

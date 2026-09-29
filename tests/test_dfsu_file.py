@@ -235,6 +235,10 @@ class DfsuFileTests(unittest.TestCase):
       Assert.AreEqual(DfsuFileType.Dfsu2D, newFile.DfsuFileType);
       Assert.AreEqual(oldFile.NumberOfNodes, newFile.NumberOfNodes);
       Assert.AreEqual(oldFile.NumberOfElements, newFile.NumberOfElements);
+      Assert.IsFalse(oldFile.IsSubMesh);
+      Assert.AreEqual(-1, oldFile.SubMeshType);
+      Assert.IsTrue(newFile.IsSubMesh);
+      Assert.AreEqual(0, newFile.SubMeshType);
       Assert.AreEqual(oldFile.NumberOfFrequencies, newFile.NumberOfFrequencies);
       Assert.AreEqual(oldFile.NumberOfDirections, newFile.NumberOfDirections);
       assert_array_equal(oldFile.ReadItemTimeStep(1, 0).Data, newFile.ReadItemTimeStep(1, 0).Data);
@@ -258,6 +262,10 @@ class DfsuFileTests(unittest.TestCase):
       Assert.AreEqual(oldFile.NumberOfElements, newFile.NumberOfElements);
       Assert.AreEqual(oldFile.NumberOfLayers, newFile.NumberOfLayers);
       Assert.AreEqual(oldFile.NumberOfSigmaLayers, newFile.NumberOfSigmaLayers);
+      Assert.IsFalse(oldFile.IsSubMesh);
+      Assert.AreEqual(-1, oldFile.SubMeshType);
+      Assert.IsTrue(newFile.IsSubMesh);
+      Assert.AreEqual(0, newFile.SubMeshType);
       Assert.AreEqual(oldFile.NumberOfFrequencies, newFile.NumberOfFrequencies);
       Assert.AreEqual(oldFile.NumberOfDirections, newFile.NumberOfDirections);
       assert_array_equal(oldFile.ReadItemTimeStep(1, 0).Data, newFile.ReadItemTimeStep(1, 0).Data);
@@ -280,6 +288,8 @@ class DfsuFileTests(unittest.TestCase):
       Assert.AreEqual(DfsuFileType.Dfsu2D, dfsFile.DfsuFileType);
       Assert.AreEqual(31, dfsFile.NumberOfNodes);
       Assert.AreEqual(40, dfsFile.NumberOfElements);
+      Assert.IsTrue(dfsFile.IsSubMesh);
+      Assert.AreEqual(1, dfsFile.SubMeshType);
       Assert.AreEqual(0, dfsFile.NumberOfFrequencies);
       Assert.AreEqual(0, dfsFile.NumberOfDirections);
       Assert.AreEqual(40, dfsFile.ReadItemTimeStep(1, 0).Data.size);
@@ -299,6 +309,8 @@ class DfsuFileTests(unittest.TestCase):
       Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType);
       Assert.AreEqual(416, dfsFile.NumberOfNodes);
       Assert.AreEqual(400, dfsFile.NumberOfElements);
+      Assert.IsFalse(dfsFile.IsSubMesh);
+      Assert.AreEqual(-1, dfsFile.SubMeshType);
       Assert.AreEqual(25, dfsFile.NumberOfFrequencies);
       Assert.AreEqual(16, dfsFile.NumberOfDirections);
       Assert.AreEqual(25, len(dfsFile.Frequencies));
@@ -328,6 +340,7 @@ class DfsuFileTests(unittest.TestCase):
       self.CopyDfsuModified(source, filename, modifyStaticItems = degrees);
       dfsFile = DfsuFile.Open(filename);
       Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType);
+      Assert.IsFalse(dfsFile.IsSubMesh);
       Assert.AreEqual(25, dfsFile.NumberOfFrequencies);
       Assert.AreEqual(16, dfsFile.NumberOfDirections);
       dfsFile.Close();
@@ -346,6 +359,8 @@ class DfsuFileTests(unittest.TestCase):
       dfsFile = DfsuFile.Open(filename);
       Assert.AreEqual(DfsuFileType.Dfsu2D, dfsFile.DfsuFileType);
       Assert.IsFalse(dfsFile.IsSpectral);
+      Assert.IsTrue(dfsFile.IsSubMesh);
+      Assert.AreEqual(16, dfsFile.SubMeshType);
       dfsFile.Close();
 
     #/ <summary>
@@ -364,6 +379,7 @@ class DfsuFileTests(unittest.TestCase):
       Assert.AreEqual(400, dfsFile.NumberOfFrequencies);
       Assert.AreEqual(0, dfsFile.NumberOfDirections);
       Assert.AreEqual(400, len(dfsFile.Frequencies));
+      Assert.IsFalse(dfsFile.IsSubMesh);
       dfsFile.Close();
 
       filename = "testdata/testtmp/test_legacy_spectral0D_direction.dfsu";
@@ -373,6 +389,7 @@ class DfsuFileTests(unittest.TestCase):
       Assert.AreEqual(0, dfsFile.NumberOfFrequencies);
       Assert.AreEqual(400, dfsFile.NumberOfDirections);
       Assert.AreEqual(400, len(dfsFile.Directions));
+      Assert.IsFalse(dfsFile.IsSubMesh);
       dfsFile.Close();
 
     #/ <summary>
@@ -388,6 +405,8 @@ class DfsuFileTests(unittest.TestCase):
       Assert.AreEqual(3, dfsFile.NumberOfLayers);
       Assert.AreEqual(3, dfsFile.NumberOfSigmaLayers);
       Assert.IsFalse(dfsFile.IsSpectral);
+      Assert.IsTrue(dfsFile.IsSubMesh);
+      Assert.AreEqual(0, dfsFile.SubMeshType);
       dfsFile.Close();
 
     #/ <summary>
@@ -401,6 +420,7 @@ class DfsuFileTests(unittest.TestCase):
       dfsFile = DfsuFile.Open(filename);
       Assert.AreEqual(DfsuFileType.Dfsu3DSigma, dfsFile.DfsuFileType);
       Assert.AreEqual(3, dfsFile.NumberOfSigmaLayers);
+      Assert.IsFalse(dfsFile.IsSubMesh);
       dfsFile.Close();
 
     #/ <summary>
