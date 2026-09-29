@@ -317,7 +317,7 @@ class DfsBuilder():
 
         filePointer = ctypes.c_void_p(0);
         headerPointer = ctypes.c_void_p(0);
-        fnp = ctypes.c_char_p(filename.encode("cp1252"))
+        fnp = ctypes.c_char_p(DfsDLLUtil.EncodeFileName(filename))
         try:
             headerPointer = self.__CreateHeader();
             DfsDLL.Wrapper.dfsFileCreate(fnp.value, headerPointer, ctypes.byref(filePointer));
