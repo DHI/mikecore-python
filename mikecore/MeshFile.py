@@ -271,13 +271,10 @@ class MeshFile:
                 raise IOError("Can not load mesh file (failed reading element header line): {0}".format(filename))
             try:            
                 noElements = int(strings[0])
-                elmtCode = int(strings[2])            
+                # Element code is parsed only to validate the header; element type comes from corner count.
+                int(strings[2])
             except Exception as ex:            
                 raise Exception("Can not load mesh file (failed reading element header line): {0}. {1}".format(filename, ex))
-            
-            # Element code must be 21 or 25 (21 for triangular meshes, 25 for mixed meshes)
-            if (elmtCode != 21) or (elmtCode != 25):
-                pass # TODO?? Do we care?
             
             # Allocate memory for elements
             self.ElementIds = np.zeros(noElements, dtype=np.int32)
