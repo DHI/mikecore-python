@@ -1,6 +1,5 @@
 import os
 import ctypes
-from mikecore._native import load_linux_lib
 import numpy as np
 from enum import IntEnum
 
@@ -43,6 +42,7 @@ class DfsDLL:
     # Static variables
     Wrapper = None
     MCCUWrapper = None
+    libfilename = "libufs-mikecore.so"
 
     @staticmethod
     def Init(libfilepath=None):
@@ -58,7 +58,7 @@ class DfsDLL:
             if os.name == "nt":
                 DfsDLL.Wrapper = ctypes.CDLL(os.path.join(DfsDLL.libfilepath, "ufs.dll"))
             else:
-                DfsDLL.Wrapper = load_linux_lib(DfsDLL.libfilepath, "libufs")
+                DfsDLL.Wrapper = ctypes.CDLL(os.path.join(DfsDLL.libfilepath, DfsDLL.libfilename))
             DfsDLL.Wrapper.dfsInitSystem()
 
             DfsDLL.Wrapper.dfsGetAppTitle.argtypes = [ctypes.c_void_p]

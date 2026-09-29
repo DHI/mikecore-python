@@ -1,10 +1,9 @@
 import contextlib
+import ctypes
 import os
 import platform
 import sys
 from pathlib import Path
-
-from mikecore._native import installation_bin, load_linux_lib
 
 __version__ = "0.3.0a1"
 
@@ -18,13 +17,19 @@ elif platform.system() == "Linux":
 else:
     raise Exception("Unsupported platform: " + platform.system())
 
-if installation_bin:
-    # MIKECORE_PYTHON_BIN opts into a MIKE installation's libraries (see README)
-    mikebin = os.path.abspath(installation_bin)
-
 from mikecore.DfsDLL import DfsDLL
 from mikecore.eum import eumDLL
 from mikecore.Projections import MzCartDLL
+
+# Opt-in, at the user's own risk: load a MIKE installation's libraries instead
+# of the bundled ones (see README). On Linux, use them under their own names,
+# so an engine in the same process shares them.
+installation_bin = os.environ.get("MIKECORE_PYTHON_BIN")
+if installation_bin:
+    mikebin = os.path.abspath(installation_bin)
+    DfsDLL.libfilename = "libufs.so"
+    eumDLL.libfilename = "libeum.so"
+    MzCartDLL.libfilename = "libMzCart.so"
 
 # Path is required for reading EUM.xml
 DfsDLL.libfilepath = mikebin
@@ -39,7 +44,7 @@ with _dll_dir:
     if installation_bin and platform.system() == "Linux":
         # Recent libeum imports fnGetLanguage from libufs without linking to
         # it, so load libufs, which pulls in libeum, first.
-        load_linux_lib(mikebin, "libufs")
+        ctypes.CDLL(os.path.join(mikebin, DfsDLL.libfilename))
     eumDLL.Init()
     MzCartDLL.Init(mikebin)
     DfsDLL.Init(mikebin)

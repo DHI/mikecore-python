@@ -1,6 +1,5 @@
 import os
 import ctypes
-from mikecore._native import load_linux_lib
 from typing import Tuple
 import numpy as np
 from enum import Enum, IntEnum
@@ -23,6 +22,7 @@ class MzCartDLL():
 
     # Static variables
     Wrapper = None
+    libfilename = "libMzCart-mikecore.so"
 
     _cartCreateCount = 0;
     _cartDestroyCount = 0;
@@ -45,7 +45,7 @@ class MzCartDLL():
             if os.name == "nt":
                 MzCartDLL.Wrapper = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, "MzCart.dll"))
             else:
-                MzCartDLL.Wrapper = load_linux_lib(MzCartDLL.libfilepath, "libMzCart")
+                MzCartDLL.Wrapper = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, MzCartDLL.libfilename))
                 libfilepathe = MzCartDLL.libfilepath+"/";
                 libfilepatheP = ctypes.c_char_p(libfilepathe.encode("ascii"))
                 MzCartDLL.Wrapper.CARTSETUPLINUX(libfilepatheP, libfilepatheP);

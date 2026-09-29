@@ -1,6 +1,5 @@
 import os
 import ctypes
-from mikecore._native import load_linux_lib
 from typing import Optional, Tuple
 import numpy as np
 from enum import IntEnum
@@ -1417,7 +1416,7 @@ class eumDLL(object):
     # Static variables
     Wrapper = None
     # Leaving out extension should make it work for both Windows and Linux
-    libfilename = "libeum.so"
+    libfilename = "libeum-mikecore.so"
     # libfilename = "eum";
     libfilepath = None
 
@@ -1438,7 +1437,7 @@ class eumDLL(object):
             if os.name == "nt":
                 eumDLL.Wrapper = ctypes.CDLL(os.path.join(eumDLL.libfilepath, "eum"))
             else:
-                eumDLL.Wrapper = load_linux_lib(eumDLL.libfilepath, "libeum")
+                eumDLL.Wrapper = ctypes.CDLL(os.path.join(eumDLL.libfilepath, eumDLL.libfilename))
 
                 eumDLL.Wrapper.eumSetupLoadLinux.argtypes = [ctypes.c_char_p]
                 # TODO: Should this not be simpler?
