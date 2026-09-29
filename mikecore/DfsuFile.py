@@ -117,7 +117,8 @@ class DfsuFile(object):
 
       dimensions = customBlock[2];
       self.NumberOfLayers = customBlock[3];
-      subMesh = self.__IsSubMesh(customBlock, build);
+      # DfsuBuilder does not create files with a 6 value custom block
+      subMesh = not build and self.__IsSubMesh(customBlock);
       self.__subMeshType = customBlock[5] if subMesh else -1;
 
       if (customBlock.Count == 5 or subMesh):
@@ -255,7 +256,7 @@ class DfsuFile(object):
             self.dfsFile.FindTimeStep(self.NumberOfTimeSteps);
 
 
-    def __IsSubMesh(self, customBlock, build):
+    def __IsSubMesh(self, customBlock):
       """
       Check if the "MIKE_FM" custom block is a submesh custom block.
 
@@ -267,13 +268,11 @@ class DfsuFile(object):
       the number of frequencies and directions in the custom block. Units are
       not checked, directions may be in degrees or radians.
       """
+      # Only a 2001 file with a 6 value custom block can be a submesh
       if (self.FileInfo.DataType != 2001 or customBlock.Count != 6):
         return False;
 
-      # DfsuBuilder does not create files with a 6 value custom block
-      if (build):
-        return False;
-
+      # No frequencies and no directions cannot be spectral, so it is a submesh
       numberOfFrequencies = customBlock[4];
       numberOfDirections = customBlock[5];
       if (numberOfFrequencies <= 0 and numberOfDirections <= 0):
@@ -281,15 +280,18 @@ class DfsuFile(object):
 
       # Frequency and direction static items, as written by MIKE and by DfsuBuilder
       itemNumber = 10;
+      # Missing or mismatching frequency item means not spectral, so it is a submesh
       if (numberOfFrequencies > 0):
         frequency = self.dfsFile.ReadStaticItem(itemNumber);
         if (frequency is None or frequency.Quantity.Item not in (eumItem.eumIWaveFrequency, eumItem.eumIFrequency) or frequency.ElementCount != numberOfFrequencies):
           return True;
         itemNumber += 1;
+      # Missing or mismatching direction item means not spectral, so it is a submesh
       if (numberOfDirections > 0):
         direction = self.dfsFile.ReadStaticItem(itemNumber);
         if (direction is None or direction.Quantity.Item not in (eumItem.eumIWaveDirection, eumItem.eumIDirection) or direction.ElementCount != numberOfDirections):
           return True;
+      # Frequency and direction items match, so it is a legacy spectral file, not a submesh
       return False;
 
     def Dispose(self):
