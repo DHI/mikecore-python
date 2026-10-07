@@ -1060,7 +1060,10 @@ class DfsFile:
         return res
 
     def ReadItemTimeStep(
-        self, itemNumber: int | DfsItemData, timestepIndex: int, reshape: bool = False
+        self,
+        itemNumber: int | DfsItemData,
+        timestepIndex: int,
+        reshape: bool = False,
     ) -> DfsItemData:
         """
         Reads the dynamic item-timestep as specified from the file. It throws an

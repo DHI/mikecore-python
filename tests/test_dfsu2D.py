@@ -123,7 +123,7 @@ class Dfsu2DTests(unittest.TestCase):
     #      #FileOresundHDDfsu.StaticItemTester(dfsFile);
     #      FileOresundHDDfsu.ReadTester(dfsFile, timestepSecs = 43200);
     #
-    ##      dfsFile.Close();
+    #      dfsFile.Close();
 
     def test_DeleteValueTest(self):
         sourceFilename = "testdata/OresundHD.dfsu"
