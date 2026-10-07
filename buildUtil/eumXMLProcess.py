@@ -1,18 +1,18 @@
 # Helper script to create/update the list of eumItem and eumUnit,
 # reading from the EUM.xml file. From the root folder, run:
-# 
+#
 # python.exe ./buildUtil/eumXMLProcess.py > eumItemUnit.txt
 #
-# then compare eumItemUnit.txt with the ./mikecore/eum.py 
+# then compare eumItemUnit.txt with the ./mikecore/eum.py
 # and copy over the missing items and units.
-#  
-# This requires that the BuildNativeBin.bat has been run, 
+#
+# This requires that the BuildNativeBin.bat has been run,
 # to find the EUM.xml in the right position.
 
 import re
 
 # Using readlines()
-eumFile = open('mikecore/bin/windows/EUM.xml', 'r')
+eumFile = open("mikecore/bin/windows/EUM.xml", "r")
 eumLines = eumFile.readlines()
 eumFile.close()
 
@@ -50,4 +50,3 @@ print("# Must be updated with every new release, or if the EUM.xml is updated")
 print("class eumUnit(IntEnum):")
 for key in unitKeys:
     print("    {} = {}".format(unitDict[key], key))
-        

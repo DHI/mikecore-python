@@ -8,11 +8,14 @@ from mikecore.DfsDLL import DfsDLL
 from typing import Union
 from mikecore.eum import eumQuantity
 
+
 class NotSupportedException(Exception):
     pass
 
+
 class ArgumentNullException(Exception):
     pass
+
 
 class DfsFileMode(IntEnum):
     Read = 0
@@ -34,10 +37,11 @@ class DataValueType(IntEnum):
     Data value type defines how one value is interpreted in time:
     Instantaneous : Value at current point in time, current time step.
     Accumulated : Value accumulated from start of time series to current time step.
-    StepAccumulated : Value accumulated within time step, from last time step to current time step. 
+    StepAccumulated : Value accumulated within time step, from last time step to current time step.
     MeanStepBackward : Mean value from previous to current time step. Also called: mean step accumulated.
     MeanStepForward : Mean value from current to next time step. Also called: reverse mean step accumulated.
     """
+
     Instantaneous = 0
     Accumulated = 1
     StepAccumulated = 2
@@ -74,10 +78,11 @@ class DfsSimpleType(IntEnum):
 
 class ProjectionType(IntEnum):
     """
-    Projection type, specifies whether file has projection or not. 
-    All newer files has a projection defined, though there exists 
+    Projection type, specifies whether file has projection or not.
+    All newer files has a projection defined, though there exists
     older files which does not have a projection (Undefined).
     """
+
     Undefined = 0
     Projection = 1
 
@@ -91,10 +96,12 @@ class UnitConversionType(IntEnum):
     FreeConversion : Convert to/from user defined unit, which must also be provided with this type.
     FirstRegisteredUnitConversion : Converts to/from the first registered unit (default EUM unit) for the given item type.
     """
+
     NoConversion = 0
     UbgConversion = 1
     FreeConversion = 2
     FirstRegisteredUnitConversion = 3
+
 
 class StatType(IntEnum):
     Undefined = 0
@@ -109,61 +116,75 @@ class DfsParameters:
     def __init__(self):
         self.ModifyTimes = False
 
+
 class DfsProjection:
     """
-      Defines a projection and its coordinate transforms.
+    Defines a projection and its coordinate transforms.
 
-      You can use the <code>DHI.Projections</code> to handle the
-      difference coordinate systems involved in a dfs file. Also
-      see there for detailed documentation.
+    You can use the <code>DHI.Projections</code> to handle the
+    difference coordinate systems involved in a dfs file. Also
+    see there for detailed documentation.
 
-      The `WKTString` is a WKT string for a spatial 
-      reference system. A number of abbreviated strings also exists, 
-      i.e., "UTM-33" for a WGS-84 UTM zone 33 projection, 
-      and "LONG/LAT" for WGS-84 geographical coordinates.
+    The `WKTString` is a WKT string for a spatial
+    reference system. A number of abbreviated strings also exists,
+    i.e., "UTM-33" for a WGS-84 UTM zone 33 projection,
+    and "LONG/LAT" for WGS-84 geographical coordinates.
 
-      There are 3 levels of coordinates:
-      - Geographical coordinates (longitude, latitude) in degrees, 
-      - Projection coordinates (easting, northing), and
-      - Model/user defined coordinates (x,y).
+    There are 3 levels of coordinates:
+    - Geographical coordinates (longitude, latitude) in degrees,
+    - Projection coordinates (easting, northing), and
+    - Model/user defined coordinates (x,y).
 
-      All coordinates in a dfs file are stored in model coordinates.
+    All coordinates in a dfs file are stored in model coordinates.
 
-      The `WKTString` defines which ellipsoid the geographical coordinates use (example: WGS-84).
+    The `WKTString` defines which ellipsoid the geographical coordinates use (example: WGS-84).
 
-      The `WKTString` defines the mapping from geographical coordinates to projection coordinates.
+    The `WKTString` defines the mapping from geographical coordinates to projection coordinates.
 
-      The `Longitude`, `Latitude` and `Orientation` defines the origin and the 
-      orientation of the model coordinates. It is used to move and rotate
-      the model coordinates, i.e., a dfs2 file with a 2D equidistant axis  
-      defines its model coordinate origin and orientation here (and not in 
-      its axis definition, though that would also be possible).
+    The `Longitude`, `Latitude` and `Orientation` defines the origin and the
+    orientation of the model coordinates. It is used to move and rotate
+    the model coordinates, i.e., a dfs2 file with a 2D equidistant axis
+    defines its model coordinate origin and orientation here (and not in
+    its axis definition, though that would also be possible).
 
-      `Orientation` is the rotation from true north to the model coordinate 
-      y-axis in degrees, measured positive clockwise.
+    `Orientation` is the rotation from true north to the model coordinate
+    y-axis in degrees, measured positive clockwise.
 
-      If `Orientation` is zero, and `Longitude` and `Latitude`
-      matches the origin of the projection coordinate system, then projection coordinates equals model
-      coordinates. Example: UTM-31 has projection origin at (lon,lat) = (3,0). 
+    If `Orientation` is zero, and `Longitude` and `Latitude`
+    matches the origin of the projection coordinate system, then projection coordinates equals model
+    coordinates. Example: UTM-31 has projection origin at (lon,lat) = (3,0).
     """
-    def __init__(self, type, wktString: str, longitude: float = 0.0, latitude: float = 0.0, orientation: float = 0.0):
+
+    def __init__(
+        self,
+        type,
+        wktString: str,
+        longitude: float = 0.0,
+        latitude: float = 0.0,
+        orientation: float = 0.0,
+    ):
         self.Type = type
         self.WKTString = wktString
         self.Longitude = longitude
         self.Latitude = latitude
         self.Orientation = orientation
-    
+
     @staticmethod
     def Create(wktString: str):
-        if (wktString is None or wktString == ""):
+        if wktString is None or wktString == "":
             raise Exception("Projection string can not be null or empty")
         return DfsProjection(ProjectionType.Projection, wktString, 0.0, 0.0, 0.0)
-    
+
     @staticmethod
-    def CreateWithGeoOrigin(wktString: str, lon0: float, lat0: float, orientation: float):
-        if (wktString is None or wktString == ""):
+    def CreateWithGeoOrigin(
+        wktString: str, lon0: float, lat0: float, orientation: float
+    ):
+        if wktString is None or wktString == "":
             raise Exception("Projection string can not be null or empty")
-        return DfsProjection(ProjectionType.Projection, wktString, lon0, lat0, orientation)
+        return DfsProjection(
+            ProjectionType.Projection, wktString, lon0, lat0, orientation
+        )
+
 
 class DfsTemporalAxis:
     def __init__(
@@ -184,51 +205,70 @@ class DfsTemporalAxis:
 
     def __getTimeUnit(self):
         return self._TimeUnit
+
     def __setTimeUnit(self, timeUnit):
         self._TimeUnit = timeUnit
         self._InvokeOnUpdate()
         self.__calcToSecFactor()
+
     TimeUnit = property(__getTimeUnit, __setTimeUnit)
 
     def __calcToSecFactor(self):
-        if self._TimeUnit == eumUnit.eumUmillisec: self._toSecondsFactor = 0.001; return
-        if self._TimeUnit == eumUnit.eumUsec:      self._toSecondsFactor = 1.0; return
-        if self._TimeUnit == eumUnit.eumUminute:   self._toSecondsFactor = 60.0; return
-        if self._TimeUnit == eumUnit.eumUhour:     self._toSecondsFactor = 3600.0; return
-        if self._TimeUnit == eumUnit.eumUday:      self._toSecondsFactor = 86400.0; return
+        if self._TimeUnit == eumUnit.eumUmillisec:
+            self._toSecondsFactor = 0.001
+            return
+        if self._TimeUnit == eumUnit.eumUsec:
+            self._toSecondsFactor = 1.0
+            return
+        if self._TimeUnit == eumUnit.eumUminute:
+            self._toSecondsFactor = 60.0
+            return
+        if self._TimeUnit == eumUnit.eumUhour:
+            self._toSecondsFactor = 3600.0
+            return
+        if self._TimeUnit == eumUnit.eumUday:
+            self._toSecondsFactor = 86400.0
+            return
         self._toSecondsFactor = 1.0
-        if (eumWrapper.eumUnitsEqv(self._TimeUnit, eumUnit.eumUsec)):
+        if eumWrapper.eumUnitsEqv(self._TimeUnit, eumUnit.eumUsec):
             res = eumWrapper.eumConvertUnit(self._TimeUnit, 1.0, eumUnit.eumUsec)
             if res[0]:
                 self._toSecondsFactor = res[1]
             else:
                 self._toSecondsFactor = 1.0
 
-
     def __getStartTimeOffset(self):
         return self._StartTimeOffset
+
     def __setStartTimeOffset(self, startTimeOffset):
         self._StartTimeOffset = startTimeOffset
         self._InvokeOnUpdate()
+
     StartTimeOffset = property(__getStartTimeOffset, __setStartTimeOffset)
 
     def __getFirstTimeStepIndex(self):
         return self._FirstTimeStepIndex
+
     def __setFirstTimeStepIndex(self, firstTimeStepIndex):
         self._FirstTimeStepIndex = firstTimeStepIndex
         self._InvokeOnUpdate()
+
     FirstTimeStepIndex = property(__getFirstTimeStepIndex, __setFirstTimeStepIndex)
 
     def IncrementNumberOfTimeSteps(self, time):
         self.NumberOfTimeSteps += 1
 
     def IsEquidistant(self):
-        return (   self.TimeAxisType == TimeAxisType.CalendarEquidistant 
-                or self.TimeAxisType == TimeAxisType.TimeEquidistant)
+        return (
+            self.TimeAxisType == TimeAxisType.CalendarEquidistant
+            or self.TimeAxisType == TimeAxisType.TimeEquidistant
+        )
 
     def IsCalendar(self):
-        return (   self.TimeAxisType == TimeAxisType.CalendarEquidistant 
-                or self.TimeAxisType == TimeAxisType.CalendarNonEquidistant)
+        return (
+            self.TimeAxisType == TimeAxisType.CalendarEquidistant
+            or self.TimeAxisType == TimeAxisType.CalendarNonEquidistant
+        )
 
     def ToSeconds(self, relativeTime):
         return relativeTime * self._toSecondsFactor
@@ -249,9 +289,11 @@ class DfsEqTimeAxis(DfsTemporalAxis):
 
     def __getTimeStep(self):
         return self._TimeStep
+
     def __setTimeStep(self, timeStep):
         self._TimeStep = timeStep
         self._InvokeOnUpdate()
+
     TimeStep = property(__getTimeStep, __setTimeStep)
 
     def TimeStepInSeconds(self):
@@ -292,20 +334,25 @@ class DfsEqCalendarAxis(DfsTemporalAxis):
 
     def __getStartDateTime(self):
         return self._StartDateTime
+
     def __setStartDateTime(self, startDateTime):
         self._StartDateTime = startDateTime
         self._InvokeOnUpdate()
+
     StartDateTime = property(__getStartDateTime, __setStartDateTime)
 
     def __getTimeStep(self):
         return self._TimeStep
+
     def __setTimeStep(self, timeStep):
         self._TimeStep = timeStep
         self._InvokeOnUpdate()
+
     TimeStep = property(__getTimeStep, __setTimeStep)
 
     def TimeStepInSeconds(self):
         return self.TimeStep * self._toSecondsFactor
+
 
 class DfsNonEqCalendarAxis(DfsTemporalAxis):
     def __init__(
@@ -326,9 +373,11 @@ class DfsNonEqCalendarAxis(DfsTemporalAxis):
 
     def __getStartDateTime(self):
         return self._StartDateTime
+
     def __setStartDateTime(self, startDateTime):
         self._StartDateTime = startDateTime
         self._InvokeOnUpdate()
+
     StartDateTime = property(__getStartDateTime, __setStartDateTime)
 
     def IncrementNumberOfTimeSteps(self, time):
@@ -338,15 +387,15 @@ class DfsNonEqCalendarAxis(DfsTemporalAxis):
 
 class DfsSpatialAxis:
     def __init__(self, axisType, shape, sizeOfData, axisUnit):
-        self.AxisType   = axisType
-        self.Shape      = shape
-        self.Dimension  = len(shape)
+        self.AxisType = axisType
+        self.Shape = shape
+        self.Dimension = len(shape)
         self.SizeOfData = sizeOfData
-        self.AxisUnit   = axisUnit
+        self.AxisUnit = axisUnit
 
 
 class DfsAxisEqD0(DfsSpatialAxis):
-    def __init__(self, axisUnit = eumUnit.eumUmeter):
+    def __init__(self, axisUnit=eumUnit.eumUmeter):
         super().__init__(SpaceAxisType.EqD0, (0,), 1, axisUnit)
 
     @staticmethod
@@ -360,18 +409,18 @@ class DfsAxisEqD1(DfsSpatialAxis):
         self.XCount = xCount
         self.X0 = x0
         self.Dx = dx
-    
+
     @staticmethod
     def CreateDummyAxis(xCount):
-        axis = DfsAxisEqD1(
-            eumUnit.eumUUnitUndefined,
-            xCount, 0.0, 1.0)
-        return (axis)
+        axis = DfsAxisEqD1(eumUnit.eumUUnitUndefined, xCount, 0.0, 1.0)
+        return axis
 
 
 class DfsAxisEqD2(DfsSpatialAxis):
     def __init__(self, axisUnit, xCount, x0, dx, yCount, y0, dy):
-        super().__init__(SpaceAxisType.EqD2, (xCount,yCount), xCount*yCount, axisUnit)
+        super().__init__(
+            SpaceAxisType.EqD2, (xCount, yCount), xCount * yCount, axisUnit
+        )
         self.XCount = xCount
         self.X0 = x0
         self.Dx = dx
@@ -382,7 +431,12 @@ class DfsAxisEqD2(DfsSpatialAxis):
 
 class DfsAxisEqD3(DfsSpatialAxis):
     def __init__(self, axisUnit, xCount, x0, dx, yCount, y0, dy, zCount, z0, dz):
-        super().__init__(SpaceAxisType.EqD3, (xCount,yCount,zCount), xCount*yCount*zCount, axisUnit)
+        super().__init__(
+            SpaceAxisType.EqD3,
+            (xCount, yCount, zCount),
+            xCount * yCount * zCount,
+            axisUnit,
+        )
         self.XCount = xCount
         self.X0 = x0
         self.Dx = dx
@@ -402,14 +456,24 @@ class DfsAxisNeqD1(DfsSpatialAxis):
 
 class DfsAxisNeqD2(DfsSpatialAxis):
     def __init__(self, axisUnit, xCoords, yCoords):
-        super().__init__(SpaceAxisType.NeqD2, ((len(xCoords)-1),(len(yCoords)-1)), (len(xCoords)-1)*(len(yCoords)-1), axisUnit)
+        super().__init__(
+            SpaceAxisType.NeqD2,
+            ((len(xCoords) - 1), (len(yCoords) - 1)),
+            (len(xCoords) - 1) * (len(yCoords) - 1),
+            axisUnit,
+        )
         self.XCoordinates = xCoords
         self.YCoordinates = yCoords
 
 
 class DfsAxisNeqD3(DfsSpatialAxis):
     def __init__(self, axisUnit, xCoords, yCoords, zCoords):
-        super().__init__(SpaceAxisType.NeqD2, ((len(xCoords)-1),(len(yCoords)-1),(len(zCoords)-1)), (len(xCoords)-1)*(len(yCoords)-1)*(len(zCoords)-1), axisUnit)
+        super().__init__(
+            SpaceAxisType.NeqD2,
+            ((len(xCoords) - 1), (len(yCoords) - 1), (len(zCoords) - 1)),
+            (len(xCoords) - 1) * (len(yCoords) - 1) * (len(zCoords) - 1),
+            axisUnit,
+        )
         self.XCoordinates = xCoords
         self.YCoordinates = yCoords
         self.ZCoordinates = zCoords
@@ -417,15 +481,23 @@ class DfsAxisNeqD3(DfsSpatialAxis):
 
 class DfsAxisCurveLinearD2(DfsSpatialAxis):
     def __init__(self, axisUnit, xCount, yCount, xCoords, yCoords):
-        super().__init__(SpaceAxisType.CurveLinearD2, (xCount,yCount), xCount*yCount, axisUnit)
+        super().__init__(
+            SpaceAxisType.CurveLinearD2, (xCount, yCount), xCount * yCount, axisUnit
+        )
         self.XCount = xCount
         self.YCount = yCount
         self.XCoordinates = xCoords
         self.YCoordinates = yCoords
 
+
 class DfsAxisCurveLinearD3(DfsSpatialAxis):
     def __init__(self, axisUnit, xCount, yCount, zCount, xCoords, yCoords, zCoords):
-        super().__init__(SpaceAxisType.CurveLinearD3,  (xCount,yCount,zCount), xCount*yCount*zCount, axisUnit)
+        super().__init__(
+            SpaceAxisType.CurveLinearD3,
+            (xCount, yCount, zCount),
+            xCount * yCount * zCount,
+            axisUnit,
+        )
         self.XCount = xCount
         self.YCount = yCount
         self.ZCount = zCount
@@ -433,19 +505,20 @@ class DfsAxisCurveLinearD3(DfsSpatialAxis):
         self.YCoordinates = yCoords
         self.ZCoordinates = zCoords
 
+
 class DfsDynamicItemInfo:
-    def __init__(self, itemPointer = None, itemNumber = 0):
+    def __init__(self, itemPointer=None, itemNumber=0):
         self.ItemPointer = itemPointer
-        self.ItemNumber  = itemNumber
-        self.DataType    = DfsSimpleType.UShort
-        self.Name        = ""
+        self.ItemNumber = itemNumber
+        self.DataType = DfsSimpleType.UShort
+        self.Name = ""
         self.ElementCount = -1
         self.Quantity = None
         self.ReferenceCoordinateX = np.float32(-1e-35)
         self.ReferenceCoordinateY = np.float32(-1e-35)
         self.ReferenceCoordinateZ = np.float32(-1e-35)
         self.OrientationAlpha = np.float32(-1e-35)
-        self.OrientationPhi   = np.float32(-1e-35)
+        self.OrientationPhi = np.float32(-1e-35)
         self.OrientationTheta = np.float32(-1e-35)
         self.ConversionType = UnitConversionType.NoConversion
         self.ConversionUnit = 0
@@ -466,7 +539,7 @@ class DfsDynamicItemInfo:
         )
 
     def init(self, itemName, eumQuantity):
-        self.Name     = itemName
+        self.Name = itemName
         self.Quantity = eumQuantity
 
     def SetReferenceCoordinates(self, x, y, z):
@@ -476,7 +549,7 @@ class DfsDynamicItemInfo:
 
     def SetOrientation(self, alpha, phi, theta):
         self.OrientationAlpha = alpha
-        self.OrientationPhi   = phi
+        self.OrientationPhi = phi
         self.OrientationTheta = theta
 
     def SetUnitConversion(self, conversionType, conversionUnit):
@@ -487,11 +560,11 @@ class DfsDynamicItemInfo:
         self.AxisConversionType = conversionType
         self.AxisConversionUnit = conversionUnit
 
-    def CreateEmptyItemData(self, reshape = False):
+    def CreateEmptyItemData(self, reshape=False):
         data = self.CreateEmptyItemDataData(reshape)
         return DfsItemData(0, self.ItemNumber, 0.0, data)
 
-    def CreateEmptyItemDataData(self, reshape = False):
+    def CreateEmptyItemDataData(self, reshape=False):
         if self.DataType == DfsSimpleType.Float:
             values = np.zeros(self.ElementCount, dtype=np.float32)
         elif self.DataType == DfsSimpleType.Double:
@@ -507,21 +580,25 @@ class DfsDynamicItemInfo:
         elif self.DataType == DfsSimpleType.UShort:
             values = np.zeros(self.ElementCount, dtype=np.uint16)
         else:
-            print("Ahhrrggg!!!!: {}-{}".format(self.DataType,self.ElementCount))
-        if (reshape):
-            values = values.reshape(self.SpatialAxis.Shape, order = 'F')
+            print("Ahhrrggg!!!!: {}-{}".format(self.DataType, self.ElementCount))
+        if reshape:
+            values = values.reshape(self.SpatialAxis.Shape, order="F")
         return values
 
+
 class DfsStaticItem(DfsDynamicItemInfo):
-    def __init__(self, dfsFile = None, vectorPointer = None, itemPointer = None, itemNumber = None):
+    def __init__(
+        self, dfsFile=None, vectorPointer=None, itemPointer=None, itemNumber=None
+    ):
         super().__init__(itemPointer, itemNumber)
         self.DfsFile = dfsFile
         self.VectorPointer = vectorPointer
         self.Data = None
+
     @staticmethod
-    def Create(name, quantity, data, spatialAxis = None):
-        if (spatialAxis is None):
-            if (data.size == 1):
+    def Create(name, quantity, data, spatialAxis=None):
+        if spatialAxis is None:
+            if data.size == 1:
                 spatialAxis = DfsAxisEqD0.Create()
             else:
                 spatialAxis = DfsAxisEqD1.CreateDummyAxis(data.size)
@@ -533,6 +610,7 @@ class DfsStaticItem(DfsDynamicItemInfo):
         staticItem.SpatialAxis = spatialAxis
         staticItem.ElementCount = spatialAxis.SizeOfData
         return staticItem
+
 
 class DfsItemData:
     def __init__(self, timestepIndex, itemNumber, time, data):
@@ -568,10 +646,10 @@ class DfsFileInfo:
         self.StatsType = StatType.NoStat
 
         # TODO: Check which items are loaded and which delete value to store, and if only one, store in DeleteValue
-        self.DeleteValueFloat       = DfsFile.DefaultDeleteValueFloat
-        self.DeleteValueDouble      = DfsFile.DefaultDeleteValueDouble
-        self.DeleteValueByte        = DfsFile.DefaultDeleteValueByte
-        self.DeleteValueInt         = DfsFile.DefaultDeleteValueInt
+        self.DeleteValueFloat = DfsFile.DefaultDeleteValueFloat
+        self.DeleteValueDouble = DfsFile.DefaultDeleteValueDouble
+        self.DeleteValueByte = DfsFile.DefaultDeleteValueByte
+        self.DeleteValueInt = DfsFile.DefaultDeleteValueInt
         self.DeleteValueUnsignedInt = DfsFile.DefaultDeleteValueUnsignedInt
 
         self.Projection = None
@@ -590,11 +668,17 @@ class DfsFileInfo:
         self.DfsFile = dfsFile
 
         # The dfsParamModifyTimes must be called before getting the temporal axis.
-        DfsDLL.Wrapper.dfsParamModifyTimes(headerPointer, ctypes.c_int32(parameters.ModifyTimes))
+        DfsDLL.Wrapper.dfsParamModifyTimes(
+            headerPointer, ctypes.c_int32(parameters.ModifyTimes)
+        )
 
         self.FileName = dfsFile.FileName
-        self.FileTitle = DfsDLL.Wrapper.dfsGetFileTitle(headerPointer).decode("cp1252", "replace")
-        self.ApplicationTitle = DfsDLL.Wrapper.dfsGetAppTitle(headerPointer).decode("cp1252", "replace")
+        self.FileTitle = DfsDLL.Wrapper.dfsGetFileTitle(headerPointer).decode(
+            "cp1252", "replace"
+        )
+        self.ApplicationTitle = DfsDLL.Wrapper.dfsGetAppTitle(headerPointer).decode(
+            "cp1252", "replace"
+        )
         self.ApplicationVersion = DfsDLL.Wrapper.dfsGetAppVersionNo(headerPointer)
         self.DataType = DfsDLL.Wrapper.dfsGetDataType(headerPointer)
 
@@ -606,13 +690,15 @@ class DfsFileInfo:
         self.DeleteValueByte = DfsDLL.Wrapper.dfsGetDeleteValByte(headerPointer)
         self.DeleteValueDouble = DfsDLL.Wrapper.dfsGetDeleteValDouble(headerPointer)
         self.DeleteValueInt = DfsDLL.Wrapper.dfsGetDeleteValInt(headerPointer)
-        self.DeleteValueUnsignedInt = DfsDLL.Wrapper.dfsGetDeleteValUnsignedInt(headerPointer)
+        self.DeleteValueUnsignedInt = DfsDLL.Wrapper.dfsGetDeleteValUnsignedInt(
+            headerPointer
+        )
 
         # TODO: implement
         self.Projection = DfsDLLUtil.GetProjection(headerPointer)
-        self.TimeAxis   = DfsDLLUtil.GetTemporalAxis(headerPointer)
+        self.TimeAxis = DfsDLLUtil.GetTemporalAxis(headerPointer)
         self.CustomBlocks = DfsDLLUtil.BuildCustomBlocks(headerPointer)
-        self.IsFileCompressed = (DfsDLL.Wrapper.dfsIsFileCompressed(headerPointer) != 0)
+        self.IsFileCompressed = DfsDLL.Wrapper.dfsIsFileCompressed(headerPointer) != 0
 
         self.TimeAxis._OnUpdate = self.__UpdateTemporalAxis
 
@@ -623,10 +709,7 @@ class DfsFileInfo:
             self.yKey = np.zeros(encodeKeySize, dtype=np.int32)
             self.zKey = np.zeros(encodeKeySize, dtype=np.int32)
             DfsDLL.Wrapper.dfsGetEncodeKey(
-                headerPointer,
-                self.xKey,
-                self.yKey,
-                self.zKey
+                headerPointer, self.xKey, self.yKey, self.zKey
             )
 
     def GetEncodeKey(self):
@@ -645,7 +728,7 @@ class DfsFileInfo:
             raise ValueError("Encoding key arguments must have same length")
 
         if encodeKeySize > 0:
-          self.IsFileCompressed = True
+            self.IsFileCompressed = True
 
         self.xKey = xKey
         self.yKey = yKey
@@ -654,14 +737,17 @@ class DfsFileInfo:
     def __UpdateTemporalAxis(self):
         DfsDLLUtil.dfsSetTemporalAxis(self.DfsFile.headPointer, self.TimeAxis)
 
-class DfsCustomBlock():
+
+class DfsCustomBlock:
     def __init__(self, name, datatype, values):
         self.Name = name
         self.SimpleType = datatype
         self.Values = values
         self.Count = values.size
+
     def __getitem__(self, key):
         return self.Values[key]
+
     def __setitem__(self, key, value):
         self.Values[key] = value
 
@@ -693,28 +779,31 @@ class DfsFile:
     def __del__(self):
         self.Close()
 
-    def Open(self, filename, mode = DfsFileMode.Read, parameters=None):
+    def Open(self, filename, mode=DfsFileMode.Read, parameters=None):
         """
         Open file
-        
+
         Parameters
         ---------
         filename: name and path of file to open
         """
 
         # Close file, if already open
-        if (self.filePointer.value != None):
+        if self.filePointer.value != None:
             self.Close()
 
-        if (not os.path.isfile(filename)):
+        if not os.path.isfile(filename):
             raise FileNotFoundError("File not found {}".format(filename))
 
         # Check if trying to edit a read-only file.
-        if ((mode == DfsFileMode.Edit or mode == DfsFileMode.Append) 
-            and (not os.access(filename, os.W_OK))):
-            raise Exception("File is readonly and can not be opened for editing: " + filename)
+        if (mode == DfsFileMode.Edit or mode == DfsFileMode.Append) and (
+            not os.access(filename, os.W_OK)
+        ):
+            raise Exception(
+                "File is readonly and can not be opened for editing: " + filename
+            )
 
-        if (parameters is None):
+        if parameters is None:
             parameters = DfsParameters()
 
         self.FileName = filename
@@ -728,19 +817,27 @@ class DfsFile:
         if mode is DfsFileMode.Read:
             # Open file for reading
             rok = DfsDLL.Wrapper.dfsFileRead(
-                fnp.value, ctypes.byref(self.headPointer), ctypes.byref(self.filePointer)
+                fnp.value,
+                ctypes.byref(self.headPointer),
+                ctypes.byref(self.filePointer),
             )
         if mode is DfsFileMode.Edit:
             rok = DfsDLL.Wrapper.dfsFileEdit(
-                fnp.value, ctypes.byref(self.headPointer), ctypes.byref(self.filePointer)
+                fnp.value,
+                ctypes.byref(self.headPointer),
+                ctypes.byref(self.filePointer),
             )
         if mode is DfsFileMode.Append:
             rok = DfsDLL.Wrapper.dfsFileAppend(
-                fnp.value, ctypes.byref(self.headPointer), ctypes.byref(self.filePointer)
+                fnp.value,
+                ctypes.byref(self.headPointer),
+                ctypes.byref(self.filePointer),
             )
 
-        if (rok != 0):
-            raise Exception("Could not load file {} (Error code {})".format(filename, rok))
+        if rok != 0:
+            raise Exception(
+                "Could not load file {} (Error code {})".format(filename, rok)
+            )
 
         self.FileInfo = DfsFileInfo()
         self.FileInfo.InitRead(self, self.headPointer, parameters)
@@ -785,46 +882,44 @@ class DfsFile:
         for i in range(noOfItems):
             self.ItemInfo.append(self.__DynamicItemInfoReadAndCreate(i + 1, noOfItems))
 
-
     def Close(self):
         """
         Close the file and release all ressources associated with it. The header information
         is still valid (for reading) even though the file has been closed.
         """
-        if (self.filePointer.value != None):
-            DfsDLL.Wrapper.dfsFileClose(self.headPointer, ctypes.byref(self.filePointer))
-        if (self.headPointer.value != None):
+        if self.filePointer.value != None:
+            DfsDLL.Wrapper.dfsFileClose(
+                self.headPointer, ctypes.byref(self.filePointer)
+            )
+        if self.headPointer.value != None:
             DfsDLL.Wrapper.dfsHeaderDestroy(ctypes.byref(self.headPointer))
-
 
     def GetNextItemNumber(self):
         return self.fpItemNumber
 
-
     def GetNextTimeStepIndex(self):
         return self.fpTimeStepIndex
-
 
     def ReadStaticItemNext(self):
         """
         Reads the next static item. First time called it returns the first
-        static item. 
-        
-        If `ReadStaticItem` is called for example with argument 
+        static item.
+
+        If `ReadStaticItem` is called for example with argument
         staticItemNo 3, the next call to this method will return static item number 4.
-        
-        If one of the methods reading/writing dynamic item data is called, see 
-        `IDfsFileIO`, the static item number is reset, and 
+
+        If one of the methods reading/writing dynamic item data is called, see
+        `IDfsFileIO`, the static item number is reset, and
         the next call to this method again returns the first item number.
 
         :returns: The next static item, null if no more items are present.
         """
         self.__CheckIfOpen()
 
-        if (self.fpState == DfsFilePointerState.CreatingItems):
+        if self.fpState == DfsFilePointerState.CreatingItems:
             raise Exception("Can not read static items when file is being created.")
 
-        if (self.fpState != DfsFilePointerState.StaticItem):
+        if self.fpState != DfsFilePointerState.StaticItem:
             DfsDLL.Wrapper.dfsFindBlockStatic(self.headPointer, self.filePointer)
             self.fpState = DfsFilePointerState.StaticItem
             self.fpItemNumber = 1
@@ -832,9 +927,9 @@ class DfsFile:
 
         staticItem = self.__StaticItemReadAndCreate(self.fpItemNumber, False)
 
-        if (staticItem != None):
+        if staticItem != None:
             self.fpItemNumber += 1
-        return (staticItem)
+        return staticItem
 
     def ReadStaticItem(self, staticItemNo):
         """
@@ -844,61 +939,75 @@ class DfsFile:
         :returns: The static item number <paramref name="staticItemNo"/>, null if there are not that many static items.
         """
         self.__CheckIfOpen()
-        if (self.fpState == DfsFilePointerState.CreatingItems):
+        if self.fpState == DfsFilePointerState.CreatingItems:
             raise Exception("Can not read static items when file is being created.")
 
-        if (self.fpState != DfsFilePointerState.StaticItem or self.fpItemNumber != staticItemNo):
-            DfsDLL.Wrapper.dfsFindItemStatic(self.headPointer, self.filePointer, staticItemNo)
+        if (
+            self.fpState != DfsFilePointerState.StaticItem
+            or self.fpItemNumber != staticItemNo
+        ):
+            DfsDLL.Wrapper.dfsFindItemStatic(
+                self.headPointer, self.filePointer, staticItemNo
+            )
             self.fpState = DfsFilePointerState.StaticItem
             self.fpItemNumber = staticItemNo
             self.fpTimeStepIndex = -1
-        return (self.ReadStaticItemNext())
-
+        return self.ReadStaticItemNext()
 
     def WriteStaticItemData(self, staticItem, data: np.ndarray):
         """
         Write the static item back to the file. the <paramref name="staticItem"/> must
-        originate from this file. This will update and overwrite the static item information and 
-        the data of the static item. 
+        originate from this file. This will update and overwrite the static item information and
+        the data of the static item.
         :param staticItem: Static item to update
         :param data: New data to insert. Data length must match the data size of the static item.
         """
         self.__CheckIfOpen()
         stItem = staticItem
-        if (data is None):
+        if data is None:
             raise Exception("data is not defined")
-        if (self.fpState != DfsFilePointerState.CreatingItems):
-            if (stItem.ItemNumber <= 0):
+        if self.fpState != DfsFilePointerState.CreatingItems:
+            if stItem.ItemNumber <= 0:
                 raise Exception("ItemNumber for static item is zero or negative.")
             # We are updating an existing static vector, position file pointer
-            if (self.fpState != DfsFilePointerState.StaticItem or self.fpItemNumber != stItem.ItemNumber):
-                DfsDLL.Wrapper.dfsFindItemStatic(self.headPointer, self.filePointer, stItem.ItemNumber)
+            if (
+                self.fpState != DfsFilePointerState.StaticItem
+                or self.fpItemNumber != stItem.ItemNumber
+            ):
+                DfsDLL.Wrapper.dfsFindItemStatic(
+                    self.headPointer, self.filePointer, stItem.ItemNumber
+                )
                 self.fpState = DfsFilePointerState.StaticItem
                 self.fpItemNumber = stItem.ItemNumber
                 self.fpTimeStepIndex = -1
 
         # Check length of data
         # data.Length can be larger than the number of elements.
-        if (stItem.ElementCount > data.size):
+        if stItem.ElementCount > data.size:
             raise Exception("Length of data does not match size of static vector.")
         # Check type of data, and save to disc.
-        if (DfsDLLUtil.GetDfsType(data) != stItem.DataType):
-            raise Exception("Type of data defined in static item does not match type of data argument.")
+        if DfsDLLUtil.GetDfsType(data) != stItem.DataType:
+            raise Exception(
+                "Type of data defined in static item does not match type of data argument."
+            )
 
-        rok = DfsDLL.Wrapper.dfsStaticWrite(stItem.VectorPointer, self.filePointer, data.ctypes.data)
+        rok = DfsDLL.Wrapper.dfsStaticWrite(
+            stItem.VectorPointer, self.filePointer, data.ctypes.data
+        )
         DfsDLL.CheckReturnCode(rok)
         self.fpItemNumber += 1
 
-
-    def ReadItemTimeStepNext(self, itemData: DfsItemData = None, reshape: bool = False) -> DfsItemData:
+    def ReadItemTimeStepNext(
+        self, itemData: DfsItemData = None, reshape: bool = False
+    ) -> DfsItemData:
         """
         Reads the next dynamic item-timestep. First time called it returns the first
-        timestep of the first item. It cycles through each timestep, and each 
+        timestep of the first item. It cycles through each timestep, and each
         item in the timestep. For a file with 3 items, it returns (itemnumber, timestepIndex)
         in the following order:
-        (1,0), (2,0), (3,0), (1,1), (2,1), (3,1), (1,2), etc. 
+        (1,0), (2,0), (3,0), (1,1), (2,1), (3,1), (1,2), etc.
 
-        If one of the ReadItemTimeStep is called with for example (1,4) 
+        If one of the ReadItemTimeStep is called with for example (1,4)
         the next call to this method will continue from there and return (2,4).
 
         If one of the methods reading/writing static item data is called,
@@ -913,8 +1022,10 @@ class DfsFile:
         :returns DfsIemData: The next dynamic item-timestep, None if no more items are present.
         """
         self.__CheckIfOpen()
-        if (self.fpState == DfsFilePointerState.CreatingItems):
-            raise Exception("No dynamic items have been written to the file yet (file is being created).")
+        if self.fpState == DfsFilePointerState.CreatingItems:
+            raise Exception(
+                "No dynamic items have been written to the file yet (file is being created)."
+            )
 
         if self.fpState != DfsFilePointerState.DynamicItem:
             # Position file pointer at first timestep and first item.
@@ -923,12 +1034,12 @@ class DfsFile:
         # TODO: size of item and hence the values array
         item = self.ItemInfo[self.fpItemNumber - 1]
 
-        if (itemData is None):
+        if itemData is None:
             values = item.CreateEmptyItemDataData()
         else:
             values = itemData.Data
 
-        if (values.size != item.ElementCount):
+        if values.size != item.ElementCount:
             raise Exception("itemData.Data is of incorrect size")
 
         timep = ctypes.c_double(0)
@@ -939,7 +1050,7 @@ class DfsFile:
         if success != 0:
             return None
         time = self.__GetTime(timep.value, self.fpTimeStepIndex)
-        if (itemData is None):
+        if itemData is None:
             res = DfsItemData(self.fpTimeStepIndex, self.fpItemNumber, time, values)
         else:
             res = itemData
@@ -948,8 +1059,12 @@ class DfsFile:
         self.__FpDynamicIncrement()
         return res
 
-
-    def ReadItemTimeStep(self, itemNumber: Union[int,DfsItemData], timestepIndex: int, reshape: bool = False) -> DfsItemData:
+    def ReadItemTimeStep(
+        self,
+        itemNumber: Union[int, DfsItemData],
+        timestepIndex: int,
+        reshape: bool = False,
+    ) -> DfsItemData:
         """
         Reads the dynamic item-timestep as specified from the file. It throws an
         exception if itemNumber or timestepIndex
@@ -961,8 +1076,10 @@ class DfsFile:
         :return DfsItemData: The dynamic item-timestep as specified
         """
         self.__CheckIfOpen()
-        if (self.fpState == DfsFilePointerState.CreatingItems):
-            raise Exception("No dynamic items have been written to the file yet (file is being created).")
+        if self.fpState == DfsFilePointerState.CreatingItems:
+            raise Exception(
+                "No dynamic items have been written to the file yet (file is being created)."
+            )
 
         if isinstance(itemNumber, DfsItemData):
             itemData = itemNumber
@@ -973,16 +1090,24 @@ class DfsFile:
         itemInfoCount = len(self.ItemInfo)
 
         # Check item number and timestep index ranges
-        if (itemInfoCount == 0): 
+        if itemInfoCount == 0:
             raise Exception("File has no dynamic items.")
-        if (itemNumber <= 0 or itemNumber > itemInfoCount):
-            raise Exception("itemNumber","Must be within [1,NumberOfItems].")
-        if (timestepIndex < 0 or timestepIndex >= self.FileInfo.TimeAxis.NumberOfTimeSteps):
-            raise Exception("timestepIndex", "Must be within [0," + (self.FileInfo.TimeAxis.NumberOfTimeSteps-1) + "].")
+        if itemNumber <= 0 or itemNumber > itemInfoCount:
+            raise Exception("itemNumber", "Must be within [1,NumberOfItems].")
+        if (
+            timestepIndex < 0
+            or timestepIndex >= self.FileInfo.TimeAxis.NumberOfTimeSteps
+        ):
+            raise Exception(
+                "timestepIndex",
+                "Must be within [0,"
+                + (self.FileInfo.TimeAxis.NumberOfTimeSteps - 1)
+                + "].",
+            )
 
         # Position file pointer
         self.__FpFindItemTimeStep(itemNumber, timestepIndex)
-        return (self.ReadItemTimeStepNext(itemData, reshape))
+        return self.ReadItemTimeStepNext(itemData, reshape)
 
     def __GetTime(self, time, timestepIndex):
         # TODO: This assumes time in seconds?
@@ -993,10 +1118,9 @@ class DfsFile:
             return timeaxis.StartTimeOffset + timestepIndex * timeaxis.TimeStep
         return time
 
-
     def WriteItemTimeStep(self, itemNumber, timestepIndex, time, data):
         """
-        Writes data to the specified item and timestep in the file. 
+        Writes data to the specified item and timestep in the file.
 
         If the item-timestep exists already, data is updated. If it does not
         exist, the item number and timestep index must match exactly the next
@@ -1013,30 +1137,45 @@ class DfsFile:
         :param data numpy.ndarray: Data to write to file
         """
         self.__CheckIfOpen()
-        if (self.fpState == DfsFilePointerState.CreatingItems 
-            and itemNumber != 1 
-            and timestepIndex != 0):
-            raise Exception("No dynamic items have been written to the file yet (file is being created).")
+        if (
+            self.fpState == DfsFilePointerState.CreatingItems
+            and itemNumber != 1
+            and timestepIndex != 0
+        ):
+            raise Exception(
+                "No dynamic items have been written to the file yet (file is being created)."
+            )
 
         itemInfoCount = len(self.ItemInfo)
 
-        if (itemInfoCount == 0): 
+        if itemInfoCount == 0:
             raise Exception("File has no dynamic items.")
 
         # Check item number and timestep index ranges
-        if (itemNumber <= 0 or itemNumber > itemInfoCount):
+        if itemNumber <= 0 or itemNumber > itemInfoCount:
             raise Exception("itemNumber must be within [1,NumberOfItems].")
-        if (timestepIndex < 0 or timestepIndex > self.FileInfo.TimeAxis.NumberOfTimeSteps):
-            raise Exception("timestepIndex must be within [0," + (self.FileInfo.TimeAxis.NumberOfTimeSteps - 1) + "].")
+        if (
+            timestepIndex < 0
+            or timestepIndex > self.FileInfo.TimeAxis.NumberOfTimeSteps
+        ):
+            raise Exception(
+                "timestepIndex must be within [0,"
+                + (self.FileInfo.TimeAxis.NumberOfTimeSteps - 1)
+                + "]."
+            )
 
         # More elaborate action is required, when appending to file. If appending then
         # (itemNumber == _fpItemNumber && timestepIndex == _fileInfo.TimeAxis.NumberOfTimeSteps == _fpTimeStepIndex)
-        if (timestepIndex == self.FileInfo.TimeAxis.NumberOfTimeSteps):
-            if (timestepIndex == self.fpTimeStepIndex 
-                and itemNumber != self.fpItemNumber  
-                or timestepIndex != self.fpTimeStepIndex 
-                and itemNumber != 1):
-                raise IndexError("Wrong item number while trying to append item data to file. Item data must be appended in order, and for all items in the time step")
+        if timestepIndex == self.FileInfo.TimeAxis.NumberOfTimeSteps:
+            if (
+                timestepIndex == self.fpTimeStepIndex
+                and itemNumber != self.fpItemNumber
+                or timestepIndex != self.fpTimeStepIndex
+                and itemNumber != 1
+            ):
+                raise IndexError(
+                    "Wrong item number while trying to append item data to file. Item data must be appended in order, and for all items in the time step"
+                )
 
         # Position file pointer
         self.__FpFindItemTimeStep(itemNumber, timestepIndex)
@@ -1045,7 +1184,7 @@ class DfsFile:
 
     def WriteItemTimeStepNext(self, time, data):
         """
-        Writes the next dynamic item-timestep. 
+        Writes the next dynamic item-timestep.
 
         If the file pointer points to the end of the file, this will append
         a new item-timestep to the file. If the file pointer points to an
@@ -1053,12 +1192,12 @@ class DfsFile:
 
         Remember that the file pointer position depends on the mode that the file
         was opened: In edit mode the file pointer points at the first item-timestep.
-        In append mode the file pointer points initially at the end of file. 
+        In append mode the file pointer points initially at the end of file.
 
-        It iterates over the item-timesteps as the ReadItemTimeStepNext, 
+        It iterates over the item-timesteps as the ReadItemTimeStepNext,
         see there for more details.
 
-        This is the most efficient way to iterate through and update/append the items and 
+        This is the most efficient way to iterate through and update/append the items and
         timesteps in a file, since it iterates exactly as the data is stored on the disk.
 
         The size of the data must match the data size of the item that is to be written.
@@ -1070,45 +1209,50 @@ class DfsFile:
         :param data numpy.ndarray: Data to write to file
         """
         self.__CheckIfOpen()
-        if (len(self.ItemInfo) == 0):
-           raise Exception("File has no dynamic items.")
+        if len(self.ItemInfo) == 0:
+            raise Exception("File has no dynamic items.")
 
-        if (self.fpState == DfsFilePointerState.CreatingItems):
+        if self.fpState == DfsFilePointerState.CreatingItems:
             # The file is being created, we are writing the first item, first timestep
             self.fpState = DfsFilePointerState.DynamicItem
             self.fpItemNumber = 1
             self.fpTimeStepIndex = 0
-        if (self.fpState != DfsFilePointerState.DynamicItem):
+        if self.fpState != DfsFilePointerState.DynamicItem:
             # Position file pointer at first timestep and first item.
             self.__FpFindBlockDynamic()
 
         dynamicItem = self.ItemInfo[self.fpItemNumber - 1]
 
         # data.Length can be larger than the number of elements.
-        if (dynamicItem.ElementCount > data.size):
+        if dynamicItem.ElementCount > data.size:
             raise Exception(
-                "Data is of wrong size. Item has {} elements, data is {} long.".format(dynamicItem.ElementCount,data.Length))
+                "Data is of wrong size. Item has {} elements, data is {} long.".format(
+                    dynamicItem.ElementCount, data.Length
+                )
+            )
 
-        if   (dynamicItem.DataType == DfsSimpleType.Float  and data.dtype != np.float32):
+        if dynamicItem.DataType == DfsSimpleType.Float and data.dtype != np.float32:
             raise Exception("Expecting float data, got " + str(data.dtype))
-        elif (dynamicItem.DataType == DfsSimpleType.Double and data.dtype != np.float64):
+        elif dynamicItem.DataType == DfsSimpleType.Double and data.dtype != np.float64:
             raise Exception("Expecting double data, got " + str(data.dtype))
-        elif (dynamicItem.DataType == DfsSimpleType.Byte   and data.dtype != np.int8):
+        elif dynamicItem.DataType == DfsSimpleType.Byte and data.dtype != np.int8:
             raise Exception("Expecting byte (int8) data, got " + str(data.dtype))
-        elif (dynamicItem.DataType == DfsSimpleType.Int    and data.dtype != np.int32):
+        elif dynamicItem.DataType == DfsSimpleType.Int and data.dtype != np.int32:
             raise Exception("Expecting int32 data, got " + str(data.dtype))
-        elif (dynamicItem.DataType == DfsSimpleType.UInt   and data.dtype != np.uint32):
+        elif dynamicItem.DataType == DfsSimpleType.UInt and data.dtype != np.uint32:
             raise Exception("Expecting uint32 data, got " + str(data.dtype))
-        elif (dynamicItem.DataType == DfsSimpleType.Short  and data.dtype != np.int16):
+        elif dynamicItem.DataType == DfsSimpleType.Short and data.dtype != np.int16:
             raise Exception("Expecting int16 data, got " + str(data.dtype))
-        elif (dynamicItem.DataType == DfsSimpleType.UShort and data.dtype != np.uint16):
+        elif dynamicItem.DataType == DfsSimpleType.UShort and data.dtype != np.uint16:
             raise Exception("Expecting uint16 data, got " + str(data.dtype))
 
-        DfsDLL.Wrapper.dfsWriteItemTimeStep(self.headPointer, self.filePointer, ctypes.c_double(time), data.ctypes.data)
+        DfsDLL.Wrapper.dfsWriteItemTimeStep(
+            self.headPointer, self.filePointer, ctypes.c_double(time), data.ctypes.data
+        )
 
-        if (self.__FpDynamicIncrement()):
-            if (self.fpTimeStepIndex > self.FileInfo.TimeAxis.NumberOfTimeSteps):
-                # One entire time step (all items) has just been written to file, 
+        if self.__FpDynamicIncrement():
+            if self.fpTimeStepIndex > self.FileInfo.TimeAxis.NumberOfTimeSteps:
+                # One entire time step (all items) has just been written to file,
                 # increment the number of time steps
                 self.FileInfo.TimeAxis.IncrementNumberOfTimeSteps(time)
 
@@ -1124,7 +1268,7 @@ class DfsFile:
 
     def FindItem(self, itemNumber, timestepIndex):
         """
-        Positions the file pointer at the location in the file where the 
+        Positions the file pointer at the location in the file where the
         specified dynamic item at the specified time step starts.
 
         :param itemNumber: Number of item to find (1-based)
@@ -1135,7 +1279,7 @@ class DfsFile:
 
     def FindTimeStep(self, timestepIndex):
         """
-        Positions the file pointer at the location in the file where the 
+        Positions the file pointer at the location in the file where the
         specified time step starts.
         :param timestepIndex: Index of time step to find (0-based)
         """
@@ -1144,7 +1288,7 @@ class DfsFile:
 
     def Flush(self):
         """
-        Flush cached data to the file. This will especially update the header information, 
+        Flush cached data to the file. This will especially update the header information,
         such that if another process is reading the file while it is being read, the new
         header information can be retrieved.
         """
@@ -1153,8 +1297,8 @@ class DfsFile:
 
     def FlushTimeStep(self):
         """
-        Flush cached data to the file. This will update the time part of the header information, 
-        but not other parts of the header. 
+        Flush cached data to the file. This will update the time part of the header information,
+        but not other parts of the header.
 
         Compared to the `Flush` method; the `Flush` will update
         statistics of all items (if enabled) and all modifications to the header data.
@@ -1165,16 +1309,15 @@ class DfsFile:
         self.__CheckIfOpen()
         DfsDLL.Wrapper.dfsFileFlushTimeStep(self.headPointer, self.filePointer)
 
-    def CreateEmptyItemData(self, item, reshape = False):
+    def CreateEmptyItemData(self, item, reshape=False):
         """Create an empty DfsItemData object with the size matching the item.
 
         :param item Union[DfsDynamicItem,int]: Dynamic item to create item data for. The int version is the item number, 1-based.
         :returns DfsItemData: an empty item data object of the correct size
         """
-        if (isinstance(item, int)):
-            item = self.ItemInfo[item-1]
+        if isinstance(item, int):
+            item = self.ItemInfo[item - 1]
         return item.CreateEmptyItemData(reshape)
-
 
     def ReadDfs0DataDouble(self, itemsToLoad=None):
         """
@@ -1193,38 +1336,42 @@ class DfsFile:
         # Size of matrix is numTimeSteps x (numItems + 1)
         numItems = len(self.ItemInfo)
         numTimeSteps = self.FileInfo.TimeAxis.NumberOfTimeSteps
-        if (itemsToLoad is None):
+        if itemsToLoad is None:
             numItemsToLoad = numItems
-        elif (type(itemsToLoad) is list):
+        elif type(itemsToLoad) is list:
             itemsToLoad = np.array(itemsToLoad, dtype=np.int32)
             numItemsToLoad = len(itemsToLoad)
         else:
             numItemsToLoad = len(itemsToLoad)
 
-        npSize = (numItemsToLoad+1) * numTimeSteps
+        npSize = (numItemsToLoad + 1) * numTimeSteps
 
         data = np.zeros(npSize, dtype=np.float64)
-        if (itemsToLoad is None):
+        if itemsToLoad is None:
             success = DfsDLL.Wrapper.dfsReadDfs0DataDouble(
                 self.headPointer, self.filePointer, data.ctypes.data
             )
         else:
             success = DfsDLL.Wrapper.dfsReadDfs0ItemsDouble(
-                self.headPointer, self.filePointer, data.ctypes.data, itemsToLoad.ctypes.data, numItemsToLoad
+                self.headPointer,
+                self.filePointer,
+                data.ctypes.data,
+                itemsToLoad.ctypes.data,
+                numItemsToLoad,
             )
         if success != 0:
             return None
 
-        data = data.reshape( (numTimeSteps, numItemsToLoad + 1))
+        data = data.reshape((numTimeSteps, numItemsToLoad + 1))
 
         # Need to handle StartTimeOffset similar to in __GetTime
         timeaxis = self.FileInfo.TimeAxis
         if timeaxis.TimeAxisType == TimeAxisType.TimeEquidistant:
             if timeaxis.StartTimeOffset != 0.0:
-                data[:,0] = data[:,0] + timeaxis.StartTimeOffset 
+                data[:, 0] = data[:, 0] + timeaxis.StartTimeOffset
         elif timeaxis.TimeAxisType == TimeAxisType.CalendarEquidistant:
             if timeaxis.StartTimeOffset != 0.0:
-                data[:,0] = data[:,0] + timeaxis.StartTimeOffset 
+                data[:, 0] = data[:, 0] + timeaxis.StartTimeOffset
 
         return data
 
@@ -1242,19 +1389,23 @@ class DfsFile:
         # Size of matrix is numTimeSteps x (numItems + 1)
         numItems = len(self.ItemInfo)
         numTimeSteps = data.shape[0]
-        
-        if data.shape[1] != numItems+1:
-            raise Exception("Number of items in file does not match number of items in data")
-        if data.dtype != np.float64:
-            raise Exception("Type of input data is incorrect. Must be float(64), but is: " + str(data.dtype))
 
-        data = np.require(data, requirements=['C'])
+        if data.shape[1] != numItems + 1:
+            raise Exception(
+                "Number of items in file does not match number of items in data"
+            )
+        if data.dtype != np.float64:
+            raise Exception(
+                "Type of input data is incorrect. Must be float(64), but is: "
+                + str(data.dtype)
+            )
+
+        data = np.require(data, requirements=["C"])
         success = DfsDLL.Wrapper.dfsWriteDfs0DataDouble(
             self.headPointer, self.filePointer, data.ctypes.data, numTimeSteps
         )
 
         return success
-
 
     def __CheckIfOpen(self):
         if self.filePointer.value is None:
@@ -1308,7 +1459,9 @@ class DfsFile:
 
     def __DynamicItemInfoReadAndCreate(self, itemNumber, noOfItems):
         if itemNumber < 1 or itemNumber > noOfItems:
-            raise ValueError("Item number must be in the range of 1 - {}".format(noOfItems))
+            raise ValueError(
+                "Item number must be in the range of 1 - {}".format(noOfItems)
+            )
         itemPointer = ctypes.c_void_p(
             DfsDLL.Wrapper.dfsItemD(self.headPointer, itemNumber)
         )
@@ -1320,14 +1473,18 @@ class DfsFile:
 
         # Check if we can read it. staticVectorPointer contains both item info and data
         fioError = ctypes.c_int32()
-        staticVectorPointer = DfsDLL.Wrapper.dfsStaticRead(self.filePointer, ctypes.byref(fioError))
+        staticVectorPointer = DfsDLL.Wrapper.dfsStaticRead(
+            self.filePointer, ctypes.byref(fioError)
+        )
         DfsDLL.CheckReturnCode(fioError.value)
 
-        if (staticVectorPointer is None):
-            return (None)
+        if staticVectorPointer is None:
+            return None
 
         # Get pointer to static item info
-        staticItemPointer = ctypes.c_void_p(DfsDLL.Wrapper.dfsItemS(staticVectorPointer))
+        staticItemPointer = ctypes.c_void_p(
+            DfsDLL.Wrapper.dfsItemS(staticVectorPointer)
+        )
 
         staticItem = DfsStaticItem(self, staticVectorPointer, staticItemPointer, number)
         staticItem.DfsFile = self
@@ -1337,7 +1494,7 @@ class DfsFile:
         # Otherwise unit conversion of static item info (spatial axis) will fail (in ufs.dll
         # a delete value from header (pdfs) is required for dfsGet/SetItemAxisXXX).
         DfsDLL.Wrapper.dfsStaticSetHeader(self.headPointer, staticItem.ItemPointer)
-        
+
         # if (ubgConversion):
         #     staticItem.SetUnitConversion(UnitConversionType.UbgConversion, default(eumUnit));
         #     staticItem.SetAxisUnitConversion(UnitConversionType.UbgConversion, default(eumUnit));
@@ -1345,7 +1502,7 @@ class DfsFile:
         self.__GetItemInfo(staticItem)
         self.__GetStaticData(staticItem)
 
-        return (staticItem)
+        return staticItem
 
     def __GetItemInfo(self, item):
         eumItemIntP = ctypes.c_int32()
@@ -1380,14 +1537,13 @@ class DfsFile:
         item.ElementCount = DfsDLL.Wrapper.dfsGetItemElements(item.ItemPointer)
         item.SpatialAxis = DfsDLLUtil.GetItemSpatialAxis(item.ItemPointer)
 
-
     def __GetStaticData(self, item):
         data = item.CreateEmptyItemDataData()
         DfsDLL.Wrapper.dfsStaticGetData(item.StaticVectorPointer, data.ctypes.data)
         item.Data = data
 
 
-class DfsDLLUtil():
+class DfsDLLUtil:
     """Utilities class, creating various Dfs classes based on pointers to DFS native data"""
 
     # In case of incorrect eumUnitInt then return eumUmeter, the default axis unit
@@ -1401,19 +1557,19 @@ class DfsDLLUtil():
 
     @staticmethod
     def GetDfsType(arrayData):
-        if   (arrayData.dtype == np.float32):
+        if arrayData.dtype == np.float32:
             datatype = DfsSimpleType.Float
-        elif (arrayData.dtype == np.float64):
+        elif arrayData.dtype == np.float64:
             datatype = DfsSimpleType.Double
-        elif (arrayData.dtype == np.int32):
+        elif arrayData.dtype == np.int32:
             datatype = DfsSimpleType.Int
-        elif (arrayData.dtype == np.uint32):
+        elif arrayData.dtype == np.uint32:
             datatype = DfsSimpleType.UInt
-        elif (arrayData.dtype == np.int16):
+        elif arrayData.dtype == np.int16:
             datatype = DfsSimpleType.Short
-        elif (arrayData.dtype == np.uint16):
+        elif arrayData.dtype == np.uint16:
             datatype = DfsSimpleType.UShort
-        elif (arrayData.dtype == np.int8):
+        elif arrayData.dtype == np.int8:
             datatype = DfsSimpleType.Byte
         else:
             raise Exception("Data type not supported: {0}".format(arrayData.dtype))
@@ -1422,23 +1578,25 @@ class DfsDLLUtil():
     @staticmethod
     def GetProjection(headerPointer):
         type = ProjectionType(DfsDLL.Wrapper.dfsGetGeoInfoType(headerPointer))
-        if (type == ProjectionType.Projection):
+        if type == ProjectionType.Projection:
             wktString = ctypes.c_char_p()
             lon0 = ctypes.c_double()
             lat0 = ctypes.c_double()
             orientation = ctypes.c_double()
             DfsDLL.Wrapper.dfsGetGeoInfoUTMProj(
-                headerPointer, 
-                ctypes.byref(wktString), 
-                ctypes.byref(lon0), 
-                ctypes.byref(lat0), 
-                ctypes.byref(orientation))
+                headerPointer,
+                ctypes.byref(wktString),
+                ctypes.byref(lon0),
+                ctypes.byref(lat0),
+                ctypes.byref(orientation),
+            )
             projection = DfsProjection(
-                type, 
-                wktString.value.decode("ascii"), 
-                lon0.value, 
-                lat0.value, 
-                orientation.value)
+                type,
+                wktString.value.decode("ascii"),
+                lon0.value,
+                lat0.value,
+                orientation.value,
+            )
         else:
             projection = DfsProjection(type, "", 0, 0, 0)
 
@@ -1501,14 +1659,14 @@ class DfsDLLUtil():
             )
             return res
         elif timeAxisType is TimeAxisType.CalendarEquidistant:
-            startDateStr     = ctypes.c_char_p()
-            startTimeStr     = ctypes.c_char_p()
-            eumTimeUnitInt   = ctypes.c_int()
+            startDateStr = ctypes.c_char_p()
+            startTimeStr = ctypes.c_char_p()
+            eumTimeUnitInt = ctypes.c_int()
             eumTimeUnitDescr = ctypes.c_char_p()
-            starttime        = ctypes.c_double()
-            timestep         = ctypes.c_double()
-            numTimeSteps     = ctypes.c_int32()
-            firstIndex       = ctypes.c_int32()
+            starttime = ctypes.c_double()
+            timestep = ctypes.c_double()
+            numTimeSteps = ctypes.c_int32()
+            firstIndex = ctypes.c_int32()
 
             DfsDLL.Wrapper.dfsGetEqCalendarAxis(
                 headPointer,
@@ -1525,7 +1683,7 @@ class DfsDLLUtil():
             timeStr = startTimeStr.value.decode("ascii")
             # startDateTime = datetime.fromisoformat("{dateStr}T{timeStr}".format(dateStr,timeStr));
             startDateTime = datetime.datetime.strptime(
-                "{} {}".format(dateStr,timeStr), "%Y-%m-%d %H:%M:%S"
+                "{} {}".format(dateStr, timeStr), "%Y-%m-%d %H:%M:%S"
             )
             res = DfsEqCalendarAxis(
                 eumUnit(eumTimeUnitInt.value),
@@ -1562,7 +1720,7 @@ class DfsDLLUtil():
             timeStr = startTimeStr.value.decode("ascii")
             # startDateTime = datetime.fromisoformat("{}T{}".format(dateStr,timeStr));
             startDateTime = datetime.datetime.strptime(
-                "{} {}".format(dateStr,timeStr), "%Y-%m-%d %H:%M:%S"
+                "{} {}".format(dateStr, timeStr), "%Y-%m-%d %H:%M:%S"
             )
             res = DfsNonEqCalendarAxis(
                 eumUnit(eumTimeUnitInt.value),
@@ -1584,9 +1742,11 @@ class DfsDLLUtil():
         if axisType == SpaceAxisType.EqD0:
             eumUnitInt = ctypes.c_int32()
             eumUnitDescr = ctypes.c_char_p()
-            DfsDLL.Wrapper.dfsGetItemAxisEqD0(itemPointer, ctypes.byref(eumUnitInt), ctypes.byref(eumUnitDescr))
+            DfsDLL.Wrapper.dfsGetItemAxisEqD0(
+                itemPointer, ctypes.byref(eumUnitInt), ctypes.byref(eumUnitDescr)
+            )
             axis = DfsAxisEqD0(DfsDLLUtil.ToEumAxisUnit(eumUnitInt.value))
-            return (axis)
+            return axis
 
         if axisType == SpaceAxisType.EqD1:
             eumUnitInt = ctypes.c_int32()
@@ -1595,14 +1755,20 @@ class DfsDLLUtil():
             x0 = ctypes.c_float()
             dx = ctypes.c_float()
             DfsDLL.Wrapper.dfsGetItemAxisEqD1(
-                itemPointer, 
-                ctypes.byref(eumUnitInt), 
-                ctypes.byref(eumUnitDescr), 
+                itemPointer,
+                ctypes.byref(eumUnitInt),
+                ctypes.byref(eumUnitDescr),
                 ctypes.byref(xCount),
-                ctypes.byref(x0), 
-                ctypes.byref(dx))
-            axis = DfsAxisEqD1(DfsDLLUtil.ToEumAxisUnit(eumUnitInt.value), xCount.value, x0.value, dx.value)
-            return (axis)
+                ctypes.byref(x0),
+                ctypes.byref(dx),
+            )
+            axis = DfsAxisEqD1(
+                DfsDLLUtil.ToEumAxisUnit(eumUnitInt.value),
+                xCount.value,
+                x0.value,
+                dx.value,
+            )
+            return axis
 
         if axisType == SpaceAxisType.NeqD1:
             raise NotSupportedException()
@@ -1617,17 +1783,26 @@ class DfsDLLUtil():
             y0 = ctypes.c_float()
             dy = ctypes.c_float()
             DfsDLL.Wrapper.dfsGetItemAxisEqD2(
-                itemPointer, 
-                ctypes.byref(eumUnitInt), 
-                ctypes.byref(eumUnitDescr), 
-                ctypes.byref(xCount), 
-                ctypes.byref(yCount), 
-                ctypes.byref(x0), 
-                ctypes.byref(y0), 
-                ctypes.byref(dx), 
-                ctypes.byref(dy))
-            axis = DfsAxisEqD2(DfsDLLUtil.ToEumAxisUnit(eumUnitInt.value), xCount.value, x0.value, dx.value, yCount.value, y0.value, dy.value)
-            return (axis)
+                itemPointer,
+                ctypes.byref(eumUnitInt),
+                ctypes.byref(eumUnitDescr),
+                ctypes.byref(xCount),
+                ctypes.byref(yCount),
+                ctypes.byref(x0),
+                ctypes.byref(y0),
+                ctypes.byref(dx),
+                ctypes.byref(dy),
+            )
+            axis = DfsAxisEqD2(
+                DfsDLLUtil.ToEumAxisUnit(eumUnitInt.value),
+                xCount.value,
+                x0.value,
+                dx.value,
+                yCount.value,
+                y0.value,
+                dy.value,
+            )
+            return axis
 
         if axisType == SpaceAxisType.NeqD2:
             raise NotSupportedException()
@@ -1645,26 +1820,37 @@ class DfsDLLUtil():
             z0 = ctypes.c_float()
             dz = ctypes.c_float()
             DfsDLL.Wrapper.dfsGetItemAxisEqD3(
-                itemPointer, 
-                ctypes.byref(eumUnitInt), 
-                ctypes.byref(eumUnitDescr), 
-                ctypes.byref(xCount), 
-                ctypes.byref(yCount), 
-                ctypes.byref(zCount), 
-                ctypes.byref(x0), 
-                ctypes.byref(y0), 
-                ctypes.byref(z0), 
-                ctypes.byref(dx), 
+                itemPointer,
+                ctypes.byref(eumUnitInt),
+                ctypes.byref(eumUnitDescr),
+                ctypes.byref(xCount),
+                ctypes.byref(yCount),
+                ctypes.byref(zCount),
+                ctypes.byref(x0),
+                ctypes.byref(y0),
+                ctypes.byref(z0),
+                ctypes.byref(dx),
                 ctypes.byref(dy),
                 ctypes.byref(dz),
-                )
-            axis = DfsAxisEqD3(DfsDLLUtil.ToEumAxisUnit(eumUnitInt.value), xCount.value, x0.value, dx.value, yCount.value, y0.value, dy.value, zCount.value, z0.value, dz.value)
+            )
+            axis = DfsAxisEqD3(
+                DfsDLLUtil.ToEumAxisUnit(eumUnitInt.value),
+                xCount.value,
+                x0.value,
+                dx.value,
+                yCount.value,
+                y0.value,
+                dy.value,
+                zCount.value,
+                z0.value,
+                dz.value,
+            )
             return axis
 
         if axisType == SpaceAxisType.NeqD3:
             raise NotSupportedException()
 
-        #if axisType == SpaceAxisType.EqD4:
+        # if axisType == SpaceAxisType.EqD4:
         #    raise NotSupportedException();
 
         if axisType == SpaceAxisType.CurveLinearD2:
@@ -1673,7 +1859,7 @@ class DfsDLLUtil():
         if axisType == SpaceAxisType.CurveLinearD3:
             raise NotSupportedException()
 
-        #if (   axisType == SpaceAxisType.TvarD1
+        # if (   axisType == SpaceAxisType.TvarD1
         #    or axisType == SpaceAxisType.TvarD2
         #    or axisType == SpaceAxisType.TvarD3):
         #    raise NotSupportedException();
@@ -1683,92 +1869,112 @@ class DfsDLLUtil():
     @staticmethod
     def dfsSetItemSpatialAxis(itemPointer, spatialAxis):
         axis = spatialAxis
-        if   spatialAxis.AxisType is SpaceAxisType.Undefined:
+        if spatialAxis.AxisType is SpaceAxisType.Undefined:
             raise Exception("Axis can not be undefined")
         elif spatialAxis.AxisType is SpaceAxisType.EqD0:
-            rok = DfsDLL.Wrapper.dfsSetItemAxisEqD0(itemPointer, ctypes.c_int32(axis.AxisUnit.value))
+            rok = DfsDLL.Wrapper.dfsSetItemAxisEqD0(
+                itemPointer, ctypes.c_int32(axis.AxisUnit.value)
+            )
             DfsDLL.CheckReturnCode(rok)
             return
         elif spatialAxis.AxisType is SpaceAxisType.EqD1:
             rok = DfsDLL.Wrapper.dfsSetItemAxisEqD1(
-                itemPointer, ctypes.c_int32(axis.AxisUnit.value), 
-                ctypes.c_int32(axis.XCount), ctypes.c_float(axis.X0), ctypes.c_float(axis.Dx))
+                itemPointer,
+                ctypes.c_int32(axis.AxisUnit.value),
+                ctypes.c_int32(axis.XCount),
+                ctypes.c_float(axis.X0),
+                ctypes.c_float(axis.Dx),
+            )
             DfsDLL.CheckReturnCode(rok)
             return
-        #elif spatialAxis.AxisType is SpaceAxisType.NeqD1:
+        # elif spatialAxis.AxisType is SpaceAxisType.NeqD1:
         #    rok = DfsDLL.Wrapper.dfsSetItemAxisNeqD1(itemPointer, ctypes.c_int32(axis.AxisUnit.values), axis.Coordinates.Length, axis.Coordinates, true);
         #    DfsDLL.CheckReturnCode(rok);
         elif spatialAxis.AxisType is SpaceAxisType.EqD2:
             rok = DfsDLL.Wrapper.dfsSetItemAxisEqD2(
-                itemPointer, ctypes.c_int32(axis.AxisUnit.value),
-                ctypes.c_int32(axis.XCount), ctypes.c_int32(axis.YCount),
-                ctypes.c_float(axis.X0), ctypes.c_float(axis.Y0),
-                ctypes.c_float(axis.Dx), ctypes.c_float(axis.Dy))
+                itemPointer,
+                ctypes.c_int32(axis.AxisUnit.value),
+                ctypes.c_int32(axis.XCount),
+                ctypes.c_int32(axis.YCount),
+                ctypes.c_float(axis.X0),
+                ctypes.c_float(axis.Y0),
+                ctypes.c_float(axis.Dx),
+                ctypes.c_float(axis.Dy),
+            )
             DfsDLL.CheckReturnCode(rok)
             return
-        #elif spatialAxis.AxisType is SpaceAxisType.NeqD2:
+        # elif spatialAxis.AxisType is SpaceAxisType.NeqD2:
         #    DfsDLL.Wrapper.dfsSetItemAxisNeqD2(itemPointer, ctypes.c_int32(axis.AxisUnit.value),
         #                                     axis.XCoordinates.Length-1, axis.YCoordinates.Length-1,
         #                                     axis.XCoordinates, axis.YCoordinates, true);
         #    DfsDLL.CheckReturnCode(rok);
         elif spatialAxis.AxisType is SpaceAxisType.EqD3:
             rok = DfsDLL.Wrapper.dfsSetItemAxisEqD3(
-                itemPointer, ctypes.c_int32(axis.AxisUnit.value),
-                ctypes.c_int32(axis.XCount), ctypes.c_int32(axis.YCount), axis.ZCount,
-                ctypes.c_float(axis.X0), ctypes.c_float(axis.Y0), ctypes.c_float(axis.Z0),
-                ctypes.c_float(axis.Dx), ctypes.c_float(axis.Dy), ctypes.c_float(axis.Dz))
+                itemPointer,
+                ctypes.c_int32(axis.AxisUnit.value),
+                ctypes.c_int32(axis.XCount),
+                ctypes.c_int32(axis.YCount),
+                axis.ZCount,
+                ctypes.c_float(axis.X0),
+                ctypes.c_float(axis.Y0),
+                ctypes.c_float(axis.Z0),
+                ctypes.c_float(axis.Dx),
+                ctypes.c_float(axis.Dy),
+                ctypes.c_float(axis.Dz),
+            )
             DfsDLL.CheckReturnCode(rok)
-        #elif spatialAxis.AxisType is SpaceAxisType.NeqD3:
+        # elif spatialAxis.AxisType is SpaceAxisType.NeqD3:
         #    rok = DfsDLL.Wrapper.dfsSetItemAxisNeqD3(itemPointer, ctypes.c_int32(axis.AxisUnit.value),
         #                                     axis.XCoordinates.Length - 1, axis.YCoordinates.Length - 1, axis.ZCoordinates.Length - 1,
         #                                     axis.XCoordinates, axis.YCoordinates, axis.ZCoordinates, true);
         #    DfsDLL.CheckReturnCode(rok);
-        #elif spatialAxis.AxisType is SpaceAxisType.EqD4:
+        # elif spatialAxis.AxisType is SpaceAxisType.EqD4:
         #    rok = DfsDLL.Wrapper.dfsSetItemAxisEqD4(
         #        itemPointer, ctypes.c_int32(axis.AxisUnit.value),
         #        ctypes.c_int32(axis.XCount), ctypes.c_int32(axis.YCount), ctypes.c_int32(axis.ZCount), ctypes.c_int32(axis.FCount),
         #        ctypes.c_float(axis.X0), ctypes.c_float(axis.Y0), ctypes.c_float(axis.Z0), ctypes.c_float(axis.F0),
         #        ctypes.c_float(axis.Dx), ctypes.c_float(axis.Dy), ctypes.c_float(axis.Dz), ctypes.c_float(axis.Df));
         #    DfsDLL.CheckReturnCode(rok);
-        #elif spatialAxis.AxisType is SpaceAxisType.CurveLinearD2:
+        # elif spatialAxis.AxisType is SpaceAxisType.CurveLinearD2:
         #    rok = DfsDLL.Wrapper.dfsSetItemAxisCurveLinearD2(itemPointer, (int) axis.AxisUnit.value,
         #                                              ctypes.c_int32(axis.XCount), ctypes.c_int32(axis.YCount),
-        #                                              axis.XCoordinates, axis.YCoordinates, 
+        #                                              axis.XCoordinates, axis.YCoordinates,
         #                                              true);
         #    DfsDLL.CheckReturnCode(rok);
-        #elif spatialAxis.AxisType is SpaceAxisType.CurveLinearD3:
+        # elif spatialAxis.AxisType is SpaceAxisType.CurveLinearD3:
         #    rok = DfsDLL.Wrapper.dfsSetItemAxisCurveLinearD3(itemPointer, (int) axis.AxisUnit.value,
         #                                              ctypes.c_int32(axis.XCount), ctypes.c_int32(axis.YCount), axis.ZCount,
-        #                                              axis.XCoordinates, axis.YCoordinates, axis.ZCoordinates, 
+        #                                              axis.XCoordinates, axis.YCoordinates, axis.ZCoordinates,
         #                                              true);
         #    DfsDLL.CheckReturnCode(rok);
-        #elif (   spatialAxis.AxisType is SpaceAxisType.TvarD1
+        # elif (   spatialAxis.AxisType is SpaceAxisType.TvarD1
         #      or spatialAxis.AxisType is SpaceAxisType.TvarD2
         #      or spatialAxis.AxisType is SpaceAxisType.TvarD3):
         #    raise Exception("Not supported: Axis type: " + spatialAxis.AxisType);
 
-
-
     @staticmethod
     def BuildCustomBlocks(headPointer):
         customBlockP = ctypes.c_void_p()
-        rok = DfsDLL.Wrapper.dfsGetCustomBlockRef(headPointer, ctypes.byref(customBlockP))
+        rok = DfsDLL.Wrapper.dfsGetCustomBlockRef(
+            headPointer, ctypes.byref(customBlockP)
+        )
         DfsDLL.CheckReturnCode(rok)
         customBlocks = []
-        while (customBlockP.value != None):
+        while customBlockP.value != None:
             customBlockP, dfsCustomBlock = DfsDLLUtil.__CustomBlockRead(customBlockP)
             customBlocks.append(dfsCustomBlock)
-        return (customBlocks)
+        return customBlocks
 
     @staticmethod
     def dfsAddCustomBlock(headerPointer, customBlock):
         values = customBlock.Values
         rok = DfsDLL.Wrapper.dfsAddCustomBlock(
-            headerPointer, 
-            ctypes.c_int32(customBlock.SimpleType.value), 
-            ctypes.c_char_p(customBlock.Name.encode("ascii")), 
-            ctypes.c_int32(values.size), 
-            values.ctypes.data)
+            headerPointer,
+            ctypes.c_int32(customBlock.SimpleType.value),
+            ctypes.c_char_p(customBlock.Name.encode("ascii")),
+            ctypes.c_int32(values.size),
+            values.ctypes.data,
+        )
         DfsDLL.CheckReturnCode(rok)
 
     @staticmethod
@@ -1778,57 +1984,56 @@ class DfsDLLUtil():
         customBlockDataPointer = ctypes.c_void_p()
         dataTypeP = ctypes.c_int32()
         DfsDLL.Wrapper.dfsGetCustomBlock(
-            customBlockPointer, 
-            ctypes.byref(dataTypeP), 
+            customBlockPointer,
+            ctypes.byref(dataTypeP),
             ctypes.byref(name),
-            ctypes.byref(size), 
+            ctypes.byref(size),
             ctypes.byref(customBlockDataPointer),
-            ctypes.byref(customBlockPointer))
+            ctypes.byref(customBlockPointer),
+        )
 
         size = size.value
         dataType = DfsSimpleType(dataTypeP.value)
         data = None
 
-        if   dataType is DfsSimpleType.Float:
+        if dataType is DfsSimpleType.Float:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_float))
             # wrap numpy array around C array
-            data  = np.ctypeslib.as_array(datap,shape=(size,))
+            data = np.ctypeslib.as_array(datap, shape=(size,))
 
         elif dataType is DfsSimpleType.Double:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_double))
             # wrap numpy array around C array
-            data  = np.ctypeslib.as_array(datap,shape=(size,))
+            data = np.ctypeslib.as_array(datap, shape=(size,))
 
         elif dataType is DfsSimpleType.Byte:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_byte))
             # wrap numpy array around C array
-            data  = np.ctypeslib.as_array(datap,shape=(size,))
+            data = np.ctypeslib.as_array(datap, shape=(size,))
 
         elif dataType is DfsSimpleType.Int:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_int32))
             # wrap numpy array around C array
-            data  = np.ctypeslib.as_array(datap,shape=(size,))
+            data = np.ctypeslib.as_array(datap, shape=(size,))
 
         elif dataType is DfsSimpleType.UInt:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_uint32))
             # wrap numpy array around C array
-            data  = np.ctypeslib.as_array(datap,shape=(size,))
+            data = np.ctypeslib.as_array(datap, shape=(size,))
 
         elif dataType is DfsSimpleType.Short:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_uint16))
             # wrap numpy array around C array
-            data  = np.ctypeslib.as_array(datap,shape=(size,))
+            data = np.ctypeslib.as_array(datap, shape=(size,))
 
         elif dataType is DfsSimpleType.UShort:
             datap = ctypes.cast(customBlockDataPointer, ctypes.POINTER(ctypes.c_uint16))
             # wrap numpy array around C array
-            data  = np.ctypeslib.as_array(datap,shape=(size,))
-
+            data = np.ctypeslib.as_array(datap, shape=(size,))
 
         customBlock = DfsCustomBlock(
-            name.value.decode("ascii"),
-            DfsSimpleType(dataType.value),
-            data)
+            name.value.decode("ascii"), DfsSimpleType(dataType.value), data
+        )
 
         return customBlockPointer, customBlock
 
@@ -1838,41 +2043,44 @@ class DfsDLLUtil():
             raise Exception("Temporal axis can not be undefined")
         if temporalAxis.TimeAxisType is TimeAxisType.TimeEquidistant:
             rok = DfsDLL.Wrapper.dfsSetEqTimeAxis(
-                headerPointer, 
-                ctypes.c_int32(temporalAxis.TimeUnit.value), 
-                ctypes.c_double(temporalAxis.StartTimeOffset), 
-                ctypes.c_double(temporalAxis.TimeStep), 
-                ctypes.c_int32(temporalAxis.FirstTimeStepIndex))
+                headerPointer,
+                ctypes.c_int32(temporalAxis.TimeUnit.value),
+                ctypes.c_double(temporalAxis.StartTimeOffset),
+                ctypes.c_double(temporalAxis.TimeStep),
+                ctypes.c_int32(temporalAxis.FirstTimeStepIndex),
+            )
             DfsDLL.CheckReturnCode(rok)
         elif temporalAxis.TimeAxisType is TimeAxisType.TimeNonEquidistant:
             rok = DfsDLL.Wrapper.dfsSetNeqTimeAxis(
-                headerPointer, 
-                ctypes.c_int32(temporalAxis.TimeUnit.value), 
-                ctypes.c_double(temporalAxis.StartTimeOffset), 
-                ctypes.c_int32(temporalAxis.FirstTimeStepIndex))
+                headerPointer,
+                ctypes.c_int32(temporalAxis.TimeUnit.value),
+                ctypes.c_double(temporalAxis.StartTimeOffset),
+                ctypes.c_int32(temporalAxis.FirstTimeStepIndex),
+            )
             DfsDLL.CheckReturnCode(rok)
         elif temporalAxis.TimeAxisType is TimeAxisType.CalendarEquidistant:
             dateStr, timeStr = DfsDLLUtil.ToDfsDateStrings(temporalAxis.StartDateTime)
             rok = DfsDLL.Wrapper.dfsSetEqCalendarAxis(
-                headerPointer, 
-                ctypes.c_char_p(dateStr.encode("ascii")), 
-                ctypes.c_char_p(timeStr.encode("ascii")), 
-                ctypes.c_int32(temporalAxis.TimeUnit.value), 
-                ctypes.c_double(temporalAxis.StartTimeOffset), 
-                ctypes.c_double(temporalAxis.TimeStep), 
-                ctypes.c_int32(temporalAxis.FirstTimeStepIndex))
+                headerPointer,
+                ctypes.c_char_p(dateStr.encode("ascii")),
+                ctypes.c_char_p(timeStr.encode("ascii")),
+                ctypes.c_int32(temporalAxis.TimeUnit.value),
+                ctypes.c_double(temporalAxis.StartTimeOffset),
+                ctypes.c_double(temporalAxis.TimeStep),
+                ctypes.c_int32(temporalAxis.FirstTimeStepIndex),
+            )
             DfsDLL.CheckReturnCode(rok)
         elif temporalAxis.TimeAxisType is TimeAxisType.CalendarNonEquidistant:
             dateStr, timeStr = DfsDLLUtil.ToDfsDateStrings(temporalAxis.StartDateTime)
             rok = DfsDLL.Wrapper.dfsSetNeqCalendarAxis(
-                headerPointer, 
-                ctypes.c_char_p(dateStr.encode("ascii")), 
-                ctypes.c_char_p(timeStr.encode("ascii")), 
-                ctypes.c_int32(temporalAxis.TimeUnit.value), 
-                ctypes.c_double(temporalAxis.StartTimeOffset), 
-                ctypes.c_int32(temporalAxis.FirstTimeStepIndex))
+                headerPointer,
+                ctypes.c_char_p(dateStr.encode("ascii")),
+                ctypes.c_char_p(timeStr.encode("ascii")),
+                ctypes.c_int32(temporalAxis.TimeUnit.value),
+                ctypes.c_double(temporalAxis.StartTimeOffset),
+                ctypes.c_int32(temporalAxis.FirstTimeStepIndex),
+            )
             DfsDLL.CheckReturnCode(rok)
-
 
     @staticmethod
     def ToDfsDateStrings(datetime):

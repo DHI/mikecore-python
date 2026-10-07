@@ -4,8 +4,8 @@ from mikecore.DfsFile import *
 from numpy.testing import *
 from tests.test_util import *
 
-class Test_dfs_temporal_axis(unittest.TestCase):
 
+class Test_dfs_temporal_axis(unittest.TestCase):
     def test_ModifyEqCalTest(self):
         sourcefilename = "testdata/TemporalEqCal.dfs0"
         filename = "testdata/testtmp/test_temporal_modifyEqCal.dfs0"
@@ -23,7 +23,6 @@ class Test_dfs_temporal_axis(unittest.TestCase):
 
         dfsFile.Close()
 
-
         # Update temporal axis
         dfsFile = DfsFileFactory.DfsGenericOpenEdit(filename)
         timeAxis = dfsFile.FileInfo.TimeAxis
@@ -36,7 +35,6 @@ class Test_dfs_temporal_axis(unittest.TestCase):
 
         dfsFile.Close()
 
-
         # Load file from disc again, and check time axis
         dfsFile = DfsFileFactory.DfsGenericOpen(filename)
         timeAxis = dfsFile.FileInfo.TimeAxis
@@ -44,7 +42,7 @@ class Test_dfs_temporal_axis(unittest.TestCase):
         assert_equal(3, timeAxis.FirstTimeStepIndex)
         assert_equal(6, timeAxis.StartTimeOffset)
         assert_equal(eumUnit.eumUminute, timeAxis.TimeUnit)
-        assert_equal(datetime.datetime(2009, 2, 2, 21, 43, 00), timeAxis.StartDateTime) 
+        assert_equal(datetime.datetime(2009, 2, 2, 21, 43, 00), timeAxis.StartDateTime)
         assert_equal(1, timeAxis.TimeStep)
-          
+
         dfsFile.Close()
