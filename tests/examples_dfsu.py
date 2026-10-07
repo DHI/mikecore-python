@@ -1,3 +1,4 @@
+import math
 from datetime import datetime
 from mikecore.DfsFileFactory import *
 from mikecore.DfsuBuilder import *
@@ -12,6 +13,7 @@ class ExamplesDfsu:
     #/ Introductory example of how to load a dfsu file.
     #/ The method assumes that the OresundHD.dfsu test file
     #/ is the input file.
+    @staticmethod
     def ReadingDfsuFile(filename):
       file = DfsuFile.Open(filename);
 
@@ -36,6 +38,7 @@ class ExamplesDfsu:
     #/ The method assumes that the OresundHD.dfsu test file
     #/ is the input file.
     #/ <param name="filename">path and name of OresundHD.dfsu test file</param>
+    @staticmethod
     def FindElementForCoordinate(filename):
       file = DfsuFile.Open(filename);
       X = file.X;
@@ -95,6 +98,7 @@ class ExamplesDfsu:
     #/ The method will work on any dfsu file. The OresundHD.dfsu test file
     #/ (preferably a copy of it) can be used as input file.
     #/ <param name="filename">Path and name of a dfsu file</param>
+    @staticmethod
     def ModifyDfsuFileGeometry(filename):
       # Open file for editing
       dfsuFile = DfsuFile.OpenEdit(filename);
@@ -102,11 +106,11 @@ class ExamplesDfsu:
       dfsuFile.StartDateTime = datetime.datetime(2019,6,27,13,50,30);
 
       # Make a rotation matrix
-      rotation = 125.0 / 180.0 * Math.PI;
-      x1 = Math.Cos(rotation);
-      y1 = -Math.Sin(rotation);
-      x2 = Math.Sin(rotation);
-      y2 = Math.Cos(rotation);
+      rotation = 125.0 / 180.0 * math.pi;
+      x1 = math.cos(rotation);
+      y1 = -math.sin(rotation);
+      x2 = math.sin(rotation);
+      y2 = math.cos(rotation);
 
       # Get the x- and y-coordinates from the file
       x = dfsuFile.X;
@@ -134,6 +138,7 @@ class ExamplesDfsu:
     #/ from dfsu file are extracted.
     #/ <param name="dfsuFileNamePath">Name, including path, of 2D dfsu file</param>
     #/ <param name="elmtsIndices">Indices of elements to extract data from</param>
+    @staticmethod
     def ExtractDfs0FromDfsu(dfsuFileNamePath, elmtsIndices):
       # If not using stream approach, at most 400 elements at a time can be processed.
       # There is a limit on how many files you can have open at the same time using
@@ -227,6 +232,7 @@ class ExamplesDfsu:
     #/ <param name="sourceFilename">Path and name of the OresundHD.dfsu test file</param>
     #/ <param name="filename">Path and name of the new file to create</param>
     #/ <param name="zInMeters">Flag specifying whether the z values are in meters or feet </param>
+    @staticmethod
     def CreateDfsuFile(sourceFilename, filename, zInMeters):
       source = DfsuFile.Open(sourceFilename);
 
@@ -273,11 +279,11 @@ class ExamplesDfsu:
     #/     Negative values count from top down, i.e. -1 is toplayer, -2 is second layer from top etc.
     #/   </para>
     #/ </param>
+    @staticmethod
     def ExtractDfsu2DLayerFrom3D(filenameDfsu3, filenameDfsu2, layerNumber):
       dfsu3File = DfsFileFactory.DfsuFileOpen(filenameDfsu3);
 
       # Check that dfsu3 file is a 3D dfsu file.
-      switch (dfsu3File.DfsuFileType)
       if (    dfsu3File.DfsuFileType == DfsuFileType.Dfsu2D
         or dfsu3File.DfsuFileType == DfsuFileType.DfsuVerticalColumn
         or dfsu3File.DfsuFileType == DfsuFileType.DfsuVerticalProfileSigma
@@ -286,7 +292,6 @@ class ExamplesDfsu:
   
       # Calculate offset from toplayer element. Offset is between 0 (top layer) and
       # dfsu3File.NumberOfLayers-1 (bottom layer)
-      topLayerOffset;
       if (layerNumber > 0 and layerNumber <= dfsu3File.NumberOfLayers):
         topLayerOffset = dfsu3File.NumberOfLayers - layerNumber;
       elif (layerNumber < 0 and -layerNumber <= dfsu3File.NumberOfLayers):
@@ -409,7 +414,7 @@ class ExamplesDfsu:
             continue;
 
           # Loop over all 2D elements
-          for k in range(elmtsIndices.size):
+          for k in range(len(topLayer)):
             # Extract layer data from 3D column into 2D element value
             if (elementExists[k]):
               data2[k] = data3[topLayer[k] - topLayerOffset];
@@ -434,6 +439,7 @@ class ExamplesDfsu:
     #/ <param name="dfs2Filename">Name of input dfs2 file, e.g. the OresundHD.dfs2</param>
     #/ <param name="meshFilename">Name ou output mesh file</param>
     #/ <param name="dfsuFilename">Name of output dfsu file</param>
+    @staticmethod
     def CreateDfsuFromDfs2(dfs2Filename, meshFilename, dfsuFilename):
 
       # Open file
@@ -612,6 +618,7 @@ class ExamplesDfsu:
     #/ <param name="y1">Lower left y coordinate of sub area</param>
     #/ <param name="x2">upper right x coordinate of sub area</param>
     #/ <param name="y2">upper right y coordinate of sub area</param>
+    @staticmethod
     def ExtractSubareaDfsu2D(sourceFilename, outputFilename, x1, y1, x2, y2):
 
       dfsu = DfsFileFactory.DfsuFileOpen(sourceFilename);

@@ -5,7 +5,6 @@ from mikecore.DfsBuilder import *
 from mikecore.DfsFactory import *
 from mikecore.DfsFile import *
 from mikecore.eum import *
-from numpy.testing import *
 from tests.examples_dfs2 import *
 from tests.examples_misc import *
 from tests.test_util import *

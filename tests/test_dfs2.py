@@ -5,7 +5,7 @@ from mikecore.DfsBuilder import *
 from mikecore.DfsFactory import *
 from mikecore.DfsFile import *
 from mikecore.eum import *
-from numpy.testing import *
+from numpy.testing import assert_allclose, assert_equal
 from tests.examples_dfs2 import *
 from tests.test_util import *
 

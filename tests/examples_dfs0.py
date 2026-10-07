@@ -3,7 +3,6 @@ from mikecore.DfsBuilder import *
 from mikecore.DfsFactory import *
 from mikecore.DfsFile import *
 from mikecore.eum import *
-from numpy.testing import *
 
 class ExamplesDfs0:
 

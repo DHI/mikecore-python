@@ -3,7 +3,6 @@ import unittest
 from mikecore.MeshFile import MeshFile
 from mikecore.MeshBuilder import MeshBuilder
 from mikecore.eum import *
-from numpy.testing import *
 from tests.test_util import *
 
 class MeshTests(unittest.TestCase):
