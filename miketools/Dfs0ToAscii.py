@@ -46,6 +46,10 @@ def Dfs0ToAscii(dfs0FileName, txtFileName):
     for i in range(dfs.FileInfo.TimeAxis.NumberOfTimeSteps):
         for j in range(len(dfs.ItemInfo)):
             itemData = dfs.ReadItemTimeStepNext()
+            if itemData is None:
+                raise Exception(
+                    f"Could not read item {j + 1} at timestep index {i} from {dfs0FileName}"
+                )
             if j == 0:
                 if startDateTime is not None:
                     # TODO: Time unit is not always seconds

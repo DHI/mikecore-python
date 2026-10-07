@@ -813,20 +813,20 @@ class DfsFile:
         fnp = ctypes.c_char_p()
         fnp.value = filename.encode("cp1252")
 
-        if mode is DfsFileMode.Read:
+        if mode == DfsFileMode.Read:
             # Open file for reading
             rok = DfsDLL.Wrapper.dfsFileRead(
                 fnp.value,
                 ctypes.byref(self.headPointer),
                 ctypes.byref(self.filePointer),
             )
-        elif mode is DfsFileMode.Edit:
+        elif mode == DfsFileMode.Edit:
             rok = DfsDLL.Wrapper.dfsFileEdit(
                 fnp.value,
                 ctypes.byref(self.headPointer),
                 ctypes.byref(self.filePointer),
             )
-        elif mode is DfsFileMode.Append:
+        elif mode == DfsFileMode.Append:
             rok = DfsDLL.Wrapper.dfsFileAppend(
                 fnp.value,
                 ctypes.byref(self.headPointer),
@@ -847,17 +847,17 @@ class DfsFile:
         for i in range(noOfItems):
             self.ItemInfo.append(self.__DynamicItemInfoReadAndCreate(i + 1, noOfItems))
 
-        if mode is DfsFileMode.Read:
+        if mode == DfsFileMode.Read:
             # file pointer is after header part
             self.fpState = DfsFilePointerState.StaticItem
             self.fpItemNumber = 1
             self.fpTimeStepIndex = 0
-        if mode is DfsFileMode.Edit:
+        if mode == DfsFileMode.Edit:
             # file pointer is after header part
             self.fpState = DfsFilePointerState.StaticItem
             self.fpItemNumber = 1
             self.fpTimeStepIndex = 0
-        if mode is DfsFileMode.Append:
+        if mode == DfsFileMode.Append:
             # file pointer is after last time step
             self.fpState = DfsFilePointerState.DynamicItem
             self.fpItemNumber = 1
@@ -1048,14 +1048,11 @@ class DfsFile:
 
         if success != 0:
             return None
-        if reshape and item.SpatialAxis is not None and item.SpatialAxis.Dimension > 1:
-            values = values.reshape(item.SpatialAxis.Shape, order="F")
         time = self.__GetTime(timep.value, self.fpTimeStepIndex)
         if itemData is None:
             res = DfsItemData(self.fpTimeStepIndex, self.fpItemNumber, time, values)
         else:
             res = itemData
-            res.Data = values
             res.Time = time
             res.TimeStepIndex = self.fpTimeStepIndex
         self.__FpDynamicIncrement()
@@ -1066,7 +1063,7 @@ class DfsFile:
         itemNumber: int | DfsItemData,
         timestepIndex: int,
         reshape: bool = False,
-    ) -> DfsItemData:
+    ) -> DfsItemData | None:
         """
         Reads the dynamic item-timestep as specified from the file. It throws an
         exception if itemNumber or timestepIndex
@@ -1109,12 +1106,7 @@ class DfsFile:
 
         # Position file pointer
         self.__FpFindItemTimeStep(itemNumber, timestepIndex)
-        res = self.ReadItemTimeStepNext(itemData, reshape)
-        if res is None:
-            raise Exception(
-                f"Could not read item {itemNumber} at timestep index {timestepIndex}."
-            )
-        return res
+        return self.ReadItemTimeStepNext(itemData, reshape)
 
     def __GetTime(self, time, timestepIndex):
         # TODO: This assumes time in seconds?

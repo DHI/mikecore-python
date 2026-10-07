@@ -20,8 +20,7 @@ class Assert:
         if tol == 0:
             assert_equal(actual, expected)
         else:
-            # tol is relative, with the same value as an absolute floor for expected values near zero
-            assert_allclose(actual, expected, rtol=tol, atol=tol)
+            assert_allclose(actual, expected, rtol=tol)
 
     @staticmethod
     def IsNotNull(obj):

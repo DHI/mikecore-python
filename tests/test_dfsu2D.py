@@ -297,6 +297,36 @@ class Dfsu2DTests(unittest.TestCase):
         FileOresundHDDfsu.StaticItemTester(dfsFile)
         FileOresundHDDfsu.ReadTester(dfsFile)
 
+    def test_ExtractDfsu2DLayerFrom3D(self):
+        filenameDfsu3 = "testdata/OdenseHD3D.dfsu"
+        filenameDfsu2 = "testdata/testtmp/test_OdenseHD3D_toplayer.dfsu"
+        ExamplesDfsu.ExtractDfsu2DLayerFrom3D(filenameDfsu3, filenameDfsu2, -1)
+
+        dfsu3 = DfsFileFactory.DfsuFileOpen(filenameDfsu3)
+        dfsu2 = DfsFileFactory.DfsuFileOpen(filenameDfsu2)
+        topLayer = dfsu3.FindTopLayerElements()
+
+        Assert.AreEqual(DfsuFileType.Dfsu2D, dfsu2.DfsuFileType)
+        Assert.AreEqual(len(topLayer), dfsu2.NumberOfElements)
+        # Z coordinate item is on the nodes, so it is skipped
+        Assert.AreEqual(len(dfsu3.ItemInfo) - 1, len(dfsu2.ItemInfo))
+        Assert.AreEqual(dfsu3.NumberOfTimeSteps, dfsu2.NumberOfTimeSteps)
+
+        # Element nodes of the 2D mesh lie at the x,y of the 3D top layer element nodes
+        for i in [0, len(topLayer) // 2, len(topLayer) - 1]:
+            elmt3 = dfsu3.ElementTable[topLayer[i]]
+            elmt2 = dfsu2.ElementTable[i]
+            Assert.AreEqual(dfsu3.X[elmt3[: elmt2.size] - 1], dfsu2.X[elmt2 - 1])
+            Assert.AreEqual(dfsu3.Y[elmt3[: elmt2.size] - 1], dfsu2.Y[elmt2 - 1])
+
+        # Data equals the top layer values of the 3D file
+        data3 = dfsu3.ReadItemTimeStep(2, 5).Data
+        data2 = dfsu2.ReadItemTimeStep(1, 5).Data
+        Assert.AreEqual(data3[topLayer], data2)
+
+        dfsu3.Close()
+        dfsu2.Close()
+
 
 class FileOresundHDDfsu:
     @staticmethod
@@ -863,33 +893,3 @@ class FileOdenseHD2DDfsu:
 
 if __name__ == "__main__":
     unittest.main()
-
-    def test_ExtractDfsu2DLayerFrom3D(self):
-        filenameDfsu3 = "testdata/OdenseHD3D.dfsu"
-        filenameDfsu2 = "testdata/testtmp/test_OdenseHD3D_toplayer.dfsu"
-        ExamplesDfsu.ExtractDfsu2DLayerFrom3D(filenameDfsu3, filenameDfsu2, -1)
-
-        dfsu3 = DfsFileFactory.DfsuFileOpen(filenameDfsu3)
-        dfsu2 = DfsFileFactory.DfsuFileOpen(filenameDfsu2)
-        topLayer = dfsu3.FindTopLayerElements()
-
-        Assert.AreEqual(DfsuFileType.Dfsu2D, dfsu2.DfsuFileType)
-        Assert.AreEqual(len(topLayer), dfsu2.NumberOfElements)
-        # Z coordinate item is on the nodes, so it is skipped
-        Assert.AreEqual(len(dfsu3.ItemInfo) - 1, len(dfsu2.ItemInfo))
-        Assert.AreEqual(dfsu3.NumberOfTimeSteps, dfsu2.NumberOfTimeSteps)
-
-        # Element nodes of the 2D mesh lie at the x,y of the 3D top layer element nodes
-        for i in [0, len(topLayer) // 2, len(topLayer) - 1]:
-            elmt3 = dfsu3.ElementTable[topLayer[i]]
-            elmt2 = dfsu2.ElementTable[i]
-            Assert.AreEqual(dfsu3.X[elmt3[: elmt2.size] - 1], dfsu2.X[elmt2 - 1])
-            Assert.AreEqual(dfsu3.Y[elmt3[: elmt2.size] - 1], dfsu2.Y[elmt2 - 1])
-
-        # Data equals the top layer values of the 3D file
-        data3 = dfsu3.ReadItemTimeStep(2, 5).Data
-        data2 = dfsu2.ReadItemTimeStep(1, 5).Data
-        Assert.AreEqual(data3[topLayer], data2)
-
-        dfsu3.Close()
-        dfsu2.Close()

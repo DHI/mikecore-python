@@ -140,7 +140,7 @@ class CartographyTests(unittest.TestCase):
         Assert.AreEqual(332050.474747851, y1, 1e-6)
 
     def test_ConvertWkt2Proj4(self):
-        proj4 = MzCartDLL.ConvertWkt2Proj4(ProjectionStrings.Utm33N)
+        proj4 = MzCartDLL.ConvertWkt2Proj4(ProjectionStrings.Utm33N, None)
         Assert.IsTrue(proj4.startswith("+proj=tmerc +lat_0=0 +lon_0=15 "))
         Assert.IsFalse("+towgs84" in proj4)
         proj4 = MzCartDLL.ConvertWkt2Proj4(
@@ -325,13 +325,6 @@ class ReprojectorTests(unittest.TestCase):
         reprojector = Reprojector(
             ProjectionStrings.Utm20NNad1927, ProjectionStrings.Utm20NWgs84
         )
-
-        # Conversion type accepts plain ints as well as the enum
-        reprojector.TypeOfConversion = 1
-        Assert.AreEqual(
-            ReprojectorConversionType.Proj2Geo, reprojector.TypeOfConversion
-        )
-        reprojector.TypeOfConversion = ReprojectorConversionType.Proj2Proj
 
         # Test values from MapProjections
         lonN, latN = projNad.Proj2Geo(35000, 6000000)

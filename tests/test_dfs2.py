@@ -291,14 +291,6 @@ class Dfs2Tests(unittest.TestCase):
         )
         dfsFile.Close()
 
-    def test_ReadGenericReshaped(self):
-        dfsFile = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfs2")
-        Assert.AreEqual(
-            (71, 91), dfsFile.ReadItemTimeStep(1, 0, reshape=True).Data.shape
-        )
-        Assert.AreEqual((71 * 91,), dfsFile.ReadItemTimeStep(1, 0).Data.shape)
-        dfsFile.Close()
-
     def test_ModifyLanduseDataTest(self):
 
         originalFilename = "testdata/Landuse.dfs2"

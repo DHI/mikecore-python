@@ -21,7 +21,10 @@ class Dfs123File(DfsFile):
     def ReadItemTimeStepNext(
         self, itemData: DfsItemData | None = None, reshape: bool = False
     ) -> DfsItemData | None:
-        return super().ReadItemTimeStepNext(itemData, self.reshape or reshape)
+        res = super().ReadItemTimeStepNext(itemData)
+        if res is not None and (self.reshape or reshape):
+            res.Data = res.Data.reshape(self.SpatialAxis.Shape, order="F")
+        return res
 
 
 class Dfs2File(Dfs123File):

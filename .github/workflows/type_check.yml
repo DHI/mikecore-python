@@ -27,3 +27,19 @@ jobs:
 
       - name: Run pyright
         run: uv run pyright
+
+      # Several rules are warnings until existing violations are fixed (see
+      # [tool.pyright] in pyproject.toml), and pyright does not fail on warnings.
+      # Fail if the count rises; lower the ceiling as warnings are fixed.
+      - name: Check pyright warning count
+        # Explicit bash adds -o pipefail, so a failed count fails the step
+        shell: bash
+        env:
+          MAX_WARNINGS: 458
+        run: |
+          warnings=$(uv run pyright --outputjson | uv run python -c "import json, sys; print(json.load(sys.stdin)['summary']['warningCount'])")
+          echo "pyright warnings: $warnings (ceiling $MAX_WARNINGS)"
+          if [ "$warnings" -gt "$MAX_WARNINGS" ]; then
+            echo "::error::pyright reported $warnings warnings, more than the ceiling of $MAX_WARNINGS. Fix the new warnings."
+            exit 1
+          fi
