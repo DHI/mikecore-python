@@ -242,14 +242,6 @@ class MeshFile:
             self.NodeIds = np.zeros(noNodes, dtype=np.int32)
             self.X = np.zeros(noNodes, dtype=np.float64)
             self.Y = np.zeros(noNodes, dtype=np.float64)
-            # float64 is correct here, and deliberate. A .mesh stores coordinates
-            # as text, so the file imposes no width and can carry more precision
-            # than float32 holds. Narrowing Z to float32 belongs to the dfsu
-            # path (DfsuBuilder.SetNodes/SetFromMeshFile), where node Z occupies
-            # four bytes; reading a file is not that path. Narrowing here would
-            # silently drop digits the file actually contains. Note that
-            # MeshBuilder.SetNodes also narrows Z to float32, so a MeshFile built
-            # with MeshBuilder has float32 Z, unlike one read from a file.
             self.Z = np.zeros(noNodes, dtype=np.float64)
             self.Code = np.zeros(noNodes, dtype=np.int32)
 
