@@ -5,7 +5,7 @@ from pathlib import Path
 __version__ = "0.3.0a1"
 
 p = platform.architecture()
-if not "64" in p[0]:
+if "64" not in p[0]:
     raise Exception("This library is 64 bit only!!!! Please use 64 bit Python")
 
 if platform.system() == "Windows":
@@ -34,4 +34,3 @@ eumDLL.libfilepath = mikebin
 eumDLL.Init()
 MzCartDLL.Init(mikebin)
 DfsDLL.Init(mikebin)
-

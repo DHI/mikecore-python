@@ -1,5 +1,5 @@
 from mikecore.DfsDLL import DfsDLL
-from mikecore.DfsFile import TimeAxisType, DfsFile, DfsDLLUtil
+from mikecore.DfsFile import TimeAxisType
 from mikecore.DfsFileFactory import DfsFileFactory
 
 
@@ -13,7 +13,7 @@ def test_timeaxis():
 
 def test_iteminfo():
     dfs = DfsFileFactory.DfsGenericOpen("testdata/TemporalEqCal.dfs0")
-    #iinfo1 = dfs.GetItemInfo(1)  # Note 1-based
+    # iinfo1 = dfs.GetItemInfo(1)  # Note 1-based
     iinfo1 = dfs.ItemInfo[0]
 
     dfs.Close()
@@ -44,11 +44,11 @@ def test_read_itemtimestep():
 
     assert data.Data[0] == 104
 
+
 def test_error_reporting():
 
     print(DfsDLL.dfsErrorString(1000))
-    try: 
+    try:
         DfsDLL.CheckReturnCode(2007)
     except Exception as e:
-        print('Exception:', e)
-
+        print("Exception:", e)
