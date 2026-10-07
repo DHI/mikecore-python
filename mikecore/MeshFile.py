@@ -275,10 +275,6 @@ class MeshFile:
             except Exception as ex:            
                 raise Exception("Can not load mesh file (failed reading element header line): {0}. {1}".format(filename, ex))
             
-            # elmtCode is the element code from the header: 21 for a triangular
-            # mesh, 25 for a mixed one. It is read but not acted on; ElementType
-            # is derived per element from the corner count below.
-
             # Allocate memory for elements
             self.ElementIds = np.zeros(noElements, dtype=np.int32)
             self.ElementType = np.zeros(noElements, dtype=np.int32)
