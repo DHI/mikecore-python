@@ -59,7 +59,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # Manual test runners that import modules for their side effects.
-"tests/Test.py" = ["F401", "E702", "E703"]
+"tests/Test.py" = ["F401", "E402"]
 "tests/test_run_all.py" = ["F401"]
 # Imports follow the native library path setup.
 "mikecore/__init__.py" = ["E402"]
