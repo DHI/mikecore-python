@@ -1,6 +1,6 @@
 import os
 import ctypes
-from typing import Tuple
+from typing import Optional, Tuple
 import numpy as np
 from enum import Enum, IntEnum
 
@@ -21,7 +21,7 @@ class ProjectionException(Exception):
 class MzCartDLL():
 
     # Static variables
-    Wrapper = None
+    Wrapper = None  # type: ctypes.CDLL  # pyright: ignore[reportAssignmentType]
 
     _cartCreateCount = 0;
     _cartDestroyCount = 0;
@@ -176,11 +176,11 @@ class MzCartDLL():
       if (mzCartPointer.value is None):
         raise ValueError("Pointer is null", "mzCartPointer");
       rc = ctypes.c_int32();
-      projName = ctypes.c_char_p((" " * 1024).encode("ascii"))
+      projName = ctypes.create_string_buffer(1024)
       MzCartDLL.Wrapper.C_MZC_GETPROJECTIONNAME(mzCartPointer, projName, ctypes.c_int32(1024), ctypes.byref(rc));
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        projName = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"))
+        projName = ctypes.create_string_buffer(rc.value + 1)
         MzCartDLL.Wrapper.C_MZC_GETPROJECTIONNAME(mzCartPointer, projName, rc.value + 1, ctypes.byref(rc));
       if (rc.value != 0):
         raise ProjectionException("Could not get projection name from cartography object");
@@ -195,11 +195,11 @@ class MzCartDLL():
       if (mzCartPointer.value is None):
         raise ValueError("Pointer is null", "mzCartPointer");
       rc = ctypes.c_int32();
-      projName = ctypes.c_char_p((" " * 2048).encode("ascii"));
+      projName = ctypes.create_string_buffer(2048);
       MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING(mzCartPointer, projName, ctypes.c_int32(2048), ctypes.byref(rc));
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        projName = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"));
+        projName = ctypes.create_string_buffer(rc.value + 1);
         MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING(mzCartPointer, projName, ctypes.c_int32(rc.value+1), ctypes.byref(rc));
       if (rc.value != 0):
         raise ProjectionException("Could not get projection string from cartography object");
@@ -211,11 +211,11 @@ class MzCartDLL():
     @staticmethod
     def GoogleMapProjectionString() -> str:
       rc = ctypes.c_int32();
-      googleMapProjection = ctypes.c_char_p((" " * 2048).encode("ascii"));
+      googleMapProjection = ctypes.create_string_buffer(2048);
       MzCartDLL.Wrapper.S_GETGOOGLEMAPPROJECTIONSTRING(googleMapProjection, ctypes.c_int(2048), ctypes.byref(rc));
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        googleMapProjection = ctypes.c_char_p((" " * (rc.value+1)).encode("ascii"));
+        googleMapProjection = ctypes.create_string_buffer(rc.value+1);
         MzCartDLL.Wrapper.S_GETGOOGLEMAPPROJECTIONSTRING(googleMapProjection, ctypes.c_int32(rc.value+1), ctypes.byref(rc));
       if (rc.value != 0):
         raise ProjectionException("Could not get google map projection string from cartography object");
@@ -366,11 +366,11 @@ class MzCartDLL():
       if (mzMapProjPointer is None):
         raise Exception("Pointer is null", "mzMapProjPointer");
       rc = ctypes.c_int32();
-      projName = ctypes.c_char_p((" " * 128).encode("ascii"));
+      projName = ctypes.create_string_buffer(128);
       MzCartDLL.Wrapper.C_MZMP_GETNAME(mzMapProjPointer, projName, ctypes.c_int32(128), ctypes.byref(rc));
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        projName = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"));
+        projName = ctypes.create_string_buffer(rc.value + 1);
         MzCartDLL.Wrapper.C_MZMP_GETNAME(mzMapProjPointer, projName, ctypes.c_int32(rc.value+1), ctypes.byref(rc));
       if (rc.value != 0):
         raise ProjectionException("Could not get projection name from cartography object");
@@ -385,11 +385,11 @@ class MzCartDLL():
       if (mzMapProjPointer.value is None):
         raise Exception("Pointer is null", "mzMapProjPointer");
       rc = ctypes.c_int32();
-      projName = ctypes.c_char_p((" " * 2048).encode("ascii"));
+      projName = ctypes.create_string_buffer(2048);
       MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING(mzMapProjPointer, projName, ctypes.c_int32(2048), ctypes.byref(rc));
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        projName = ctypes.c_char_p((" " * (rc.value+1)).encode("ascii"));
+        projName = ctypes.create_string_buffer(rc.value+1);
         MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING(mzMapProjPointer, projName, ctypes.c_int32(rc.value+1), ctypes.byref(rc));
       if (rc.value != 0):
         raise ProjectionException("Could not get projection string from cartography object");
@@ -607,7 +607,7 @@ class MzCartDLL():
     #/ </summary>
     @staticmethod
     def MzConverterSetConversionType(mzConverterPointer: ctypes.c_void_p,  typeOfConversion: "ReprojectorConversionType"):
-        MzCartDLL.Wrapper.C_MZDC_SETCONVERSIONTYPE(mzConverterPointer, ctypes.c_int32(typeOfConversion.value))
+        MzCartDLL.Wrapper.C_MZDC_SETCONVERSIONTYPE(mzConverterPointer, ctypes.c_int32(int(typeOfConversion)))
 
     #/ <summary>
     #/ Returns the current value of the bypass flag.
@@ -706,12 +706,12 @@ class MzCartDLL():
     #/ </summary>
     @staticmethod
     def Longitude2UtmZone(longitude: float) -> str:
-      res = ctypes.c_char_p((" " * 128).encode("ascii"));
+      res = ctypes.create_string_buffer(128);
       rc = ctypes.c_int32();
       MzCartDLL.Wrapper.S_LONGITUDETOUTMZONE(ctypes.c_double(longitude), res, ctypes.c_int32(128), ctypes.byref(rc));
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        res = ctypes.c_char_p((" " * (rc.value+1)).encode("ascii"));
+        res = ctypes.create_string_buffer(rc.value+1);
         MzCartDLL.Wrapper.S_LONGITUDETOUTMZONE(ctypes.c_double(longitude), res, ctypes.c_int32(rc.value+1), ctypes.byref(rc));
       if (rc.value != 0):
         raise ProjectionException("Could not get short name out of projection string");
@@ -730,13 +730,13 @@ class MzCartDLL():
     #/ <param name="projString">A WKT projection string</param>
     @staticmethod
     def ProjectionShortName(projString: str) -> str:
-      shortNameBuffer = ctypes.c_char_p((" " * 128).encode("ascii"));
+      shortNameBuffer = ctypes.create_string_buffer(128);
       rc = ctypes.c_int32();
       MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME(ctypes.c_char_p(projString.encode("ascii")), shortNameBuffer, ctypes.c_int32(128), ctypes.byref(rc));
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        shortNameBuffer = ctypes.c_char_p((" " * (rc.value+1)).encode("ascii"));
-        MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME(ctypes.c_char_p(projString.encode("ascii")), shortNameBuffer, ctypes.c_int32(128), ctypes.byref(rc));
+        shortNameBuffer = ctypes.create_string_buffer(rc.value+1);
+        MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME(ctypes.c_char_p(projString.encode("ascii")), shortNameBuffer, ctypes.c_int32(rc.value+1), ctypes.byref(rc));
       if (rc.value != 0):
         raise ProjectionException("Could not get short name ctypes.byref(of projection string)");
       return (shortNameBuffer.value.decode("ascii"));
@@ -784,35 +784,38 @@ class MzCartDLL():
     #/ <param name="wktProjectionString">Full WKT projection string</param>
     #/ <param name="datumShiftParameters">Optional array of datum shift parameters, null if not applicable.</param>
     @staticmethod
-    def ConvertWkt2Proj4(wktProjectionString: str, datumShiftParameters: np.ndarray) -> str:
+    def ConvertWkt2Proj4(wktProjectionString: str, datumShiftParameters: Optional[np.ndarray] = None) -> str:
       noOfParams = 0;
+      datumShiftPointer = None;
       if (datumShiftParameters is not None):
+        datumShiftParameters = np.ascontiguousarray(datumShiftParameters, dtype=np.float64);
         noOfParams= datumShiftParameters.size;
+        datumShiftPointer = datumShiftParameters.ctypes.data;
 
       if ( not (noOfParams==0 or noOfParams==3 or noOfParams==7) ):
         raise Exception("Invalid number of datum shift parameters specified. Only 0, 3 or 7 is allowed", "datumShiftParameters");
 
       rc = ctypes.c_int32();
-      proj4 = ctypes.c_char_p((" " * 1024).encode("ascii"));
+      proj4 = ctypes.create_string_buffer(1024);
 
       MzCartDLL.Wrapper.C_MZC_CONVERT2PROJ4(
           ctypes.c_char_p(wktProjectionString.encode("ascii")), 
-          datumShiftParameters.ctypes.data, 
+          datumShiftPointer, 
           ctypes.c_int32(noOfParams), 
           proj4, 
-          ctypes.c_int32(rc.value + 1), 
+          ctypes.c_int32(1024), 
           ctypes.byref(rc));
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        proj4 = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"));
+        proj4 = ctypes.create_string_buffer(rc.value + 1);
         MzCartDLL.Wrapper.C_MZC_CONVERT2PROJ4(
             ctypes.c_char_p(wktProjectionString.encode("ascii")), 
-            datumShiftParameters.ctypes.data, 
+            datumShiftPointer, 
             ctypes.c_int32(noOfParams), 
             proj4, 
             ctypes.c_int32(rc.value + 1), 
             ctypes.byref(rc));
-      if (rc != 0):
+      if (rc.value != 0):
         raise ProjectionException("Could not convert Prj string to Proj.4 string");
 
       return (proj4.value.decode("ascii"));
@@ -1673,7 +1676,7 @@ class Reprojector:
     def __getConversionType(self):
         return self._typeOfConversion
     def __setConversionType(self, value):
-        self._typeOfConversion = value; 
+        self._typeOfConversion = ReprojectorConversionType(value); 
         MzCartDLL.MzConverterSetConversionType(self._mzConverterPointer, self._typeOfConversion);
     #/ <summary>
     #/ Type of conversion. Default is <see cref="ConversionType.Proj2Proj"/>.

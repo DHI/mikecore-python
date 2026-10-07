@@ -1414,7 +1414,7 @@ class eumDLL(object):
     """description of class"""
 
     # Static variables
-    Wrapper = None
+    Wrapper = None  # type: ctypes.CDLL  # pyright: ignore[reportAssignmentType]
     # Leaving out extension should make it work for both Windows and Linux
     libfilename = "libeum.so"
     # libfilename = "eum";
@@ -1552,18 +1552,11 @@ class eumWrapper:
     #/ matching textual description is found, and FALSE otherwise</returns>
     @staticmethod
     def GetItemTypeTag(itemDesc: str) -> Optional[eumItem]:
-      found = False;
-      itemKey = None;
       for i in range(1, eumWrapper.eumGetItemTypeCount() + 1):
         ok, key, desc = eumWrapper.eumGetItemTypeSeq(i);
         if (ok and desc == itemDesc):
-          found = True
-          itemKey = key;
-          break;
-      if (found):
-        return itemKey;
-      else:
-        return None;
+          return key;
+      return None;
 
     #/ <summary>
     #/ returns array containing the EUM units that are allowed for an EUM data type

@@ -1,4 +1,5 @@
 import unittest
+import numpy as np
 from tests.test_util import *
 from mikecore.Projections import *
 
@@ -112,6 +113,25 @@ class CartographyTests(unittest.TestCase):
       cart = Cartography("UTM-33");
       Assert.AreEqual("UTM-33", cart.ProjectionName);
       Assert.AreEqual(ProjectionStrings.Utm33Dhi, cart.ProjectionString);
+
+    def test_GoogleMapProjectionString(self):
+      googleMapProjection = MapProjection.GoogleMapProjectionString();
+      Assert.IsTrue(googleMapProjection.startswith("PROJCS[\"Google Maps - Mercator\""));
+      Assert.IsTrue(MapProjection.IsValid(googleMapProjection));
+
+    def test_GetDefaultArea(self):
+      x0, y0, x1, y1 = MapProjection("UTM-33").GetDefaultArea();
+      Assert.AreEqual(166476.932992403, x0, 1e-6);
+      Assert.AreEqual(-332050.474747851, y0, 1e-6);
+      Assert.AreEqual(833523.067007597, x1, 1e-6);
+      Assert.AreEqual(332050.474747851, y1, 1e-6);
+
+    def test_ConvertWkt2Proj4(self):
+      proj4 = MzCartDLL.ConvertWkt2Proj4(ProjectionStrings.Utm33N);
+      Assert.IsTrue(proj4.startswith("+proj=tmerc +lat_0=0 +lon_0=15 "));
+      Assert.IsFalse("+towgs84" in proj4);
+      proj4 = MzCartDLL.ConvertWkt2Proj4(ProjectionStrings.Utm33N, np.array([1.0, 2.0, 3.0]));
+      Assert.IsTrue("+towgs84=1,2,3,0,0,0,0" in proj4);
 
     def test_CartographyTest(self):
       self._CheckUTM33Zone(ProjectionStrings.Utm33N);
@@ -280,6 +300,11 @@ class ReprojectorTests(unittest.TestCase):
       projNad = MapProjection(ProjectionStrings.Utm20NNad1927);
       projWgs = MapProjection(ProjectionStrings.Utm20NWgs84);
       reprojector = Reprojector(ProjectionStrings.Utm20NNad1927, ProjectionStrings.Utm20NWgs84);
+
+      # Conversion type accepts plain ints as well as the enum
+      reprojector.TypeOfConversion = 1;
+      Assert.AreEqual(ReprojectorConversionType.Proj2Geo, reprojector.TypeOfConversion);
+      reprojector.TypeOfConversion = ReprojectorConversionType.Proj2Proj;
 
       # Test values from MapProjections
       lonN, latN = projNad.Proj2Geo(35000, 6000000);

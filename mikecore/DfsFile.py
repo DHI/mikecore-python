@@ -938,11 +938,14 @@ class DfsFile:
 
         if success != 0:
             return None
+        if (reshape and item.SpatialAxis is not None and item.SpatialAxis.Dimension > 1):
+            values = values.reshape(item.SpatialAxis.Shape, order = 'F')
         time = self.__GetTime(timep.value, self.fpTimeStepIndex)
         if (itemData is None):
             res = DfsItemData(self.fpTimeStepIndex, self.fpItemNumber, time, values)
         else:
             res = itemData
+            res.Data = values
             res.Time = time
             res.TimeStepIndex = self.fpTimeStepIndex
         self.__FpDynamicIncrement()
@@ -982,7 +985,10 @@ class DfsFile:
 
         # Position file pointer
         self.__FpFindItemTimeStep(itemNumber, timestepIndex);
-        return (self.ReadItemTimeStepNext(itemData, reshape));
+        res = self.ReadItemTimeStepNext(itemData, reshape)
+        if (res is None):
+            raise Exception("Could not read item {} at timestep index {}.".format(itemNumber, timestepIndex));
+        return res
 
     def __GetTime(self, time, timestepIndex):
         # TODO: This assumes time in seconds?
@@ -1027,7 +1033,7 @@ class DfsFile:
         if (itemNumber <= 0 or itemNumber > itemInfoCount):
             raise Exception("itemNumber must be within [1,NumberOfItems].");
         if (timestepIndex < 0 or timestepIndex > self.FileInfo.TimeAxis.NumberOfTimeSteps):
-            raise Exception("timestepIndex must be within [0," + str(self.FileInfo.TimeAxis.NumberOfTimeSteps - 1) + "].");
+            raise Exception("timestepIndex must be within [0," + str(self.FileInfo.TimeAxis.NumberOfTimeSteps) + "], where the upper bound appends a new timestep.");
 
         # More elaborate action is required, when appending to file. If appending then
         # (itemNumber == _fpItemNumber && timestepIndex == _fileInfo.TimeAxis.NumberOfTimeSteps == _fpTimeStepIndex)

@@ -44,12 +44,13 @@ dev = [
 [tool.pyright]
 include = ["mikecore", "miketools", "tests"]
 typeCheckingMode = "basic"
-# Many attributes (including the native library wrappers) start as None and
-# are set later, so every access trips these. Re-enable once they are typed.
-reportOptionalMemberAccess = false
-reportOptionalSubscript = false
-reportOptionalIterable = false
-reportOptionalOperand = false
+# Many attributes (e.g. FileInfo, TimeAxis, X/Y/Z) start as None and are set
+# later, so most accesses trip these. Kept as warnings so real None
+# dereferences stay visible; make them errors once those attributes are typed.
+reportOptionalMemberAccess = "warning"
+reportOptionalSubscript = "warning"
+reportOptionalIterable = "warning"
+reportOptionalOperand = "warning"
 # Existing violations need typing work (e.g. TimeAxis unions, List[int]
 # parameters that receive numpy arrays). Kept visible as warnings for now.
 reportArgumentType = "warning"

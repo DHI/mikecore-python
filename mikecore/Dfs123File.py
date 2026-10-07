@@ -1,4 +1,5 @@
-from mikecore.DfsFile import DfsFile, DfsFileMode
+from typing import Optional
+from mikecore.DfsFile import DfsFile, DfsFileMode, DfsItemData
 
 class Dfs123File(DfsFile):
     def __init__(self):
@@ -17,11 +18,8 @@ class Dfs123File(DfsFile):
         # Set True to reshape item data to multi-dimensional arrays.
         self.reshape = reshape
 
-    def ReadItemTimeStepNext(self, itemData = None, reshape = False):
-        res = super().ReadItemTimeStepNext(itemData)
-        if (self.reshape or reshape):
-            res.Data = res.Data.reshape(self.SpatialAxis.Shape, order = 'F')
-        return res;
+    def ReadItemTimeStepNext(self, itemData: Optional[DfsItemData] = None, reshape: bool = False) -> Optional[DfsItemData]:
+        return super().ReadItemTimeStepNext(itemData, self.reshape or reshape)
 
 class Dfs2File(Dfs123File):
     pass

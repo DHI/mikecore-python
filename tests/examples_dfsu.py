@@ -1,5 +1,5 @@
+import datetime
 import math
-from datetime import datetime
 from mikecore.DfsFileFactory import *
 from mikecore.DfsuBuilder import *
 from mikecore.DfsBuilder import *
@@ -345,14 +345,14 @@ class ExamplesDfsu:
       topLayer = dfsu3File.FindTopLayerElements();
 
       # Create element table for 2D dfsu file
-      elmttable2 = np.zeros(dfsu3File.NumberOfNodes, dtype=object);
+      elmttable2 = np.zeros(len(topLayer), dtype=object);
       for i in range(len(topLayer)):
-        # 3D element nodes
+        # 3D element nodes (1-based node numbers)
         elmt3 = dfsu3File.ElementTable[topLayer[i]];
         # 2D element nodes, only half as big, so copy over the first half
-        elmt2 = np.zeros(elmt3.size / 2, dtype=np.int32);
+        elmt2 = np.zeros(elmt3.size // 2, dtype=np.int32);
         for j in range(elmt2.size):
-          elmt2[j] = renumber[elmt3[j]];
+          elmt2[j] = renumber[elmt3[j] - 1];
         elmttable2[i] = elmt2;
   
       # --------------------------------------------------
@@ -360,7 +360,7 @@ class ExamplesDfsu:
       builder = DfsuBuilder.Create(DfsuFileType.Dfsu2D);
 
       # Setup header and geometry
-      builder.SetNodes(xv2.ToArray(), yv2.ToArray(), zv2.ToArray(), cv2.ToArray());
+      builder.SetNodes(xv2, yv2, zv2, cv2);
       builder.SetElements(elmttable2);
       builder.SetProjection(dfsu3File.Projection);
       builder.SetTimeInfo(dfsu3File.StartDateTime, dfsu3File.TimeStepInSeconds);

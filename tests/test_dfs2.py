@@ -271,6 +271,24 @@ class Dfs2Tests(unittest.TestCase):
 #
 #        file.Close();
 
+    def test_ReadReshapedPastEndReturnsNone(self):
+        dfsFile = DfsFileFactory.Dfs2FileOpen("testdata/OresundHD.dfs2");
+        dfsFile.Reshape(True);
+        count = 0;
+        itemData = dfsFile.ReadItemTimeStepNext();
+        while (itemData is not None):
+            Assert.AreEqual((71, 91), itemData.Data.shape);
+            count += 1;
+            itemData = dfsFile.ReadItemTimeStepNext();
+        Assert.AreEqual(len(dfsFile.ItemInfo) * dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps, count);
+        dfsFile.Close();
+
+    def test_ReadGenericReshaped(self):
+        dfsFile = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfs2");
+        Assert.AreEqual((71, 91), dfsFile.ReadItemTimeStep(1, 0, reshape = True).Data.shape);
+        Assert.AreEqual((71*91,), dfsFile.ReadItemTimeStep(1, 0).Data.shape);
+        dfsFile.Close();
+
     def test_ModifyLanduseDataTest(self):
 
         originalFilename = "testdata/Landuse.dfs2";
