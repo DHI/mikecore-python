@@ -37,12 +37,13 @@ Homepage = "https://github.com/DHI/mikecore-python"
 
 [dependency-groups]
 dev = [
-    "pyright>=1.1.400; python_version >= '3.7'",
+    "pyright>=1.1.414; python_version >= '3.7'",
     "pytest>=6.1.2",
 ]
 
 [tool.pyright]
 include = ["mikecore", "miketools", "tests"]
+pythonVersion = "3.11"
 typeCheckingMode = "basic"
 # Many attributes (e.g. FileInfo, TimeAxis, X/Y/Z) start as None and are set
 # later, so most accesses trip these. Kept as warnings so real None

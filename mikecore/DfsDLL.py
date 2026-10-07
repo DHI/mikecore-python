@@ -40,7 +40,7 @@ class DfsDLL:
     """description of class"""
 
     # Static variables
-    Wrapper = None  # type: ctypes.CDLL  # pyright: ignore[reportAssignmentType]
+    Wrapper: ctypes.CDLL = None  # pyright: ignore[reportAssignmentType]
     MCCUWrapper = None
 
     @staticmethod

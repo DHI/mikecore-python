@@ -21,7 +21,7 @@ class ProjectionException(Exception):
 class MzCartDLL():
 
     # Static variables
-    Wrapper = None  # type: ctypes.CDLL  # pyright: ignore[reportAssignmentType]
+    Wrapper: ctypes.CDLL = None  # pyright: ignore[reportAssignmentType]
 
     _cartCreateCount = 0;
     _cartDestroyCount = 0;

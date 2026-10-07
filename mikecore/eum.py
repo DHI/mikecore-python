@@ -1414,7 +1414,7 @@ class eumDLL(object):
     """description of class"""
 
     # Static variables
-    Wrapper = None  # type: ctypes.CDLL  # pyright: ignore[reportAssignmentType]
+    Wrapper: ctypes.CDLL = None  # pyright: ignore[reportAssignmentType]
     # Leaving out extension should make it work for both Windows and Linux
     libfilename = "libeum.so"
     # libfilename = "eum";
