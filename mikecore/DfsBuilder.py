@@ -258,14 +258,10 @@ class DfsBuilder:
 
         for i, itemInfo in enumerate(self.DynamicItems):
             if itemInfo.Name is None or itemInfo.Name == "":
-                errors.append(
-                    "Name of dynamic item number {} is null or empty".format(i + 1)
-                )
+                errors.append(f"Name of dynamic item number {i + 1} is null or empty")
             if itemInfo.SpatialAxis is None:
                 errors.append(
-                    "Spatial axis of dynamic item number {} can not be null".format(
-                        i + 1
-                    )
+                    f"Spatial axis of dynamic item number {i + 1} can not be null"
                 )
                 continue
 
@@ -284,16 +280,12 @@ class DfsBuilder:
 
                 if not ok:
                     errors.append(
-                        "Encode key values are not valid for axis of dynamic item number {}".format(
-                            i + 1
-                        )
+                        f"Encode key values are not valid for axis of dynamic item number {i + 1}"
                     )
 
                 if itemInfo.DataType != DfsSimpleType.Float:
                     errors.append(
-                        "Compressed files dynamic items must all be of type float. Dynamic item number {0} is not of type float".format(
-                            i + 1
-                        )
+                        f"Compressed files dynamic items must all be of type float. Dynamic item number {i + 1} is not of type float"
                     )
 
         # if (not seekable and self.FileInfo.StatsType != DfsStatType.NoStat):
@@ -725,9 +717,7 @@ class DfsStaticItemBuilder(DfsAbstractItemBuilder):
             errors.append("Data has not been set.")
         if self.ItemInfo.Data.size != self.ItemInfo.SpatialAxis.SizeOfData:
             errors.append(
-                "Size of data ({}) does not match spatial axis size ({}).".format(
-                    self.ItemInfo.Data.size, self.ItemInfo.SpatialAxis.SizeOfData
-                )
+                f"Size of data ({self.ItemInfo.Data.size}) does not match spatial axis size ({self.ItemInfo.SpatialAxis.SizeOfData})."
             )
 
         return errors

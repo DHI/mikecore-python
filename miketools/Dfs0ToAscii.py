@@ -15,15 +15,13 @@ def Dfs0ToAscii(dfs0FileName, txtFileName):
 
     txt.write(" Time")
     for item in dfs.ItemInfo:
-        txt.write("    {}".format(item.Name))
+        txt.write(f"    {item.Name}")
     txt.write("\n")
 
     txt.write(" Item")
     for item in dfs.ItemInfo:
         txt.write(
-            " {:11} {:11} {:11}".format(
-                item.Quantity.Item.value, item.Quantity.Unit.value, item.ValueType.name
-            )
+            f" {item.Quantity.Item.value:11} {item.Quantity.Unit.value:11} {item.ValueType.name:11}"
         )
     txt.write("\n")
     txt.write(" Item")
@@ -59,9 +57,9 @@ def Dfs0ToAscii(dfs0FileName, txtFileName):
                     )  # Milli-seconds accuracy
                     # txt.write(itemTime.strftime("%Y-%m-%d %H:%M:%S.%f"));      # Micro-seconds accuracy
                 else:
-                    txt.write("{:19.6E}".format(itemData.Time))
+                    txt.write(f"{itemData.Time:19.6E}")
 
-            txt.write(" {:18.11E}".format(itemData.Data[0]))
+            txt.write(f" {itemData.Data[0]:18.11E}")
 
         txt.write("\n")
 

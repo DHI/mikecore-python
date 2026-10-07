@@ -33,7 +33,7 @@ class ExamplesDfs2:
         data2D = dfs2File.ReadItemTimeStep(1, 2)
         # Get the value at (i,j) = (3,4) of the item and timestep
         value = data2D.Data[3, 4]  # 11.3634329
-        print("ReadingDfs2File: data2D.Data[3, 4] = {}".format(value))
+        print(f"ReadingDfs2File: data2D.Data[3, 4] = {value}")
 
         # This iterates through all the timesteps and items in the file
         # For performance reasons it is important to iterate over time steps

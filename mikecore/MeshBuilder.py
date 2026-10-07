@@ -1,5 +1,4 @@
 import numpy as np
-from typing import List
 from mikecore.DfsuFile import DfsuFile
 from mikecore.eum import eumQuantity, eumItem, eumUnit
 from mikecore.MeshFile import MeshFile
@@ -67,9 +66,7 @@ class MeshBuilder:
             or numberOfNodes != len(code)
         ):
             raise Exception(
-                "All arguments must have same length. Lengths are: x={x}, y={y}, z={z}, code={code}".format(
-                    x=x.size, y=y.size, z=z.size, code=code.size
-                )
+                f"All arguments must have same length. Lengths are: x={x.size}, y={y.size}, z={z.size}, code={code.size}"
             )
 
         if self.__nodeIds != None and numberOfNodes != len(self.__nodeIds):
@@ -96,9 +93,7 @@ class MeshBuilder:
             elmnt = connectivity[i]
             if (3 > len(elmnt)) or (len(elmnt) > 4):
                 raise ValueError(
-                    "All elements must have 3 or 4 nodes. Element number {0} has {1} nodes".format(
-                        i + 1, len(elmnt)
-                    )
+                    f"All elements must have 3 or 4 nodes. Element number {i + 1} has {len(elmnt)} nodes"
                 )
 
         self.__connectivity = connectivity
@@ -112,7 +107,7 @@ class MeshBuilder:
             raise ValueError("Number of element id's does not match number of elements")
         self.__elementIds = elementIds
 
-    def Validate(self, dieOnError: bool = False) -> List[str]:
+    def Validate(self, dieOnError: bool = False) -> list[str]:
         """Validate will return a string of issues from the mesh builder.
         When this returns an empty list, the mesh has been properly build.
         """

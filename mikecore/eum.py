@@ -1,6 +1,5 @@
 import os
 import ctypes
-from typing import Optional, Tuple
 import numpy as np
 from enum import IntEnum
 
@@ -1325,7 +1324,7 @@ class eumQuantity:
         self.UnitInt = unit
 
     def __repr__(self):
-        return "{item}-{unit}".format(item=self.Item, unit=self.Unit)
+        return f"{self.Item}-{self.Unit}"
 
     @staticmethod
     def Create(item, unit):
@@ -1410,7 +1409,7 @@ class UnitConverter:
                     pData[i] = self.InvConvert(pData[i])
 
 
-class eumDLL(object):
+class eumDLL:
     """description of class"""
 
     # Static variables
@@ -1616,7 +1615,7 @@ class eumWrapper:
     # / <param name="itemDesc">Returns the textual description of the item</param>
     # / <returns>TRUE if an item is found and FALSE otherwise.</returns>
     @staticmethod
-    def eumGetItemTypeSeq(seqNo: int) -> Tuple[bool, eumItem, str]:
+    def eumGetItemTypeSeq(seqNo: int) -> tuple[bool, eumItem, str]:
         itemKey = ctypes.c_int32()
         lpItemDesc = ctypes.c_char_p()
         iok = eumDLL.Wrapper.eumGetItemTypeSeq(
@@ -1630,7 +1629,7 @@ class eumWrapper:
     # / Retrieves the textual description of the item specified by <paramref name="itemKey"/>
     # / </summary>
     @staticmethod
-    def eumGetItemTypeKey(itemKey: eumItem) -> Optional[str]:
+    def eumGetItemTypeKey(itemKey: eumItem) -> str | None:
         lpItDesc = ctypes.c_char_p()
         if 0 != eumDLL.Wrapper.eumGetItemTypeKey(itemKey, ctypes.byref(lpItDesc)):
             return lpItDesc.value.decode("ascii")
@@ -1670,7 +1669,7 @@ class eumWrapper:
     # / <param name="unitKey">Returns the numeric key of the found unit</param>
     # / <param name="UniDesc">Returns the textual description of the unit, e.g. "hour" or "second"</param>
     @staticmethod
-    def eumGetItemUnitSeq(itemKey: eumItem, UniSeq: int) -> Tuple[bool, eumUnit, str]:
+    def eumGetItemUnitSeq(itemKey: eumItem, UniSeq: int) -> tuple[bool, eumUnit, str]:
         unitKey = ctypes.c_int32()
         lpUniDesc = ctypes.c_char_p()
         if 0 != eumDLL.Wrapper.eumGetItemUnitSeq(
@@ -1753,7 +1752,7 @@ class eumWrapper:
     # / the unit if any unit attached to an item with this text description exists.
     # / </summary>
     @staticmethod
-    def eumGetItemUnitTag(itemKey: eumItem, unitDesc: str) -> Tuple[bool, eumUnit]:
+    def eumGetItemUnitTag(itemKey: eumItem, unitDesc: str) -> tuple[bool, eumUnit]:
         unitKey = ctypes.c_int32()
         if 0 != eumDLL.Wrapper.eumGetItemUnitTag(
             ctypes.c_int32(itemKey),
@@ -1803,7 +1802,7 @@ class eumWrapper:
     # / <see cref="eumUnit.eumUUnitUndefined"/> gives the first unit in the system.
     # / </summary>
     @staticmethod
-    def eumGetNextUnit(prevUnitKey: int) -> Tuple[bool, int, str]:
+    def eumGetNextUnit(prevUnitKey: int) -> tuple[bool, int, str]:
         unitKey = ctypes.c_int32()
         lpUnitDesc = ctypes.c_char_p()
         if 0 != eumDLL.Wrapper.eumGetNextUnit(
@@ -1825,7 +1824,7 @@ class eumWrapper:
     @staticmethod
     def eumGetNextEqvUnit(
         baseunitKey: eumUnit, PrevunitKey: eumUnit
-    ) -> Tuple[bool, eumUnit, str]:
+    ) -> tuple[bool, eumUnit, str]:
         unitKey = ctypes.c_int32()
         lpUnitDesc = ctypes.c_char_p()
         rc = eumDLL.Wrapper.eumGetNextEqvUnit(
@@ -1843,7 +1842,7 @@ class eumWrapper:
     @staticmethod
     def eumConvertUnit(
         fromUnitKey: eumUnit, fromValue: float, toUnitKey: eumUnit
-    ) -> Tuple[bool, float]:
+    ) -> tuple[bool, float]:
         toValue = ctypes.c_double()
         iok = eumDLL.Wrapper.eumConvertUnit(
             ctypes.c_int32(fromUnitKey),
@@ -2137,7 +2136,7 @@ class eumWrapper:
     # / <summary>
     # / Returns factor and offset to SI base unit
     @staticmethod
-    def eumUnitGetSIFactor(unitKey: eumUnit) -> Tuple[float, float]:
+    def eumUnitGetSIFactor(unitKey: eumUnit) -> tuple[float, float]:
         factor = ctypes.c_double()
         offset = ctypes.c_double()
         powdim = np.zeros(7, dtype=np.double)
@@ -2166,7 +2165,7 @@ class eumWrapper:
     @staticmethod
     def eumUnitGetParameters(
         unitKey: eumUnit,
-    ) -> Tuple[float, float, np.ndarray, np.ndarray]:
+    ) -> tuple[float, float, np.ndarray, np.ndarray]:
         factor = ctypes.c_double()
         offset = ctypes.c_double()
         powdim = np.zeros(7, dtype=np.double)

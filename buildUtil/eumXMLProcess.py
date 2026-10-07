@@ -12,7 +12,7 @@
 import re
 
 # Using readlines()
-eumFile = open("mikecore/bin/windows/EUM.xml", "r")
+eumFile = open("mikecore/bin/windows/EUM.xml")
 eumLines = eumFile.readlines()
 eumFile.close()
 
@@ -41,7 +41,7 @@ print("# Must be updated with every new release, or if the EUM.xml is updated")
 print("# Run buildUtil\eumXMLProcess.py to create the lists")
 print("class eumItem(IntEnum):")
 for key in itemKeys:
-    print("    {} = {}".format(itemDict[key], key))
+    print(f"    {itemDict[key]} = {key}")
 
 print("")
 print("# Predefined enums of EUM units.")
@@ -49,4 +49,4 @@ print("#")
 print("# Must be updated with every new release, or if the EUM.xml is updated")
 print("class eumUnit(IntEnum):")
 for key in unitKeys:
-    print("    {} = {}".format(unitDict[key], key))
+    print(f"    {unitDict[key]} = {key}")

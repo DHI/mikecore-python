@@ -201,9 +201,7 @@ class DfsuBuilder:
             or numberOfNodes != len(code)
         ):
             raise Exception(
-                "All arguments must have same length. Lengths are: x={x}, y={y}, z={z}, code={code}".format(
-                    x=x.size, y=y.size, z=z.size, code=code.size
-                )
+                f"All arguments must have same length. Lengths are: x={x.size}, y={y.size}, z={z.size}, code={code.size}"
             )
 
         if self.__nodeIds != None and numberOfNodes != len(self.__nodeIds):
@@ -264,9 +262,7 @@ class DfsuBuilder:
                 elmnt = connectivity[i]
                 if 3 > len(elmnt) or len(elmnt) > 4:
                     raise Exception(
-                        "All elements must have 3 or 4 nodes. Element number {id} has {size} nodes".format(
-                            id=i + 1, size=len(elmnt)
-                        )
+                        f"All elements must have 3 or 4 nodes. Element number {i + 1} has {len(elmnt)} nodes"
                     )
         elif self.__dfsuFileType == DfsuFileType.Dfsu3DSigma:
             # Check number of elements
@@ -274,9 +270,7 @@ class DfsuBuilder:
                 elmnt = connectivity[i]
                 if len(elmnt) != 6 and len(elmnt) != 8:
                     raise Exception(
-                        "All elements must have 6 or 8 nodes. Element number {id} has {size} nodes".format(
-                            id=i + 1, size=len(elmnt)
-                        )
+                        f"All elements must have 6 or 8 nodes. Element number {i + 1} has {len(elmnt)} nodes"
                     )
 
         self.__connectivity = connectivity
@@ -408,9 +402,7 @@ class DfsuBuilder:
             # TODO do we need to check frequency or directions?
             pass
         else:
-            raise Exception(
-                "Dfsu file type {} not supported".format(self.__dfsuFileType)
-            )
+            raise Exception(f"Dfsu file type {self.__dfsuFileType} not supported")
 
         if dieOnError and len(errors) > 0:
             msgs = DfsBuilder.ErrorMessage(errors)

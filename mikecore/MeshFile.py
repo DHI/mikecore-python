@@ -1,6 +1,5 @@
 import os.path
 import numpy as np
-from typing import List
 import re
 from mikecore.eum import eumQuantity, eumItem, eumUnit
 
@@ -202,11 +201,11 @@ class MeshFile:
         mixed triangular/quadrilateral meshes, where all elements specify 4 nodes,
         and triangular elements specifies the last node as zero.
         """
-        with open(filename, "r") as reader:
+        with open(filename) as reader:
             # read header line
             line = reader.readline().lstrip()
             if line is None:
-                raise IOError("Can not load mesh file. File is empty")
+                raise OSError("Can not load mesh file. File is empty")
 
             noNodes = 0
             proj = None
@@ -236,10 +235,8 @@ class MeshFile:
                     proj = groups[1]
 
             if proj is None:
-                raise IOError(
-                    "Can not load mesh file (failed reading mesh file header line): {0}".format(
-                        filename
-                    )
+                raise OSError(
+                    f"Can not load mesh file (failed reading mesh file header line): {filename}"
                 )
 
             self.ProjectionString = proj.strip()
@@ -254,7 +251,7 @@ class MeshFile:
                 for i in range(noNodes):
                     line = reader.readline().strip()
                     if line is None:
-                        raise IOError(
+                        raise OSError(
                             "Unexpected end of file"
                         )  # used as inner exception
                     strings = re.split(r"\s+", line)
@@ -266,22 +263,18 @@ class MeshFile:
             except Exception as inner:
                 # DfsException
                 raise Exception(
-                    "Can not load mesh file (failed reading nodes): {0}. {1}".format(
-                        filename, inner
-                    )
+                    f"Can not load mesh file (failed reading nodes): {filename}. {inner}"
                 )
 
             # Reading element header line
             line = reader.readline().strip()
             if line is None:
-                raise IOError("Can not load mesh file (unexpected end of file)")
+                raise OSError("Can not load mesh file (unexpected end of file)")
 
             strings = re.split(r"\s+", line)
             if len(strings) != 3:
-                raise IOError(
-                    "Can not load mesh file (failed reading element header line): {0}".format(
-                        filename
-                    )
+                raise OSError(
+                    f"Can not load mesh file (failed reading element header line): {filename}"
                 )
             try:
                 noElements = int(strings[0])
@@ -289,9 +282,7 @@ class MeshFile:
                 int(strings[2])
             except Exception as ex:
                 raise Exception(
-                    "Can not load mesh file (failed reading element header line): {0}. {1}".format(
-                        filename, ex
-                    )
+                    f"Can not load mesh file (failed reading element header line): {filename}. {ex}"
                 )
 
             # Allocate memory for elements
@@ -304,7 +295,7 @@ class MeshFile:
                 for i in range(noElements):
                     line = reader.readline().strip()
                     if line is None:
-                        raise IOError(
+                        raise OSError(
                             "Unexpected end of file"
                         )  # used as inner exception
                     strings = re.split(r"\s+", line)
@@ -317,7 +308,7 @@ class MeshFile:
                         if (nodeNumber < 0) or (
                             nodeNumber > noNodes
                         ):  # used as inner exception:
-                            raise IOError(
+                            raise OSError(
                                 "Node number in element table is negative or larger than number of nodes"
                             )
                         # It is only a node in the element if the node number is positive
@@ -338,9 +329,7 @@ class MeshFile:
 
             except Exception as inner:
                 raise Exception(
-                    "Can not load mesh file (failed reading elements): {0}. {1}".format(
-                        filename, inner
-                    )
+                    f"Can not load mesh file (failed reading elements): {filename}. {inner}"
                 )
 
     def Write(self, filename: str):
@@ -394,13 +383,13 @@ class MeshFile:
     def Create(
         eumQuantity: eumQuantity,
         wktString: str,
-        nodeIds: List[int],
-        x: List[float],
-        y: List[float],
-        z: List[float],
-        nodeCode: List[int],
-        elmtIds: List[int],
-        elmtTypes: List[int],
+        nodeIds: list[int],
+        x: list[float],
+        y: list[float],
+        z: list[float],
+        nodeCode: list[int],
+        elmtIds: list[int],
+        elmtTypes: list[int],
         connectivity,
     ) -> "MeshFile":
 
@@ -427,7 +416,7 @@ class MeshFile:
         """Read the mesh from the provided mesh file"""
 
         if not os.path.exists(filename):
-            raise FileNotFoundError("File {0} not found".format(filename))
+            raise FileNotFoundError(f"File {filename} not found")
         file = MeshFile()
         file.Read(filename)
         return file

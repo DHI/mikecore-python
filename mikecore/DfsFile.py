@@ -5,7 +5,6 @@ import ctypes
 import numpy as np
 from mikecore.eum import *
 from mikecore.DfsDLL import DfsDLL
-from typing import Union
 from mikecore.eum import eumQuantity
 
 
@@ -580,7 +579,7 @@ class DfsDynamicItemInfo:
         elif self.DataType == DfsSimpleType.UShort:
             values = np.zeros(self.ElementCount, dtype=np.uint16)
         else:
-            print("Ahhrrggg!!!!: {}-{}".format(self.DataType, self.ElementCount))
+            print(f"Ahhrrggg!!!!: {self.DataType}-{self.ElementCount}")
         if reshape:
             values = values.reshape(self.SpatialAxis.Shape, order="F")
         return values
@@ -639,7 +638,7 @@ class DfsFileInfo:
         self.FileName = ""
         self.FileTitle = ""
         self.ApplicationTitle = "MIKE Core Python"
-        self.ApplicationVersion = int(1)
+        self.ApplicationVersion = 1
         self.DataType = 0
 
         # self.FileType = None;
@@ -793,7 +792,7 @@ class DfsFile:
             self.Close()
 
         if not os.path.isfile(filename):
-            raise FileNotFoundError("File not found {}".format(filename))
+            raise FileNotFoundError(f"File not found {filename}")
 
         # Check if trying to edit a read-only file.
         if (mode == DfsFileMode.Edit or mode == DfsFileMode.Append) and (
@@ -835,9 +834,7 @@ class DfsFile:
             )
 
         if rok != 0:
-            raise Exception(
-                "Could not load file {} (Error code {})".format(filename, rok)
-            )
+            raise Exception(f"Could not load file {filename} (Error code {rok})")
 
         self.FileInfo = DfsFileInfo()
         self.FileInfo.InitRead(self, self.headPointer, parameters)
@@ -1061,7 +1058,7 @@ class DfsFile:
 
     def ReadItemTimeStep(
         self,
-        itemNumber: Union[int, DfsItemData],
+        itemNumber: int | DfsItemData,
         timestepIndex: int,
         reshape: bool = False,
     ) -> DfsItemData:
@@ -1226,9 +1223,7 @@ class DfsFile:
         # data.Length can be larger than the number of elements.
         if dynamicItem.ElementCount > data.size:
             raise Exception(
-                "Data is of wrong size. Item has {} elements, data is {} long.".format(
-                    dynamicItem.ElementCount, data.Length
-                )
+                f"Data is of wrong size. Item has {dynamicItem.ElementCount} elements, data is {data.Length} long."
             )
 
         if dynamicItem.DataType == DfsSimpleType.Float and data.dtype != np.float32:
@@ -1409,7 +1404,7 @@ class DfsFile:
 
     def __CheckIfOpen(self):
         if self.filePointer.value is None:
-            raise IOError("File is closed")
+            raise OSError("File is closed")
 
     def __FpFindBlockDynamic(self):
         DfsDLL.Wrapper.dfsFindBlockDynamic(self.headPointer, self.filePointer)
@@ -1459,9 +1454,7 @@ class DfsFile:
 
     def __DynamicItemInfoReadAndCreate(self, itemNumber, noOfItems):
         if itemNumber < 1 or itemNumber > noOfItems:
-            raise ValueError(
-                "Item number must be in the range of 1 - {}".format(noOfItems)
-            )
+            raise ValueError(f"Item number must be in the range of 1 - {noOfItems}")
         itemPointer = ctypes.c_void_p(
             DfsDLL.Wrapper.dfsItemD(self.headPointer, itemNumber)
         )
@@ -1572,7 +1565,7 @@ class DfsDLLUtil:
         elif arrayData.dtype == np.int8:
             datatype = DfsSimpleType.Byte
         else:
-            raise Exception("Data type not supported: {0}".format(arrayData.dtype))
+            raise Exception(f"Data type not supported: {arrayData.dtype}")
         return datatype
 
     @staticmethod
@@ -1683,7 +1676,7 @@ class DfsDLLUtil:
             timeStr = startTimeStr.value.decode("ascii")
             # startDateTime = datetime.fromisoformat("{dateStr}T{timeStr}".format(dateStr,timeStr));
             startDateTime = datetime.datetime.strptime(
-                "{} {}".format(dateStr, timeStr), "%Y-%m-%d %H:%M:%S"
+                f"{dateStr} {timeStr}", "%Y-%m-%d %H:%M:%S"
             )
             res = DfsEqCalendarAxis(
                 eumUnit(eumTimeUnitInt.value),
@@ -1720,7 +1713,7 @@ class DfsDLLUtil:
             timeStr = startTimeStr.value.decode("ascii")
             # startDateTime = datetime.fromisoformat("{}T{}".format(dateStr,timeStr));
             startDateTime = datetime.datetime.strptime(
-                "{} {}".format(dateStr, timeStr), "%Y-%m-%d %H:%M:%S"
+                f"{dateStr} {timeStr}", "%Y-%m-%d %H:%M:%S"
             )
             res = DfsNonEqCalendarAxis(
                 eumUnit(eumTimeUnitInt.value),

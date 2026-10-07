@@ -41,7 +41,7 @@ class DfsuFileType(IntEnum):
     DfsuSpectral2D = 10
 
 
-class DfsuFile(object):
+class DfsuFile:
     """
     Class for exposing data from a dfsu file.
     Use the DfsFileFactory to open an existing dfsu file.

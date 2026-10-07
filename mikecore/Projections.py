@@ -1,6 +1,5 @@
 import os
 import ctypes
-from typing import Tuple
 import numpy as np
 from enum import IntEnum
 
@@ -281,7 +280,7 @@ class MzCartDLL:
     @staticmethod
     def MzCartGeo2Proj(
         mzCartPointer: ctypes.c_void_p, lon: float, lat: float
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         east = ctypes.c_double()
         north = ctypes.c_double()
         MzCartDLL.Wrapper.C_MZC_GEO2PROJ(
@@ -299,7 +298,7 @@ class MzCartDLL:
     @staticmethod
     def MzCartProj2Geo(
         mzCartPointer: ctypes.c_void_p, east: float, north: float
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         lon = ctypes.c_double()
         lat = ctypes.c_double()
         MzCartDLL.Wrapper.C_MZC_PROJ2GEO(
@@ -317,7 +316,7 @@ class MzCartDLL:
     @staticmethod
     def MzCartGeo2Xy(
         mzCartPointer: ctypes.c_void_p, lon: float, lat: float
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         x = ctypes.c_double()
         y = ctypes.c_double()
         MzCartDLL.Wrapper.C_MZC_GEO2XY(
@@ -335,7 +334,7 @@ class MzCartDLL:
     @staticmethod
     def MzCartXy2Geo(
         mzCartPointer: ctypes.c_void_p, x: float, y: float
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         lon = ctypes.c_double()
         lat = ctypes.c_double()
         MzCartDLL.Wrapper.C_MZC_XY2GEO(
@@ -353,7 +352,7 @@ class MzCartDLL:
     @staticmethod
     def MzCartProj2Xy(
         mzCartPointer: ctypes.c_void_p, east: float, north: float
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         x = ctypes.c_double()
         y = ctypes.c_double()
         MzCartDLL.Wrapper.C_MZC_PROJ2XY(
@@ -371,7 +370,7 @@ class MzCartDLL:
     @staticmethod
     def MzCartXy2Proj(
         mzCartPointer: ctypes.c_void_p, x: float, y: float
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         east = ctypes.c_double()
         north = ctypes.c_double()
         MzCartDLL.Wrapper.C_MZC_XY2PROJ(
@@ -503,7 +502,7 @@ class MzCartDLL:
     @staticmethod
     def MzMapProjGeo2Proj(
         mzMapProjPointer: ctypes.c_void_p, lon: float, lat: float
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         east = ctypes.c_double()
         north = ctypes.c_double()
         MzCartDLL.Wrapper.C_MZMP_GEO2PROJ(
@@ -521,7 +520,7 @@ class MzCartDLL:
     @staticmethod
     def MzMapProjProj2Geo(
         mzMapProjPointer: ctypes.c_void_p, east: float, north: float
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         lon = ctypes.c_double()
         lat = ctypes.c_double()
         MzCartDLL.Wrapper.C_MZMP_PROJ2GEO(
@@ -537,7 +536,7 @@ class MzCartDLL:
     # / Gets the geographical origin of the map projection
     # / </summary>
     @staticmethod
-    def MzMapProjGetOrigin(mzMapProjPointer: ctypes.c_void_p) -> Tuple[float, float]:
+    def MzMapProjGetOrigin(mzMapProjPointer: ctypes.c_void_p) -> tuple[float, float]:
         lon = ctypes.c_double()
         lat = ctypes.c_double()
         MzCartDLL.Wrapper.C_MZMP_GETORIGIN(
@@ -562,7 +561,7 @@ class MzCartDLL:
     @staticmethod
     def GetDefaultArea(
         mzMapProjPointer: ctypes.c_void_p,
-    ) -> Tuple[float, float, float, float]:
+    ) -> tuple[float, float, float, float]:
         x0 = ctypes.c_double()
         y0 = ctypes.c_double()
         x1 = ctypes.c_double()
@@ -581,7 +580,7 @@ class MzCartDLL:
     @staticmethod
     def MzMapProjGeo2Xyz(
         mzMapProjPointer: ctypes.c_void_p, lon: float, lat: float, height: float
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         x = ctypes.c_double()
         y = ctypes.c_double()
         z = ctypes.c_double()
@@ -602,7 +601,7 @@ class MzCartDLL:
     @staticmethod
     def MzMapProjXyz2Geo(
         mzMapProjPointer: ctypes.c_void_p, x: float, y: float, z: float
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         lon = ctypes.c_double()
         lat = ctypes.c_double()
         height = ctypes.c_double()
@@ -684,7 +683,7 @@ class MzCartDLL:
     @staticmethod
     def MzConverterConvertXY(
         mzConverterPointer: ctypes.c_void_p, x: float, y: float
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         resx = ctypes.c_double(x)
         resy = ctypes.c_double(y)
         MzCartDLL.Wrapper.C_MZDC_CONVERTXY(
@@ -698,7 +697,7 @@ class MzCartDLL:
     @staticmethod
     def MzConverterInvConvertXY(
         mzConverterPointer: ctypes.c_void_p, x: float, y: float
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         resx = ctypes.c_double(x)
         resy = ctypes.c_double(y)
         MzCartDLL.Wrapper.C_MZDC_INVCONVERTXY(
@@ -712,7 +711,7 @@ class MzCartDLL:
     @staticmethod
     def MzConverterConvertXYH(
         mzConverterPointer: ctypes.c_void_p, x: float, y: float, h: float
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         resx = ctypes.c_double(x)
         resy = ctypes.c_double(y)
         resh = ctypes.c_double(h)
@@ -730,7 +729,7 @@ class MzCartDLL:
     @staticmethod
     def MzConverterInvConvertXYH(
         mzConverterPointer: ctypes.c_void_p, x: float, y: float, h: float
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         resx = ctypes.c_double(x)
         resy = ctypes.c_double(y)
         resh = ctypes.c_double(h)
@@ -749,7 +748,7 @@ class MzCartDLL:
     @staticmethod
     def MzConverterDatumShift(
         mzConverterPointer: ctypes.c_void_p, x: float, y: float, z: float
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         resx = ctypes.c_double(x)
         resy = ctypes.c_double(y)
         resz = ctypes.c_double(z)
@@ -768,7 +767,7 @@ class MzCartDLL:
     @staticmethod
     def MzConverterInvDatumShift(
         mzConverterPointer: ctypes.c_void_p, x: float, y: float, z: float
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         resx = ctypes.c_double(x)
         resy = ctypes.c_double(y)
         resz = ctypes.c_double(z)
@@ -981,7 +980,7 @@ class MzCartDLL:
     # / <param name="lon">Longitude coordinate of the projection origin</param>
     # / <param name="lat">Latitude coordinate of the projection origin</param>
     @staticmethod
-    def ProjectionOrigin(projstring: str) -> Tuple[float, float]:
+    def ProjectionOrigin(projstring: str) -> tuple[float, float]:
         lon = ctypes.c_double()
         lat = ctypes.c_double()
         rc = ctypes.c_int32()
@@ -1231,7 +1230,7 @@ class MapProjection:
     # / <param name="lat">Latitude</param>
     # / <param name="east">Easting</param>
     # / <param name="north">Northing</param>
-    def Geo2Proj(self, lon: float, lat: float) -> Tuple[float, float]:
+    def Geo2Proj(self, lon: float, lat: float) -> tuple[float, float]:
         return MzCartDLL.MzMapProjGeo2Proj(self._mzMapProjPointer, lon, lat)
 
     # / <summary>
@@ -1241,7 +1240,7 @@ class MapProjection:
     # / <param name="north">Northing</param>
     # / <param name="lon">Longitude</param>
     # / <param name="lat">Latitude</param>
-    def Proj2Geo(self, east: float, north: float) -> Tuple[float, float]:
+    def Proj2Geo(self, east: float, north: float) -> tuple[float, float]:
         return MzCartDLL.MzMapProjProj2Geo(self._mzMapProjPointer, east, north)
 
     # / <summary>
@@ -1249,7 +1248,7 @@ class MapProjection:
     # / </summary>
     # / <param name="lon">Longitude</param>
     # / <param name="lat">Latitude</param>
-    def GetOrigin(self) -> Tuple[float, float]:
+    def GetOrigin(self) -> tuple[float, float]:
         return MzCartDLL.MzMapProjGetOrigin(self._mzMapProjPointer)
 
     # / <summary>
@@ -1276,7 +1275,7 @@ class MapProjection:
     # / <param name="y0">the y-coordinate of the lower lefthand corner</param>
     # / <param name="x1">the x-coordinate of the upper righthand corner</param>
     # / <param name="y1">the y-coordinate of the upper righthand corner</param>
-    def GetDefaultArea(self) -> Tuple[float, float, float, float]:
+    def GetDefaultArea(self) -> tuple[float, float, float, float]:
         return MzCartDLL.GetDefaultArea(self._mzMapProjPointer)
 
     # / <summary>
@@ -1293,7 +1292,7 @@ class MapProjection:
     # / <param name="z">Eucledian z coordinate</param>
     def Geo2Xyz(
         self, lon: float, lat: float, height: float
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         return MzCartDLL.MzMapProjGeo2Xyz(self._mzMapProjPointer, lon, lat, height)
 
     # / <summary>
@@ -1308,7 +1307,7 @@ class MapProjection:
     # / <param name="lon">Longitude</param>
     # / <param name="lat">Latitude</param>
     # / <param name="height">Height over ellipsoid</param>
-    def Xyz2Geo(self, x: float, y: float, z: float) -> Tuple[float, float, float]:
+    def Xyz2Geo(self, x: float, y: float, z: float) -> tuple[float, float, float]:
         return MzCartDLL.MzMapProjXyz2Geo(self._mzMapProjPointer, x, y, z)
 
     # / <summary>
@@ -1464,7 +1463,7 @@ class MapProjection:
     @staticmethod
     def ProjectionOrigin(
         projstring: str, validateProjectionString: bool = True
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         if validateProjectionString and not MzCartDLL.IsValid(projstring):
             raise Exception(
                 "Projection string is not a valid WKT projection string", "projstring"
@@ -1683,7 +1682,7 @@ class Cartography:
     # / <param name="lat">Latitude</param>
     # / <param name="east">Easting</param>
     # / <param name="north">Northing</param>
-    def Geo2Proj(self, lon: float, lat: float) -> Tuple[float, float]:
+    def Geo2Proj(self, lon: float, lat: float) -> tuple[float, float]:
         return MzCartDLL.MzCartGeo2Proj(self._mzCartPointer, lon, lat)
 
     # / <summary>
@@ -1693,7 +1692,7 @@ class Cartography:
     # / <param name="north">Northing</param>
     # / <param name="lon">Longitude</param>
     # / <param name="lat">Latitude</param>
-    def Proj2Geo(self, east: float, north: float) -> Tuple[float, float]:
+    def Proj2Geo(self, east: float, north: float) -> tuple[float, float]:
         return MzCartDLL.MzCartProj2Geo(self._mzCartPointer, east, north)
 
     # / <summary>
@@ -1703,7 +1702,7 @@ class Cartography:
     # / <param name="lat">Latitude</param>
     # / <param name="x">Local grid x coordinate</param>
     # / <param name="y">Local grid y coordinate</param>
-    def Geo2Xy(self, lon: float, lat: float) -> Tuple[float, float]:
+    def Geo2Xy(self, lon: float, lat: float) -> tuple[float, float]:
         return MzCartDLL.MzCartGeo2Xy(self._mzCartPointer, lon, lat)
 
     # / <summary>
@@ -1713,7 +1712,7 @@ class Cartography:
     # / <param name="y">Local grid y coordinate</param>
     # / <param name="lon">Longitude</param>
     # / <param name="lat">Latitude</param>
-    def Xy2Geo(self, x: float, y: float) -> Tuple[float, float]:
+    def Xy2Geo(self, x: float, y: float) -> tuple[float, float]:
         return MzCartDLL.MzCartXy2Geo(self._mzCartPointer, x, y)
 
     # / <summary>
@@ -1723,7 +1722,7 @@ class Cartography:
     # / <param name="north">Northing</param>
     # / <param name="x">Local grid x coordinate</param>
     # / <param name="y">Local grid y coordinate</param>
-    def Proj2Xy(self, east: float, north: float) -> Tuple[float, float]:
+    def Proj2Xy(self, east: float, north: float) -> tuple[float, float]:
         return MzCartDLL.MzCartProj2Xy(self._mzCartPointer, east, north)
 
     # / <summary>
@@ -1733,7 +1732,7 @@ class Cartography:
     # / <param name="y">Local grid y coordinate</param>
     # / <param name="east">Easting</param>
     # / <param name="north">Northing</param>
-    def Xy2Proj(self, x: float, y: float) -> Tuple[float, float]:
+    def Xy2Proj(self, x: float, y: float) -> tuple[float, float]:
         return MzCartDLL.MzCartXy2Proj(self._mzCartPointer, x, y)
 
     # region Static factory methods
@@ -2156,25 +2155,25 @@ class Reprojector:
     # / <summary>
     # / Converts a point (x, y) from the source map projection to the target map projection.
     # / </summary>
-    def ConvertXY(self, x: float, y: float) -> Tuple[float, float]:
+    def ConvertXY(self, x: float, y: float) -> tuple[float, float]:
         return MzCartDLL.MzConverterConvertXY(self._mzConverterPointer, x, y)
 
     # / <summary>
     # / Inverse conversion, converts a point (x, y) from the target map projection to the source map projection.
     # / </summary>
-    def InvConvertXY(self, x: float, y: float) -> Tuple[float, float]:
+    def InvConvertXY(self, x: float, y: float) -> tuple[float, float]:
         return MzCartDLL.MzConverterInvConvertXY(self._mzConverterPointer, x, y)
 
     # / <summary>
     # / Converts a point (x, y, h) from the source map projection to the target map projection.
     # / </summary>
-    def ConvertXYH(self, x: float, y: float, h: float) -> Tuple[float, float, float]:
+    def ConvertXYH(self, x: float, y: float, h: float) -> tuple[float, float, float]:
         return MzCartDLL.MzConverterConvertXYH(self._mzConverterPointer, x, y, h)
 
     # / <summary>
     # / Inverse conversion, converts a point (x, y, h) from the target map projection to the source map projection.
     # / </summary>
-    def InvConvertXYH(self, x: float, y: float, h: float) -> Tuple[float, float, float]:
+    def InvConvertXYH(self, x: float, y: float, h: float) -> tuple[float, float, float]:
         return MzCartDLL.MzConverterInvConvertXYH(self._mzConverterPointer, x, y, h)
 
     # / <summary>
@@ -2189,7 +2188,7 @@ class Reprojector:
     # / <param name="x">Euclidean x coordinate</param>
     # / <param name="y">Euclidean y coordinate</param>
     # / <param name="z">Euclidean z coordinate</param>
-    def DatumShift(self, x: float, y: float, z: float) -> Tuple[float, float, float]:
+    def DatumShift(self, x: float, y: float, z: float) -> tuple[float, float, float]:
         return MzCartDLL.MzConverterDatumShift(self._mzConverterPointer, x, y, z)
 
     # / <summary>
@@ -2204,5 +2203,5 @@ class Reprojector:
     # / <param name="x">Euclidean x coordinate</param>
     # / <param name="y">Euclidean y coordinate</param>
     # / <param name="z">Euclidean z coordinate</param>
-    def InvDatumShift(self, x: float, y: float, z: float) -> Tuple[float, float, float]:
+    def InvDatumShift(self, x: float, y: float, z: float) -> tuple[float, float, float]:
         return MzCartDLL.MzConverterInvDatumShift(self._mzConverterPointer, x, y, z)

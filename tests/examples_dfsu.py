@@ -79,12 +79,12 @@ class ExamplesDfsu:
                 break
 
         if elmt >= 0:
-            print("Found     element index: = {}".format(elmt))
-            print("(xc,yc) = ({},{})".format(xc, yc))
+            print(f"Found     element index: = {elmt}")
+            print(f"(xc,yc) = ({xc},{yc})")
             resNodes = file.ElementTable[elmt]
             for j in range(resNodes.size):
                 node = resNodes[j] - 1
-                print("(x,y)   = ({0},{1})".format(X[node], Y[node]))
+                print(f"(x,y)   = ({X[node]},{Y[node]})")
 
         return elmt
 
@@ -196,7 +196,7 @@ class ExamplesDfsu:
                 builder.AddDynamicItem(itemBuilder.GetDynamicItemInfo())
 
             # Create and get file, store them in dfs0s array
-            dfs0Filename = dfs0BaseFilename + "{:0>5d}".format(elmtsIndex) + ".dfs0"
+            dfs0Filename = dfs0BaseFilename + f"{elmtsIndex:0>5d}" + ".dfs0"
             # Create file in the ordinary way. Will include statistics (of delete values etc).
             builder.CreateFile(dfs0Filename)
             dfs0Files.append(builder.GetFile())

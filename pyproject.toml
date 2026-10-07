@@ -23,13 +23,19 @@ license = { file = "LICENSE.txt" }
 authors = [
     { name = "DHI", email = "mike@dhigroup.com" }
 ]
-requires-python = ">=3.5"
+# Only CPython versions that have not reached end of life; see docs/adr/0001-python-version-support.md
+requires-python = ">=3.11"
 dependencies = [
     "numpy"
 ]
 classifiers = [
     "License :: OSI Approved :: BSD License",
-    "Programming Language :: Python :: 3"
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
 [project.urls]
@@ -40,11 +46,9 @@ dev = [
     "pytest>=6.1.2",
 ]
 
-[tool.ruff]
-target-version = "py38"
-
+# ruff takes its target version from requires-python.
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F"]
+select = ["E4", "E7", "E9", "F", "UP"]
 # The C#-style API is re-exported through star imports throughout.
 ignore = [
     "F403", "F405",
