@@ -9,19 +9,19 @@ class Test_dfs_static_item(unittest.TestCase):
         dfsFile = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfsu")
 
         staticItems = []
-        staticItemNumber = 1;
+        staticItemNumber = 1
         while (True):
-            varstaticItem = dfsFile.ReadStaticItem(staticItemNumber);
+            varstaticItem = dfsFile.ReadStaticItem(staticItemNumber)
             if (varstaticItem is None):
-                break;
-            staticItems.append(varstaticItem);
+                break
+            staticItems.append(varstaticItem)
             staticItemNumber += 1
 
         assert staticItems != None
         assert 9 == len(staticItems)
 
         # Check x-coord static item
-        staticItem = staticItems[1];
+        staticItem = staticItems[1]
         assert 2 ==  staticItem.ItemNumber
         assert 2057 == staticItem.ElementCount
         #assert 2057 == staticItem.UsedElementCount
@@ -58,8 +58,8 @@ class Test_dfs_static_item(unittest.TestCase):
 
         #--------------------------------------
         # Check element type static item
-        staticItem = staticItems[6];
-        assert 7    == staticItem.ItemNumber;
+        staticItem = staticItems[6]
+        assert 7    == staticItem.ItemNumber
         assert 3636 == staticItem.ElementCount
         #assert 3636 == staticItem.UsedElementCount
 
@@ -84,7 +84,7 @@ class Test_dfs_static_item(unittest.TestCase):
 
         #--------------------------------------
         # Check connectivity static item
-        staticItem = staticItems[8];
+        staticItem = staticItems[8]
         assert 9 == staticItem.ItemNumber
         assert 3 * 3636 == staticItem.ElementCount
         #assert 3 * 3636 == staticItem.UsedElementCount
@@ -107,7 +107,7 @@ class Test_dfs_static_item(unittest.TestCase):
         #assert deleteValueFloat == staticItem.OrientationTheta
 
         # Check dummy spatial axis
-        axis = staticItem.SpatialAxis;
+        axis = staticItem.SpatialAxis
         assert SpaceAxisType.EqD1 == axis.AxisType
         assert 1 == axis.Dimension
         # TODO: Assert.AreEqual(eumUnit.eumUmeter, axis.AxisUnit

@@ -1,5 +1,5 @@
 from mikecore.DfsDLL import DfsDLL
-from mikecore.DfsFile import TimeAxisType, DfsFile, DfsDLLUtil
+from mikecore.DfsFile import TimeAxisType
 from mikecore.DfsFileFactory import DfsFileFactory
 
 

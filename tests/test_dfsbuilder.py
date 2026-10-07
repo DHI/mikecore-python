@@ -19,7 +19,7 @@ def landuse():
     builder.DeleteValueFloat = -2
 
     # Set up dynamic items
-    builder.AddCreateDynamicItem("Landuse", eumQuantity.Create(eumItem.eumIIntegerCode, eumUnit.eumUintCode), DfsSimpleType.Float, DataValueType.Instantaneous);
+    builder.AddCreateDynamicItem("Landuse", eumQuantity.Create(eumItem.eumIIntegerCode, eumUnit.eumUintCode), DfsSimpleType.Float, DataValueType.Instantaneous)
 
     return builder
 

@@ -35,11 +35,11 @@ unitKeys = list(unitDict.keys())
 itemKeys.sort()
 unitKeys.sort()
 
-print("# Predefined enums of EUM item types.");
-print("#");
-print("# Must be updated with every new release, or if the EUM.xml is updated");
-print("# Run buildUtil\eumXMLProcess.py to create the lists");
-print("class eumItem(IntEnum):");
+print("# Predefined enums of EUM item types.")
+print("#")
+print("# Must be updated with every new release, or if the EUM.xml is updated")
+print("# Run buildUtil\eumXMLProcess.py to create the lists")
+print("class eumItem(IntEnum):")
 for key in itemKeys:
     print("    {} = {}".format(itemDict[key], key))
 

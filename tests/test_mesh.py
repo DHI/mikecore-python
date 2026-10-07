@@ -1,4 +1,3 @@
-import numpy as np
 import unittest
 from mikecore.MeshFile import MeshFile
 from mikecore.MeshBuilder import MeshBuilder

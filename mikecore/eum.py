@@ -1285,27 +1285,27 @@ class eumDimensionBase(IntEnum):
     #/ <summary>
     #/ Length dimension; index 0
     #/ </summary>
-    Length = 0;
+    Length = 0
     #/ <summary>
     #/ Mass dimension; index 1
     #/ </summary>
-    Mass = 1;
+    Mass = 1
     #/ <summary>
     #/ Time dimension; index 2
     #/ </summary>
-    Time = 2;
+    Time = 2
     #/ <summary>
     #/ Temperature dimension; index 3
     #/ </summary>
-    Temperature = 3;
+    Temperature = 3
     #/ <summary>
     #/ Electric current dimension; index 4
     #/ </summary>
-    ElectricCurrent = 4;
+    ElectricCurrent = 4
     #/ <summary>
     #/ Amount of substance dimension; index 5
     #/ </summary>
-    AmountOfSubstance = 5;
+    AmountOfSubstance = 5
     #/ <summary>
     #/ Luminous intensity dimension; index 6
     #/ </summary>
@@ -1317,10 +1317,10 @@ class eumQuantity:
     __undefined = None
 
     def __init__(self, item = eumItem.eumIItemUndefined, unit = eumUnit.eumUUnitUndefined):
-        self.Item = item;
-        self.ItemInt = item;
-        self.Unit = unit;
-        self.UnitInt = unit;
+        self.Item = item
+        self.ItemInt = item
+        self.Unit = unit
+        self.UnitInt = unit
 
     def __repr__(self):
         return "{item}-{unit}".format(item=self.Item, unit=self.Unit)
@@ -1346,18 +1346,18 @@ class UnitConverter:
       #/ <param name="nUnitFrom"></param>
       #/ <param name="nUnitTo"></param>
       def __init__(self, unitFrom: eumUnit, unitTo: eumUnit, equivalentUnits: bool = True):
-        self.dFactorFwd = 1;   # Forward conversion factor  - 1 by default
-        self.dOffsetFwd = 0;   # Forward conversion offset  - 0 by default
-        self.dFactorBck = 1;   # Backward conversion factor - 1 by default
-        self.dOffsetBck = 0;   # Backward conversion offset - 0 by default
+        self.dFactorFwd = 1   # Forward conversion factor  - 1 by default
+        self.dOffsetFwd = 0   # Forward conversion offset  - 0 by default
+        self.dFactorBck = 1   # Backward conversion factor - 1 by default
+        self.dOffsetBck = 0   # Backward conversion offset - 0 by default
         if ((not equivalentUnits) or eumWrapper.eumUnitsEqv(unitFrom, unitTo)):
-          dFactorFrom, dOffsetFrom = eumWrapper.eumUnitGetSIFactor(unitFrom);
-          dFactorTo,   dOffsetTo   = eumWrapper.eumUnitGetSIFactor(unitTo);
+          dFactorFrom, dOffsetFrom = eumWrapper.eumUnitGetSIFactor(unitFrom)
+          dFactorTo,   dOffsetTo   = eumWrapper.eumUnitGetSIFactor(unitTo)
 
-          self.dFactorFwd = dFactorFrom/dFactorTo;
-          self.dOffsetFwd = (dOffsetFrom - dOffsetTo)/dFactorTo;
-          self.dFactorBck = dFactorTo/dFactorFrom;
-          self.dOffsetBck = (dOffsetTo - dOffsetFrom)/dFactorFrom;
+          self.dFactorFwd = dFactorFrom/dFactorTo
+          self.dOffsetFwd = (dOffsetFrom - dOffsetTo)/dFactorTo
+          self.dFactorBck = dFactorTo/dFactorFrom
+          self.dOffsetBck = (dOffsetTo - dOffsetFrom)/dFactorFrom
         else:
           raise Exception("Units are not equivalent")
 
@@ -1367,7 +1367,7 @@ class UnitConverter:
       #/ <param name="val"></param>
       #/ <returns></returns>
       def Convert(self, val: float) -> float:
-          return self.dFactorFwd * val + self.dOffsetFwd;
+          return self.dFactorFwd * val + self.dOffsetFwd
 
       #/ <summary>
       #/ Convert data set from fromUnit to toUnit
@@ -1377,11 +1377,11 @@ class UnitConverter:
       def ConvertArray(self, pData: np.ndarray, dDeleteValue: float = None):
           if (dDeleteValue is None):
               for i in range(pData.size):
-                  pData[i] = self.Convert(pData[i]);
+                  pData[i] = self.Convert(pData[i])
           else:
               for i in range(pData.size):
                   if (dDeleteValue != pData[i]):
-                      pData[i] = self.Convert(pData[i]);
+                      pData[i] = self.Convert(pData[i])
 
       #/ <summary>
       #/ Convert from toUnit to fromUnit
@@ -1389,7 +1389,7 @@ class UnitConverter:
       #/ <param name="val"></param>
       #/ <returns></returns>
       def InvConvert(self, val: float) -> float:
-          return self.dFactorBck * val + self.dOffsetBck;
+          return self.dFactorBck * val + self.dOffsetBck
 
       #/ <summary>
       #/ Convert set data from toUnit to fromUnit
@@ -1399,11 +1399,11 @@ class UnitConverter:
       def InvConvertArray(self, pData: np.ndarray, dDeleteValue: float = None):
           if (dDeleteValue is None):
               for i in range(pData.size):
-                  pData[i] = self.InvConvert(pData[i]);
+                  pData[i] = self.InvConvert(pData[i])
           else:
               for i in range(pData.size):
                   if (dDeleteValue != pData[i]):
-                      pData[i] = self.InvConvert(pData[i]);
+                      pData[i] = self.InvConvert(pData[i])
 
 
 
@@ -1426,9 +1426,9 @@ class eumDLL(object):
     @staticmethod
     def Init(libfilepath=None, libfilename=None):
 
-        if not libfilepath is None:
+        if libfilepath is not None:
             eumDLL.libfilepath = libfilepath
-        if not libfilename is None:
+        if libfilename is not None:
             eumDLL.libfilename = libfilename
 
         # eum lib should be loaded only once
@@ -1443,7 +1443,7 @@ class eumDLL(object):
                 # TODO: Should this not be simpler?
                 eumFilePath = eumDLL.libfilepath + "/EUM.xml"
                 eumFilePathP = ctypes.c_char_p(eumFilePath.encode("ascii"))
-                res = eumDLL.Wrapper.eumSetupLoadLinux(eumFilePathP);
+                res = eumDLL.Wrapper.eumSetupLoadLinux(eumFilePathP)
 
             eumDLL.Wrapper.eumUnitGetParameters.argtypes = [ctypes.c_int32, 
                                                             ctypes.POINTER(ctypes.c_double), 
@@ -1503,13 +1503,13 @@ class eumWrapper:
     #/ <returns>A hashtable with item type text description, numeric key pairs.</returns>
     @staticmethod
     def CreateItemHashtable() -> dict:
-      itemHash = dict();
-      n = eumWrapper.eumGetItemTypeCount();
+      itemHash = dict()
+      n = eumWrapper.eumGetItemTypeCount()
       for i in range(1, n + 1):
-        ok, key, desc = eumWrapper.eumGetItemTypeSeq(i);
+        ok, key, desc = eumWrapper.eumGetItemTypeSeq(i)
         if (ok):
-          itemHash[desc] = key;
-      return itemHash;
+          itemHash[desc] = key
+      return itemHash
 
     #/ <summary>
     #/ Returns a hashtable using the textual descriptions and abbreviations of units as
@@ -1521,23 +1521,23 @@ class eumWrapper:
     #/ <returns></returns>
     @staticmethod
     def CreateUnitHashTable(abbreviations: bool = False):
-      unitHash = dict(); #current number of unique desc/abbrs.
-      prevKey = eumUnit.eumUUnitUndefined;
+      unitHash = dict() #current number of unique desc/abbrs.
+      prevKey = eumUnit.eumUUnitUndefined
       ok, unitKey, desc = eumWrapper.eumGetNextUnit(prevKey)
       while (ok):
         if (not abbreviations):
           # Add the full description to the unitHash
-          if (not desc in unitHash):
-            unitHash[desc] = unitKey;
+          if (desc not in unitHash):
+            unitHash[desc] = unitKey
         else:
           # Add the abbreviated describtion to the unitHash
-          desc = eumWrapper.eumGetUnitAbbreviation(unitKey);
-          if (not desc in unitHash):
-            unitHash[desc] = unitKey;
+          desc = eumWrapper.eumGetUnitAbbreviation(unitKey)
+          if (desc not in unitHash):
+            unitHash[desc] = unitKey
 
-        prevKey = unitKey;
+        prevKey = unitKey
         ok, unitKey, desc = eumWrapper.eumGetNextUnit(prevKey)
-      return unitHash;
+      return unitHash
 
     #/ <summary>
     #/ Converts a textual description of the item type to the numeric key for the
@@ -1552,31 +1552,31 @@ class eumWrapper:
     #/ matching textual description is found, and FALSE otherwise</returns>
     @staticmethod
     def GetItemTypeTag(itemDesc: str) -> eumItem:
-      found = False;
-      itemKey = None;
+      found = False
+      itemKey = None
       for i in range(1, eumWrapper.eumGetItemTypeCount() + 1):
-        ok, key, desc = eumWrapper.eumGetItemTypeSeq(i);
+        ok, key, desc = eumWrapper.eumGetItemTypeSeq(i)
         if (ok and desc == itemDesc):
           found = True
-          itemKey = key;
-          break;
+          itemKey = key
+          break
       if (found):
-        return itemKey;
+        return itemKey
       else:
-        return None;
+        return None
 
     #/ <summary>
     #/ returns array containing the EUM units that are allowed for an EUM data type
     #/ </summary>
     @staticmethod
     def GetItemAllowedUnits(eumItemType: eumItem):
-      nUnits = eumWrapper.eumGetItemUnitCount(eumItemType);
-      units = [];
+      nUnits = eumWrapper.eumGetItemUnitCount(eumItemType)
+      units = []
       for i in range(nUnits):
         ok, iUnit, _ = eumWrapper.eumGetItemUnitSeq(eumItemType, i + 1)
         if (ok):
-          units.append(iUnit);
-      return units;
+          units.append(iUnit)
+      return units
 
 
     #endregion
@@ -1590,7 +1590,7 @@ class eumWrapper:
     #/ </summary>
     @staticmethod
     def eumGetItemTypeCount() -> int:
-        return eumDLL.Wrapper.eumGetItemTypeCount();
+        return eumDLL.Wrapper.eumGetItemTypeCount()
 
     #/ <summary>
     #/ Retrieves a numeric item key and the corresponding textual description based on a sequence number SeqNo.
@@ -1604,12 +1604,12 @@ class eumWrapper:
     #/ <returns>TRUE if an item is found and FALSE otherwise.</returns>
     @staticmethod
     def eumGetItemTypeSeq(seqNo: int) -> Tuple[bool, eumItem, str]:
-      itemKey = ctypes.c_int32();
-      lpItemDesc = ctypes.c_char_p();
+      itemKey = ctypes.c_int32()
+      lpItemDesc = ctypes.c_char_p()
       iok = eumDLL.Wrapper.eumGetItemTypeSeq(ctypes.c_int32(seqNo), ctypes.byref(itemKey), ctypes.byref(lpItemDesc))
       if (0 != iok):
-        return True, eumItem(itemKey.value), lpItemDesc.value.decode("ascii");
-      return False, eumItem.eumIItemUndefined, "";
+        return True, eumItem(itemKey.value), lpItemDesc.value.decode("ascii")
+      return False, eumItem.eumIItemUndefined, ""
 
 
     #/ <summary>
@@ -1617,17 +1617,17 @@ class eumWrapper:
     #/ </summary>
     @staticmethod
     def eumGetItemTypeKey(itemKey: eumItem) -> Optional[str]:
-      lpItDesc = ctypes.c_char_p();
+      lpItDesc = ctypes.c_char_p()
       if (0 != eumDLL.Wrapper.eumGetItemTypeKey(itemKey, ctypes.byref(lpItDesc))):
-        return lpItDesc.value.decode("ascii");
-      return None;
+        return lpItDesc.value.decode("ascii")
+      return None
 
     #/ <summary>
     #/ retrieves the number of units attached to the item specified by <paramref name="itemKey"/>
     #/ </summary>
     @staticmethod
     def eumGetItemUnitCount(itemKey: eumItem) -> int:
-        return eumDLL.Wrapper.eumGetItemUnitCount(ctypes.c_int32(itemKey));
+        return eumDLL.Wrapper.eumGetItemUnitCount(ctypes.c_int32(itemKey))
 
     #/ <summary>
     #/ Gets the first unit defined in the eum-system for the item specified by itemKey.
@@ -1635,10 +1635,10 @@ class eumWrapper:
     @staticmethod
     def eumGetItemFirstEqvUnit(itemKey: eumItem) -> eumUnit:
       unitKey = ctypes.c_int32()
-      lpUniDesc = ctypes.c_char_p();
+      lpUniDesc = ctypes.c_char_p()
 
       if (0 != eumDLL.Wrapper.eumGetItemUnitSeq(itemKey, ctypes.c_int32(1), ctypes.byref(unitKey), ctypes.byref(lpUniDesc))):
-        return eumUnit(unitKey.value);
+        return eumUnit(unitKey.value)
       raise Exception("Item not defined")
 
 
@@ -1659,8 +1659,8 @@ class eumWrapper:
       unitKey = ctypes.c_int32()
       lpUniDesc = ctypes.c_char_p()
       if (0 != eumDLL.Wrapper.eumGetItemUnitSeq(itemKey, UniSeq, ctypes.byref(unitKey), ctypes.byref(lpUniDesc))):
-        return True, eumUnit(unitKey.value), lpUniDesc.value.decode("ascii");
-      return False, eumUnit.eumUUnitUndefined, "";
+        return True, eumUnit(unitKey.value), lpUniDesc.value.decode("ascii")
+      return False, eumUnit.eumUUnitUndefined, ""
 
 
     #/ <summary>
@@ -1680,7 +1680,7 @@ class eumWrapper:
     #/ </summary>
     @staticmethod
     def eumGetItemUserUnit(itemKey: eumItem) -> eumUnit:
-        UserunitKey = ctypes.c_int32();
+        UserunitKey = ctypes.c_int32()
         if 0 != eumDLL.Wrapper.eumGetItemUserUnit(ctypes.c_int32(itemKey), ctypes.byref(UserunitKey)):
             return eumUnit(UserunitKey.value)
         raise Exception("Item not defined")
@@ -1690,9 +1690,9 @@ class eumWrapper:
     #/ </summary>    
     @staticmethod
     def eumGetUnitKey(unitKey: eumUnit) -> str:
-      lpUniDesc = ctypes.c_char_p();
+      lpUniDesc = ctypes.c_char_p()
       if (0 != eumDLL.Wrapper.eumGetUnitKey(ctypes.c_int32(unitKey), ctypes.byref(lpUniDesc))):
-        return lpUniDesc.value.decode("ascii");
+        return lpUniDesc.value.decode("ascii")
       raise Exception("Unit not defined")
 
     #/ <summary>
@@ -1701,9 +1701,9 @@ class eumWrapper:
     #/ </summary>        
     @staticmethod
     def eumGetUnitAbbreviation(unitKey: eumUnit) -> str:
-      lpUnitDesc = ctypes.c_char_p();
+      lpUnitDesc = ctypes.c_char_p()
       if (1 == eumDLL.Wrapper.eumGetUnitAbbreviation(unitKey, ctypes.byref(lpUnitDesc))):
-        return lpUnitDesc.value.decode("ascii");
+        return lpUnitDesc.value.decode("ascii")
       raise Exception("Unit not defined")
 
     #/ <summary>
@@ -1717,11 +1717,11 @@ class eumWrapper:
     #/ </remarks>
     @staticmethod
     def eumGetUnitTag(unitDesc: str) -> eumUnit:
-        unitKey = ctypes.c_int32();
+        unitKey = ctypes.c_int32()
         if 0 != eumDLL.Wrapper.eumGetUnitTag(ctypes.c_char_p(unitDesc.encode("ascii")),
                                              ctypes.byref(unitKey)):
-            return eumUnit(unitKey.value);
-        return None;
+            return eumUnit(unitKey.value)
+        return None
 
     #/ <summary>
     #/ Converts a textual description of the unit to the numeric key for 
@@ -1729,12 +1729,12 @@ class eumWrapper:
     #/ </summary>
     @staticmethod
     def eumGetItemUnitTag(itemKey: eumItem, unitDesc: str) -> Tuple[bool,eumUnit]:
-        unitKey = ctypes.c_int32();
+        unitKey = ctypes.c_int32()
         if 0 != eumDLL.Wrapper.eumGetItemUnitTag(ctypes.c_int32(itemKey), 
                                                  ctypes.c_char_p(unitDesc.encode("ascii")),
                                                  ctypes.byref(unitKey)):
-            return eumUnit(unitKey.value);
-        return None;
+            return eumUnit(unitKey.value)
+        return None
 
     #/ <summary>
     #/ Checks if two units specified are equivalent
@@ -1757,12 +1757,12 @@ class eumWrapper:
     #/ </summary>        
     @staticmethod
     def eumGetBaseUnit(unitKey: eumUnit) -> eumUnit:
-      baseunitKey = ctypes.c_int32();
-      lpBaseUnitDesc = ctypes.c_char_p();
+      baseunitKey = ctypes.c_int32()
+      lpBaseUnitDesc = ctypes.c_char_p()
       if (0 != eumDLL.Wrapper.eumGetBaseUnit(ctypes.c_int32(unitKey), 
                                              ctypes.byref(baseunitKey), 
                                              ctypes.byref(lpBaseUnitDesc))):
-        return eumUnit(baseunitKey.value);
+        return eumUnit(baseunitKey.value)
       raise Exception("Unit not defined")
 
     #/ <summary>
@@ -1772,11 +1772,11 @@ class eumWrapper:
     #/ </summary>        
     @staticmethod
     def eumGetNextUnit(prevUnitKey: int) -> Tuple[bool, int, str]:
-      unitKey = ctypes.c_int32();
-      lpUnitDesc = ctypes.c_char_p();
+      unitKey = ctypes.c_int32()
+      lpUnitDesc = ctypes.c_char_p()
       if (0 != eumDLL.Wrapper.eumGetNextUnit(prevUnitKey, ctypes.byref(unitKey), ctypes.byref(lpUnitDesc))):
-        return True, unitKey.value, lpUnitDesc.value.decode("ascii");
-      return False, eumUnit.eumUUnitUndefined.value, "";
+        return True, unitKey.value, lpUnitDesc.value.decode("ascii")
+      return False, eumUnit.eumUUnitUndefined.value, ""
 
     #/ <summary>
     #/ Get the next unit defined in the eum-system which is equivalent 
@@ -1790,12 +1790,12 @@ class eumWrapper:
     #/ <param name="unitDesc">Returns the textual description of the unit</param>
     @staticmethod
     def eumGetNextEqvUnit(baseunitKey: eumUnit, PrevunitKey: eumUnit) -> Tuple[bool, eumUnit, str]:
-      unitKey = ctypes.c_int32();
-      lpUnitDesc = ctypes.c_char_p();
+      unitKey = ctypes.c_int32()
+      lpUnitDesc = ctypes.c_char_p()
       rc = eumDLL.Wrapper.eumGetNextEqvUnit(baseunitKey, PrevunitKey, ctypes.byref(unitKey), ctypes.byref(lpUnitDesc))
       if rc != 0:
-        return False, eumUnit.eumUUnitUndefined, "";
-      return True, eumUnit(unitKey.value), lpUnitDesc.value.decode("ascii");
+        return False, eumUnit.eumUUnitUndefined, ""
+      return True, eumUnit(unitKey.value), lpUnitDesc.value.decode("ascii")
 
     #/ <summary>
     #/ Converts a floating point value from <paramref name="fromUnitKey"/>-units to 
@@ -1804,7 +1804,7 @@ class eumWrapper:
     #/ </summary>
     @staticmethod
     def eumConvertUnit(fromUnitKey: eumUnit, fromValue: float, toUnitKey: eumUnit) -> Tuple[bool, float]:
-        toValue = ctypes.c_double();
+        toValue = ctypes.c_double()
         iok = eumDLL.Wrapper.eumConvertUnit(ctypes.c_int32(fromUnitKey), ctypes.c_double(fromValue), ctypes.c_int32(toUnitKey), ctypes.byref(toValue))
         return (iok != 0, toValue.value)
 
@@ -1838,9 +1838,9 @@ class eumWrapper:
     #/ </summary>
     @staticmethod
     def eumConvertUnitToBase(unitKey: eumUnit, value: float) -> float:
-        baseValue = ctypes.c_double();
+        baseValue = ctypes.c_double()
         if 0 != eumDLL.Wrapper.eumConvertUnitToBase(ctypes.c_int32(unitKey), ctypes.c_double(value), ctypes.byref(baseValue)):
-            return baseValue.value;
+            return baseValue.value
         raise Exception("Unit not found")
 
     #/ <summary>
@@ -1848,9 +1848,9 @@ class eumWrapper:
     #/ </summary>
     @staticmethod
     def eumConvertUnitFromBase(unitKey: eumUnit, baseValue: float) -> float:
-        value = ctypes.c_double();
+        value = ctypes.c_double()
         if 0 != eumDLL.Wrapper.eumConvertUnitFromBase(ctypes.c_int32(unitKey), ctypes.c_double(baseValue), ctypes.byref(value)):
-            return value.value;
+            return value.value
         raise Exception("Unit not found")
 
 
@@ -1864,12 +1864,12 @@ class eumWrapper:
     #/ <param name="toValue">Returns the value converted to User units</param>
     @staticmethod
     def eumConvertToUserUnit(UBGitemKey: eumItem, localunitKey: eumUnit, fromValue: float) -> float:
-        toValue = ctypes.c_double();
+        toValue = ctypes.c_double()
         if 0 != eumDLL.Wrapper.eumConvertToUserUnit(ctypes.c_int32(UBGitemKey), 
                                                     ctypes.c_int32(localunitKey), 
                                                     ctypes.c_double(fromValue), 
                                                     ctypes.byref(toValue)):
-            return toValue.value;
+            return toValue.value
         raise Exception("Unit not found")
 
     #/ <summary>
@@ -1882,12 +1882,12 @@ class eumWrapper:
     #/ <param name="toValue">Returns the value converted to <paramref name="localUnitKey"/></param>
     @staticmethod
     def eumConvertFromUserUnit(UBGitemKey: eumItem, localunitKey: eumUnit, fromValue: float) -> float:
-        toValue = ctypes.c_double();
+        toValue = ctypes.c_double()
         if 0 != eumDLL.Wrapper.eumConvertFromUserUnit(ctypes.c_int32(UBGitemKey), 
                                                       ctypes.c_int32(localunitKey), 
                                                       ctypes.c_double(fromValue), 
                                                       ctypes.byref(toValue)):
-            return toValue.value;
+            return toValue.value
         raise Exception("Unit not found")
 
     #/ <summary>
@@ -2043,15 +2043,15 @@ class eumWrapper:
     def eumUnitGetSIFactor(unitKey: eumUnit) -> Tuple[float,float]:
         factor = ctypes.c_double()
         offset = ctypes.c_double()
-        powdim = np.zeros(7, dtype=np.double);
-        facdim = np.zeros(7, dtype=np.double);
+        powdim = np.zeros(7, dtype=np.double)
+        facdim = np.zeros(7, dtype=np.double)
         if 0 != eumDLL.Wrapper.eumUnitGetParameters(ctypes.c_int32(unitKey),
                                                     ctypes.byref(factor),
                                                     ctypes.byref(offset),
                                                     powdim.ctypes.data,
                                                     facdim.ctypes.data):
             return factor.value, offset.value
-        raise Exception("Unit no defined");
+        raise Exception("Unit no defined")
 
     #/ <summary>
     #/ Returns all 9 parameters, that describes a unit. First it's the two parameters (factor and offset) that defines 
@@ -2068,15 +2068,15 @@ class eumWrapper:
     def eumUnitGetParameters(unitKey: eumUnit) -> Tuple[float,float,np.ndarray,np.ndarray]:
         factor = ctypes.c_double()
         offset = ctypes.c_double()
-        powdim = np.zeros(7, dtype=np.double);
-        facdim = np.zeros(7, dtype=np.double);
+        powdim = np.zeros(7, dtype=np.double)
+        facdim = np.zeros(7, dtype=np.double)
         if 0 != eumDLL.Wrapper.eumUnitGetParameters(ctypes.c_int32(unitKey),
                                                     ctypes.byref(factor),
                                                     ctypes.byref(offset),
                                                     powdim.ctypes.data,
                                                     facdim.ctypes.data):
             return factor.value, offset.value, powdim, facdim
-        raise Exception("Unit no defined");
+        raise Exception("Unit no defined")
 
 
 #    #/ <summary>

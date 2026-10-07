@@ -5,7 +5,7 @@ from mikecore.DfsFile import *
 
 def CheckForNull(obj):
   if (obj is None):
-    raise Exception("File is not a valid dfsu file. It can not be opened");
+    raise Exception("File is not a valid dfsu file. It can not be opened")
 
 class DfsuFileType(IntEnum):
 
@@ -51,44 +51,44 @@ class DfsuFile(object):
 
     def __init__(self, dfsFile = None):
         # underlying dfs file
-        self.dfsFile = dfsFile;
-        self.DfsuFileType = DfsuFileType.Dfsu2D;
-        self.NumberOfLayers = -1;
-        self.NumberOfSigmaLayers = -1;
-        self.NumberOfFrequencies = -1;
-        self.NumberOfDirections = -1;
+        self.dfsFile = dfsFile
+        self.DfsuFileType = DfsuFileType.Dfsu2D
+        self.NumberOfLayers = -1
+        self.NumberOfSigmaLayers = -1
+        self.NumberOfFrequencies = -1
+        self.NumberOfDirections = -1
 
         # Static item
-        self.__nodeIdItem = None;
-        self.__xItem = None;
-        self.__yItem = None;
-        self.__zItem = None;
-        self.__codeItem = None;
+        self.__nodeIdItem = None
+        self.__xItem = None
+        self.__yItem = None
+        self.__zItem = None
+        self.__codeItem = None
 
-        self.__elmtIdItem = None;
+        self.__elmtIdItem = None
 
         self.__freqItem = None
         self.__dirItem = None
 
         # Node variables
-        self.NodeIds = None;
-        self.X = None;
-        self.Y = None;
-        self.Z = None;
-        self.Code = None;
+        self.NodeIds = None
+        self.X = None
+        self.Y = None
+        self.Z = None
+        self.Code = None
 
-        self.ZUnit = eumUnit.eumUmeter;
+        self.ZUnit = eumUnit.eumUmeter
 
         # Element variables
-        self.ElementIds = None; # this can be null, then set default id's, starting from 1
-        self.ElementType = None;
-        self.ElementTable = [];
+        self.ElementIds = None # this can be null, then set default id's, starting from 1
+        self.ElementType = None
+        self.ElementTable = []
 
         # Spectral definition
-        self.Frequencies = None;
-        self.Directions = None;
+        self.Frequencies = None
+        self.Directions = None
 
-        if (not dfsFile is None):
+        if (dfsFile is not None):
             self.__Init(dfsFile)
 
     def __Init(self, dfsFile, build = False):
@@ -97,7 +97,7 @@ class DfsuFile(object):
       It will throw an exception if file is not a dfsu file.
       """
 
-      self.dfsFile = dfsFile;
+      self.dfsFile = dfsFile
       self.FileInfo  = self.dfsFile.FileInfo
 
       # Build geometry
@@ -105,60 +105,60 @@ class DfsuFile(object):
       # Read "MIKE_FM" custom block
       if (len(self.dfsFile.FileInfo.CustomBlocks) != 1 
           or not self.dfsFile.FileInfo.CustomBlocks[0].Name ==  "MIKE_FM"):
-          raise Exception("Error while reading dfsu file (custom block 'MIKE_FM' missing)");
+          raise Exception("Error while reading dfsu file (custom block 'MIKE_FM' missing)")
 
-      customBlock = self.dfsFile.FileInfo.CustomBlocks[0];
+      customBlock = self.dfsFile.FileInfo.CustomBlocks[0]
       if (customBlock is None or customBlock.Count < 4 or customBlock.SimpleType != DfsSimpleType.Int):
-          raise Exception("Error while reading dfsu file (custom block not valid)");
+          raise Exception("Error while reading dfsu file (custom block not valid)")
 
       #int numberOfNodes = customBlock[0];
-      numberOfElmts = customBlock[1];
+      numberOfElmts = customBlock[1]
 
-      dimensions = customBlock[2];
-      self.NumberOfLayers = customBlock[3];
+      dimensions = customBlock[2]
+      self.NumberOfLayers = customBlock[3]
       if (customBlock.Count == 5):
-        self.NumberOfSigmaLayers = customBlock[4];
+        self.NumberOfSigmaLayers = customBlock[4]
       else:
-        self.NumberOfSigmaLayers = self.NumberOfLayers;
+        self.NumberOfSigmaLayers = self.NumberOfLayers
 
       if (self.FileInfo.DataType in (2002, 2003) or (self.FileInfo.DataType == 2001 and (customBlock.Count == 6))):
-        self.NumberOfFrequencies = customBlock[4];
-        self.NumberOfDirections = customBlock[5];
+        self.NumberOfFrequencies = customBlock[4]
+        self.NumberOfDirections = customBlock[5]
       else:
-        self.NumberOfFrequencies = 0;
-        self.NumberOfDirections = 0;
+        self.NumberOfFrequencies = 0
+        self.NumberOfDirections = 0
 
       # Figuring out dfsu file type from custom block MIKE_FM
       if (dimensions == 1):
         if (self.NumberOfLayers > 0):
-          self.DfsuFileType = DfsuFileType.DfsuVerticalColumn;
+          self.DfsuFileType = DfsuFileType.DfsuVerticalColumn
         elif (self.FileInfo.DataType == 2001 and (self.NumberOfFrequencies == numberOfElmts or self.NumberOfDirections == numberOfElmts)):
           # Spectral Frequency-Direction (Rose-plot) geometry
-          self.DfsuFileType = DfsuFileType.DfsuSpectral0D;
+          self.DfsuFileType = DfsuFileType.DfsuSpectral0D
         elif (self.FileInfo.DataType == 2002 and self.IsSpectral):
           # Spectral Frequency or Direction geometry
-          self.DfsuFileType = DfsuFileType.DfsuSpectral1D;
+          self.DfsuFileType = DfsuFileType.DfsuSpectral1D
         else:
-          self.DfsuFileType = DfsuFileType.Dfsu1D;
+          self.DfsuFileType = DfsuFileType.Dfsu1D
 
       elif (dimensions == 2):
         if (self.FileInfo.DataType == 2001 and (self.NumberOfFrequencies*self.NumberOfDirections == numberOfElmts)):
           # Spectral Frequency-Direction (Rose-plot) geometry
-          self.DfsuFileType = DfsuFileType.DfsuSpectral0D;
+          self.DfsuFileType = DfsuFileType.DfsuSpectral0D
         elif self.FileInfo.DataType == 2003:
-          self.DfsuFileType = DfsuFileType.DfsuSpectral2D;
+          self.DfsuFileType = DfsuFileType.DfsuSpectral2D
         elif (self.NumberOfLayers == 0):
-          self.DfsuFileType = DfsuFileType.Dfsu2D;
+          self.DfsuFileType = DfsuFileType.Dfsu2D
         elif (self.NumberOfLayers == self.NumberOfSigmaLayers):
-          self.DfsuFileType = DfsuFileType.DfsuVerticalProfileSigma;
+          self.DfsuFileType = DfsuFileType.DfsuVerticalProfileSigma
         else:
-          self.DfsuFileType = DfsuFileType.DfsuVerticalProfileSigmaZ;
+          self.DfsuFileType = DfsuFileType.DfsuVerticalProfileSigmaZ
 
       elif (dimensions == 3):
         if (self.NumberOfLayers == self.NumberOfSigmaLayers):
-          self.DfsuFileType = DfsuFileType.Dfsu3DSigma;
+          self.DfsuFileType = DfsuFileType.Dfsu3DSigma
         else:
-          self.DfsuFileType = DfsuFileType.Dfsu3DSigmaZ;
+          self.DfsuFileType = DfsuFileType.Dfsu3DSigmaZ
 
 
       # Do not read static items when building, they are already set
@@ -176,49 +176,49 @@ class DfsuFile(object):
           # "Frequency"     , double
           # "Direction"     , double
 
-          self.__nodeIdItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__nodeIdItem);
+          self.__nodeIdItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__nodeIdItem)
           self.NodeIds = self.__nodeIdItem.Data
 
           # X can be in doubles or in floats. Floats are converted to doubles
-          self.__xItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__xItem);
+          self.__xItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__xItem)
           if (self.__xItem.DataType == DfsSimpleType.Double):
             self.X = self.__xItem.Data
           else: # self.__xItem.DataType == DfsSimpleType.Float 
-            floats = self.__xItem.Data;
-            self.X = np.array(floats, np.double);
+            floats = self.__xItem.Data
+            self.X = np.array(floats, np.double)
 
 
           # Y can be in doubles or in floats. Floats are converted to doubles
-          self.__yItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__yItem);
+          self.__yItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__yItem)
           if (self.__yItem.DataType == DfsSimpleType.Double):
             self.Y = self.__yItem.Data
           else: # self.__yItem.DataType == DfsSimpleType.Double
-            floats = self.__yItem.Data;
-            self.Y = np.array(floats, np.double);
+            floats = self.__yItem.Data
+            self.Y = np.array(floats, np.double)
 
           # Z is stored as float. Doubles are also read, but converted to floats ("future" support of doubles)
-          self.__zItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__zItem);
+          self.__zItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__zItem)
           if (self.__zItem.DataType == DfsSimpleType.Float):
             self.Z = self.__zItem.Data
           else: # self.__zItem.DataType == DfsSimpleType.Double
-            doubles = self.__zItem.Data;
-            self.Z = np.array(doubles, np.float32);
+            doubles = self.__zItem.Data
+            self.Z = np.array(doubles, np.float32)
 
-          self.ZUnit = self.__zItem.Quantity.Unit;
+          self.ZUnit = self.__zItem.Quantity.Unit
 
-          self.__codeItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__codeItem);
+          self.__codeItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__codeItem)
           self.Code = self.__codeItem.Data
 
-          self.__elmtIdItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__elmtIdItem);
+          self.__elmtIdItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(self.__elmtIdItem)
           self.ElementIds = self.__elmtIdItem.Data
 
-          elmtTypeItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(elmtTypeItem);
+          elmtTypeItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(elmtTypeItem)
           self.ElementType = elmtTypeItem.Data
 
-          nodesPerElmtItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(nodesPerElmtItem);
+          nodesPerElmtItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(nodesPerElmtItem)
           nodesPerElement = nodesPerElmtItem.Data
 
-          connectivityItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(connectivityItem);
+          connectivityItem = self.dfsFile.ReadStaticItemNext(); CheckForNull(connectivityItem)
           connectivityArray = connectivityItem.Data
 
           # TODO Validate data
@@ -231,13 +231,13 @@ class DfsuFile(object):
             
           # Spectral Dfsu
           if (self.NumberOfFrequencies):
-              frequency = self.dfsFile.ReadStaticItemNext(); CheckForNull(frequency);
+              frequency = self.dfsFile.ReadStaticItemNext(); CheckForNull(frequency)
               self.Frequencies = frequency.Data
           if (self.NumberOfDirections):
-              direction = self.dfsFile.ReadStaticItemNext(); CheckForNull(direction);
+              direction = self.dfsFile.ReadStaticItemNext(); CheckForNull(direction)
               self.Directions = direction.Data
 
-      self.NumberOfNodes = self.NodeIds.size; 
+      self.NumberOfNodes = self.NodeIds.size 
       self.ItemInfo = self.dfsFile.ItemInfo
 
       self.NumberOfElements = self.ElementIds.size
@@ -247,7 +247,7 @@ class DfsuFile(object):
          # In append mode, move the file pointer to end of file
          # It was moved elsewhere when reading static data...
          if (self.dfsFile.FileMode == DfsFileMode.Append):
-            self.dfsFile.FindTimeStep(self.NumberOfTimeSteps);
+            self.dfsFile.FindTimeStep(self.NumberOfTimeSteps)
 
 
     def Dispose(self):
@@ -255,59 +255,59 @@ class DfsuFile(object):
       Close file and release ressources on the unmanaged side.
       """
 
-      self.dfsFile.Dispose();
+      self.dfsFile.Dispose()
 
     def ReadItemTimeStepNext(self):
-      return (self.dfsFile.ReadItemTimeStepNext());
+      return (self.dfsFile.ReadItemTimeStepNext())
 
     def ReadItemTimeStep(self, itemNumber, timestepIndex):
-      return (self.dfsFile.ReadItemTimeStep(itemNumber, timestepIndex));
+      return (self.dfsFile.ReadItemTimeStep(itemNumber, timestepIndex))
 
 #    def ReadItemTimeStep(itemData, timestepIndex)
 #      return (self.dfsFile.ReadItemTimeStep(itemData, timestepIndex));
 
     def WriteItemTimeStep(self, itemNumber, timestepIndex, time, data):
-      self.dfsFile.WriteItemTimeStep(itemNumber, timestepIndex, time, data);
+      self.dfsFile.WriteItemTimeStep(itemNumber, timestepIndex, time, data)
 
     def WriteItemTimeStepNext(self, time, data):
-      self.dfsFile.WriteItemTimeStepNext(time, data);
+      self.dfsFile.WriteItemTimeStepNext(time, data)
 
 
     def FindItem(self, itemNumber, timestepIndex):
-      self.dfsFile.FindItem(itemNumber, timestepIndex);
+      self.dfsFile.FindItem(itemNumber, timestepIndex)
 
     def FindTimeStep(self, timestepIndex):
-      self.dfsFile.FindTimeStep(timestepIndex);
+      self.dfsFile.FindTimeStep(timestepIndex)
 
     def Reset(self):
-      self.dfsFile.Reset();
+      self.dfsFile.Reset()
 
     def Flush(self):
-       self.dfsFile.Flush(self);
+       self.dfsFile.Flush(self)
 
     def FlushTimeStep(self):
-       self.dfsFile.FlushTimeStep();
+       self.dfsFile.FlushTimeStep()
 
     def Close(self):
-       self.dfsFile.Close();
+       self.dfsFile.Close()
 
     @staticmethod
     def Open(fileName):
-      dfs = DfsFile();
-      dfs.Open(fileName, DfsFileMode.Read);
-      return (DfsuFile(dfs));
+      dfs = DfsFile()
+      dfs.Open(fileName, DfsFileMode.Read)
+      return (DfsuFile(dfs))
 
     @staticmethod
     def OpenEdit(fileName):
-      dfs = DfsFile();
-      dfs.Open(fileName, DfsFileMode.Edit);
-      return (DfsuFile(dfs));
+      dfs = DfsFile()
+      dfs.Open(fileName, DfsFileMode.Edit)
+      return (DfsuFile(dfs))
 
     @staticmethod
     def OpenAppend(fileName):
-      dfs = DfsFile();
-      dfs.Open(fileName, DfsFileMode.Append);
-      return (DfsuFile(dfs));
+      dfs = DfsFile()
+      dfs.Open(fileName, DfsFileMode.Append)
+      return (DfsuFile(dfs))
 
       """
       Internal factory method, used by the DfsuBuilder
@@ -334,22 +334,22 @@ class DfsuFile(object):
       dirItem,
       ):
 
-      self.dfsFile = dfsFile;
-      self.__nodeIdItem = nodeIdItem;
-      self.__xItem = xItem;
-      self.__yItem = yItem;
-      self.__zItem = zItem;
-      self.__codeItem = codeItem;
-      self.__elmtIdItem = elmtIdItem;
-      self.NodeIds = nodeIds;
-      self.X = x;
-      self.Y = y;
-      self.Z = z;
-      self.Code = code;
-      self.ElementIds = elementIds;
-      self.ElementType = elementType;
-      self.ElementTable = connectivity;
-      self.ZUnit = zUnit;
+      self.dfsFile = dfsFile
+      self.__nodeIdItem = nodeIdItem
+      self.__xItem = xItem
+      self.__yItem = yItem
+      self.__zItem = zItem
+      self.__codeItem = codeItem
+      self.__elmtIdItem = elmtIdItem
+      self.NodeIds = nodeIds
+      self.X = x
+      self.Y = y
+      self.Z = z
+      self.Code = code
+      self.ElementIds = elementIds
+      self.ElementType = elementType
+      self.ElementTable = connectivity
+      self.ZUnit = zUnit
       self.__freqItem = freqItem
       self.__dirItem = dirItem
       self.__Init(dfsFile, build = True)
@@ -434,10 +434,10 @@ class DfsuFile(object):
       If not all items are of type {T}, an exception will be thrown.
       </para>
       """
-      res = np.zeros(len(dfsFile.ItemInfo), dtype=object);
+      res = np.zeros(len(dfsFile.ItemInfo), dtype=object)
       for i in range(len(dfsFile.ItemInfo)):
-        res[i] = dfsFile.ItemInfo[i].CreateEmptyItemData();
-      return res;
+        res[i] = dfsFile.ItemInfo[i].CreateEmptyItemData()
+      return res
 
     def CalculateElementCenterCoordinates(self):
       """"
@@ -445,40 +445,40 @@ class DfsuFile(object):
       as the average of all node coordinates of the nodes in 
       each element.
       """
-      xArr = np.zeros(self.NumberOfElements, dtype=np.float64);
-      yArr = np.zeros(self.NumberOfElements, dtype=np.float64);
-      zArr = np.zeros(self.NumberOfElements, dtype=np.float64);
+      xArr = np.zeros(self.NumberOfElements, dtype=np.float64)
+      yArr = np.zeros(self.NumberOfElements, dtype=np.float64)
+      zArr = np.zeros(self.NumberOfElements, dtype=np.float64)
 
       for i in range(self.NumberOfElements):
-        nodesInElmt = self.ElementTable[i].size;
-        iNodesInElmt = 1.0/nodesInElmt;
-        x = 0;
-        y = 0;
-        z = 0;
+        nodesInElmt = self.ElementTable[i].size
+        iNodesInElmt = 1.0/nodesInElmt
+        x = 0
+        y = 0
+        z = 0
         for j in range(nodesInElmt):
-          nodeIndex = self.ElementTable[i][j];
-          x += self.X[nodeIndex -1] * iNodesInElmt;
-          y += self.Y[nodeIndex -1] * iNodesInElmt;
-          z += self.Z[nodeIndex -1] * iNodesInElmt;
-        xArr[i] = x;
-        yArr[i] = y;
-        zArr[i] = z;
+          nodeIndex = self.ElementTable[i][j]
+          x += self.X[nodeIndex -1] * iNodesInElmt
+          y += self.Y[nodeIndex -1] * iNodesInElmt
+          z += self.Z[nodeIndex -1] * iNodesInElmt
+        xArr[i] = x
+        yArr[i] = y
+        zArr[i] = z
       return xArr, yArr, zArr
 
     def GetDateTimes(self):
       """"
       Return an array of DateTimes which are the times for each timestep
       """
-      res = np.zeros(self.NumberOfTimeSteps, dtype=datetime.datetime);
-      start = self.StartDateTime;
-      timestepInSecs = self.TimeStepInSeconds;
+      res = np.zeros(self.NumberOfTimeSteps, dtype=datetime.datetime)
+      start = self.StartDateTime
+      timestepInSecs = self.TimeStepInSeconds
       for i in range(self.NumberOfTimeSteps):
-        res[i] = start + datetime.timedelta(seconds=i*timestepInSecs);
-      return (res);
+        res[i] = start + datetime.timedelta(seconds=i*timestepInSecs)
+      return (res)
 
     def FindTopLayerElements(self):
       if (self.DfsuFileType == DfsuFileType.Dfsu2D):
-        raise Exception("Can not extract top layer elements of a 2D dfsu file");
+        raise Exception("Can not extract top layer elements of a 2D dfsu file")
 
       return DfsuUtil.FindTopLayerElements(self.ElementTable)
 
@@ -504,48 +504,48 @@ class DfsuUtil:
       :returns: A list of element indices of top layer elements
       """
 
-      topLayerElments = [];
+      topLayerElments = []
 
       # Find top layer elements by matching the number numers of the last half of elmt i 
       # with the first half of element i+1.
       # Elements always start from the bottom, and the element of one columne are following
       # each other in the element table.
       for i in range(len(elementTable)-1):
-        elmt1 = elementTable[i];
-        elmt2 = elementTable[i+1];
+        elmt1 = elementTable[i]
+        elmt2 = elementTable[i+1]
 
         if (elmt1.size != elmt2.size):
           # elements with different number of nodes can not be on top of each other, 
           # so elmt2 must be another column, and elmt1 must be a top element
-          topLayerElments.append(i);
-          continue;
+          topLayerElments.append(i)
+          continue
         
         if (elmt1.size%2 != 0):
-          raise Exception("In a layered mesh, each element must have an even number of elements (element index "+i+")");
+          raise Exception("In a layered mesh, each element must have an even number of elements (element index "+i+")")
 
         # Number of nodes in a 2D element
-        elmt2DSize = int(elmt1.size/2);
+        elmt2DSize = int(elmt1.size/2)
 
         for j in range(elmt2DSize):
           if (elmt2DSize > 2):
             if (elmt1[j + elmt2DSize] != elmt2[j]):
               # At least one node number did not match
               # so elmt2 must be another column, and elmt1 must be a top element
-              topLayerElments.append(i);
-              break;
+              topLayerElments.append(i)
+              break
           else:
             # for 2D vertical profiles the nodes in the element on the
             # top is in reverse order of those in the bottom.
             if (elmt1[j + elmt2DSize] != elmt2[(elmt2DSize-1)-j]):
               # At least one node number did not match
               # so elmt2 must be another column, and elmt1 must be a top element
-              topLayerElments.append(i);
-              break;
+              topLayerElments.append(i)
+              break
 
       # The last element will always be a top layer element
-      topLayerElments.append(len(elementTable)-1);
+      topLayerElments.append(len(elementTable)-1)
 
-      return (np.array(topLayerElments, dtype=np.int32));
+      return (np.array(topLayerElments, dtype=np.int32))
 
 
     @staticmethod
@@ -562,63 +562,63 @@ class DfsuUtil:
       :returns: A list of element indices of top layer elements
       """
 
-      topLayerElments = [];
+      topLayerElments = []
 
       # Find top layer elements by matching the element center (x,y)-coordinates
       # of a column
       for i in range(len(elementTable) - 1):
-        elmt1 = elementTable[i];
-        elmt2 = elementTable[i + 1];
+        elmt1 = elementTable[i]
+        elmt2 = elementTable[i + 1]
 
-        x1 = 0;
-        y1 = 0;
-        x2 = 0;
-        y2 = 0;
+        x1 = 0
+        y1 = 0
+        x2 = 0
+        y2 = 0
 
         # Calculate element center coordinate
         for j in range(elmt1.size):
-          x1 += x[elmt1[j] - 1];
-          y1 += y[elmt1[j] - 1];
-        x1 /= elmt1.size;
-        y1 /= elmt1.size;
+          x1 += x[elmt1[j] - 1]
+          y1 += y[elmt1[j] - 1]
+        x1 /= elmt1.size
+        y1 /= elmt1.size
 
         for j in range(elmt2.size):
-          x2 += x[elmt2[j] - 1];
-          y2 += y[elmt2[j] - 1];
-        x2 /= elmt2.size;
-        y2 /= elmt2.size;
+          x2 += x[elmt2[j] - 1]
+          y2 += y[elmt2[j] - 1]
+        x2 /= elmt2.size
+        y2 /= elmt2.size
 
-        dx = x2 - x1;
-        dy = y2 - y1;
+        dx = x2 - x1
+        dy = y2 - y1
         # Distance (squared) between element center (x,y) coordinates
-        dist2 = dx*dx + dy*dy;
+        dist2 = dx*dx + dy*dy
 
         # Find a reference length, being the longest (x,y) 
         # distance between two consecutive nodes in the element table. 
         # For 3D files this will usually be some kind of diagonal.
-        maxNodeDist2 = 0;
+        maxNodeDist2 = 0
         for j in range(elmt1.size):
-          x1 = x[elmt1[(j) % elmt1.size] - 1];
-          y1 = y[elmt1[(j) % elmt1.size] - 1];
-          x2 = x[elmt1[(j + 1) % elmt1.size] - 1];
-          y2 = y[elmt1[(j + 1) % elmt1.size] - 1];
-          dx = x2 - x1;
-          dy = y2 - y1;
-          nodeDist2 = dx * dx + dy * dy;
+          x1 = x[elmt1[(j) % elmt1.size] - 1]
+          y1 = y[elmt1[(j) % elmt1.size] - 1]
+          x2 = x[elmt1[(j + 1) % elmt1.size] - 1]
+          y2 = y[elmt1[(j + 1) % elmt1.size] - 1]
+          dx = x2 - x1
+          dy = y2 - y1
+          nodeDist2 = dx * dx + dy * dy
           if (nodeDist2 > maxNodeDist2):
-            maxNodeDist2 = nodeDist2;
+            maxNodeDist2 = nodeDist2
 
         # Check if element center coordinates differ more than a tolerance
         # times the reference lenght - the maximum node distance.
         if (dist2 > 1e-4 * maxNodeDist2):
           # Element center coordinates are too far from each other, elmt1
           # is a top layer element.
-          topLayerElments.append(i);
+          topLayerElments.append(i)
       
       # The last element will always be a top layer element
-      topLayerElments.append(len(elementTable) - 1);
+      topLayerElments.append(len(elementTable) - 1)
 
-      return (np.array(topLayerElments, dtype=np.int32));
+      return (np.array(topLayerElments, dtype=np.int32))
 
     @staticmethod
     def FindMaxNumberOfLayers(topLayerElements):
@@ -628,12 +628,12 @@ class DfsuUtil:
       Assuming that the topLayerElements comes ordered.
       """
       # the first column has top-element-index + 1 layers
-      maxLayers = topLayerElements[0]+1;
+      maxLayers = topLayerElements[0]+1
       for i in range(1, topLayerElements.size):
-        layers = topLayerElements[i] - topLayerElements[i - 1];
+        layers = topLayerElements[i] - topLayerElements[i - 1]
         if (layers > maxLayers):
-          maxLayers = layers;
-      return (maxLayers);
+          maxLayers = layers
+      return (maxLayers)
 
     @staticmethod
     def FindMinNumberOfLayers(topLayerElements):
@@ -644,9 +644,9 @@ class DfsuUtil:
       ordered.
       """
       # the first column has top-element-index + 1 layers
-      minLayers = topLayerElements[0] + 1;
+      minLayers = topLayerElements[0] + 1
       for i in range(1, topLayerElements.size):
-        layers = topLayerElements[i] - topLayerElements[i - 1];
+        layers = topLayerElements[i] - topLayerElements[i - 1]
         if (layers < minLayers):
-          minLayers = layers;
-      return (minLayers);
+          minLayers = layers
+      return (minLayers)

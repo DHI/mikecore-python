@@ -11,7 +11,7 @@ from tests.examples_dfs0 import *
 from tests.test_util import *
 
 class Dfs0Tests(unittest.TestCase):
-    timeOffset = 3.0;
+    timeOffset = 3.0
 
     # def ReadDfs0Example():
     #    sum = examples_dfs0.ReadDfs0File("testdata/Rain_stepaccumulated.dfs0");
@@ -39,133 +39,133 @@ class Dfs0Tests(unittest.TestCase):
     #    examples_dfs0.UpdateDfs0Data(UnitTestHelper.TestDataRoot + @"Rain_instantaneous.dfs0", UnitTestHelper.TestDataRoot + @"test_update_Rain_instantaneous.dfs0");
 
     def test_CreateEqTimeTest(self):
-        Dfs0Tests.CreateEqCalTimeTest(False);
+        Dfs0Tests.CreateEqCalTimeTest(False)
 
     def test_CreateEqCalTest(self):
-        Dfs0Tests.CreateEqCalTimeTest(True);
+        Dfs0Tests.CreateEqCalTimeTest(True)
 
     @staticmethod
     def CreateEqCalTimeTest(calendarAxis):
 
         if (calendarAxis):
-            filename = "testdata/testtmp/test_create_TemporalEqCal.dfs0";
+            filename = "testdata/testtmp/test_create_TemporalEqCal.dfs0"
         else:
-            filename = "testdata/testtmp/test_create_TemporalEqTime.dfs0";
+            filename = "testdata/testtmp/test_create_TemporalEqTime.dfs0"
 
-        ExamplesDfs0.CreateDfs0File(filename, calendarAxis);
+        ExamplesDfs0.CreateDfs0File(filename, calendarAxis)
 
         # Open file and test content
-        dfsFile = DfsFileFactory.DfsGenericOpen(filename);
+        dfsFile = DfsFileFactory.DfsGenericOpen(filename)
 
         if (calendarAxis):
-            FileTemporalEqCalDfs0.TimeAxisTester(dfsFile, False);
-            FileTemporalEqCalDfs0.ReadTester(dfsFile, False);
-            FileTemporalEqCalDfs0.ReadAllTester(dfsFile, False);
+            FileTemporalEqCalDfs0.TimeAxisTester(dfsFile, False)
+            FileTemporalEqCalDfs0.ReadTester(dfsFile, False)
+            FileTemporalEqCalDfs0.ReadAllTester(dfsFile, False)
         else:
-            FileTemporalEqTimeDfs0.TimeAxisTester(dfsFile);
-            FileTemporalEqTimeDfs0.ReadTester(dfsFile);
-            FileTemporalEqTimeDfs0.ReadAllTester(dfsFile);
+            FileTemporalEqTimeDfs0.TimeAxisTester(dfsFile)
+            FileTemporalEqTimeDfs0.ReadTester(dfsFile)
+            FileTemporalEqTimeDfs0.ReadAllTester(dfsFile)
 
-        dfsFile.Close();
+        dfsFile.Close()
 
         # Open file and test content with modifyTimes==True
         if (calendarAxis and platform.system() == "Linux"):
-            print("WARNING: start-time-offset and ModifyTimes=True does not work on Linux");
-            return;
+            print("WARNING: start-time-offset and ModifyTimes=True does not work on Linux")
+            return
 
         modifyTimes = True
-        parameters = DfsFileFactory.CreateDefaultParameters();
-        parameters.ModifyTimes = modifyTimes;
-        dfsFile = DfsFileFactory.DfsGenericOpen(filename, parameters);
+        parameters = DfsFileFactory.CreateDefaultParameters()
+        parameters.ModifyTimes = modifyTimes
+        dfsFile = DfsFileFactory.DfsGenericOpen(filename, parameters)
 
         if (calendarAxis):
-            FileTemporalEqCalDfs0.TimeAxisTester(dfsFile, modifyTimes);
-            FileTemporalEqCalDfs0.ReadTester(dfsFile, modifyTimes);
-            FileTemporalEqCalDfs0.ReadAllTester(dfsFile, modifyTimes);
+            FileTemporalEqCalDfs0.TimeAxisTester(dfsFile, modifyTimes)
+            FileTemporalEqCalDfs0.ReadTester(dfsFile, modifyTimes)
+            FileTemporalEqCalDfs0.ReadAllTester(dfsFile, modifyTimes)
         else:
-            FileTemporalEqTimeDfs0.TimeAxisTester(dfsFile);
-            FileTemporalEqTimeDfs0.ReadTester(dfsFile);
-            FileTemporalEqTimeDfs0.ReadAllTester(dfsFile);
+            FileTemporalEqTimeDfs0.TimeAxisTester(dfsFile)
+            FileTemporalEqTimeDfs0.ReadTester(dfsFile)
+            FileTemporalEqTimeDfs0.ReadAllTester(dfsFile)
 
-        dfsFile.Close();
+        dfsFile.Close()
 
     # Create a file matching the TemporalEqTime.dfs0 file, and tests its content
     def test_CreateNeqTimeTest(self):
-        Dfs0Tests.CreateNeqCalTimeTest(False);
-        Dfs0Tests.CreateNeqCalTimeTest(False, bulkWrite=True);
+        Dfs0Tests.CreateNeqCalTimeTest(False)
+        Dfs0Tests.CreateNeqCalTimeTest(False, bulkWrite=True)
 
 
     # Create a file matching the TemporalEqCal.dfs0 file, and tests its content
     def test_CreateNeqCalFileTest(self):
-        Dfs0Tests.CreateNeqCalTimeTest(True);
-        Dfs0Tests.CreateNeqCalTimeTest(True, bulkWrite=True);
+        Dfs0Tests.CreateNeqCalTimeTest(True)
+        Dfs0Tests.CreateNeqCalTimeTest(True, bulkWrite=True)
 
 
     @staticmethod
     def CreateNeqCalTimeTest(calendarAxis, fileTitle="TemporalAxisTest", itemName1="WaterLevel item", bulkWrite=False):
 
-        filename = "testdata/testtmp/test_create_Temporal";
+        filename = "testdata/testtmp/test_create_Temporal"
         if (calendarAxis):
-            filename = filename + "NeqCal";
+            filename = filename + "NeqCal"
         else:
-            filename = filename + "NeqTime";
+            filename = filename + "NeqTime"
         if (bulkWrite):
-            filename = filename + "Data";
-        filename = filename + ".dfs0";
+            filename = filename + "Data"
+        filename = filename + ".dfs0"
 
-        factory = DfsFactory();
-        builder = DfsBuilder.Create(fileTitle, "dfs Timeseries Bridge", 10000);
+        factory = DfsFactory()
+        builder = DfsBuilder.Create(fileTitle, "dfs Timeseries Bridge", 10000)
 
         # Set up file header
-        builder.SetDataType(1);
-        builder.SetGeographicalProjection(factory.CreateProjectionUndefined());
+        builder.SetDataType(1)
+        builder.SetGeographicalProjection(factory.CreateProjectionUndefined())
         if (calendarAxis):
-            builder.SetTemporalAxis(factory.CreateTemporalNonEqCalendarAxis(eumUnit.eumUsec, datetime.datetime(2010,  1,  4, 12, 34, 00)));
+            builder.SetTemporalAxis(factory.CreateTemporalNonEqCalendarAxis(eumUnit.eumUsec, datetime.datetime(2010,  1,  4, 12, 34, 00)))
         else:
-            builder.SetTemporalAxis(factory.CreateTemporalNonEqTimeAxis(eumUnit.eumUsec));
-        builder.SetItemStatisticsType(StatType.NoStat);
+            builder.SetTemporalAxis(factory.CreateTemporalNonEqTimeAxis(eumUnit.eumUsec))
+        builder.SetItemStatisticsType(StatType.NoStat)
 
         # Set up first item
-        item1 = builder.CreateDynamicItemBuilder();
-        item1.Set(itemName1, eumQuantity.Create(eumItem.eumIWaterLevel, eumUnit.eumUmeter), DfsSimpleType.Float);
-        item1.SetValueType(DataValueType.Instantaneous);
-        item1.SetAxis(factory.CreateAxisEqD0());
-        item1.SetReferenceCoordinates(1, 2, 3);
-        builder.AddDynamicItem(item1.GetDynamicItemInfo());
+        item1 = builder.CreateDynamicItemBuilder()
+        item1.Set(itemName1, eumQuantity.Create(eumItem.eumIWaterLevel, eumUnit.eumUmeter), DfsSimpleType.Float)
+        item1.SetValueType(DataValueType.Instantaneous)
+        item1.SetAxis(factory.CreateAxisEqD0())
+        item1.SetReferenceCoordinates(1, 2, 3)
+        builder.AddDynamicItem(item1.GetDynamicItemInfo())
 
-        item2 = builder.CreateDynamicItemBuilder();
-        item2.Set("WaterDepth item", eumQuantity.Create(eumItem.eumIWaterDepth, eumUnit.eumUmeter), DfsSimpleType.Float);
-        item2.SetValueType(DataValueType.Instantaneous);
-        item2.SetAxis(factory.CreateAxisEqD0());
-        item2.SetReferenceCoordinates(1, 2, 3);
-        builder.AddDynamicItem(item2.GetDynamicItemInfo());
+        item2 = builder.CreateDynamicItemBuilder()
+        item2.Set("WaterDepth item", eumQuantity.Create(eumItem.eumIWaterDepth, eumUnit.eumUmeter), DfsSimpleType.Float)
+        item2.SetValueType(DataValueType.Instantaneous)
+        item2.SetAxis(factory.CreateAxisEqD0())
+        item2.SetReferenceCoordinates(1, 2, 3)
+        builder.AddDynamicItem(item2.GetDynamicItemInfo())
 
         # Create file
-        builder.CreateFile(filename);
-        file = builder.GetFile();
+        builder.CreateFile(filename)
+        file = builder.GetFile()
 
         if not bulkWrite:
             # Write data to file
-            file.WriteItemTimeStepNext( 0 + Dfs0Tests.timeOffset, np.array([  0], np.float32)); # Water level
-            file.WriteItemTimeStepNext( 0 + Dfs0Tests.timeOffset, np.array([100], np.float32)); # Water depth
-            file.WriteItemTimeStepNext(10 + Dfs0Tests.timeOffset, np.array([  1], np.float32)); # Water level
-            file.WriteItemTimeStepNext(10 + Dfs0Tests.timeOffset, np.array([101], np.float32)); # Water depth
-            file.WriteItemTimeStepNext(20 + Dfs0Tests.timeOffset, np.array([  2], np.float32)); # Water level
-            file.WriteItemTimeStepNext(20 + Dfs0Tests.timeOffset, np.array([102], np.float32)); # Water depth
-            file.WriteItemTimeStepNext(35 + Dfs0Tests.timeOffset, np.array([  3], np.float32)); # etc...
-            file.WriteItemTimeStepNext(35 + Dfs0Tests.timeOffset, np.array([103], np.float32));
-            file.WriteItemTimeStepNext(50 + Dfs0Tests.timeOffset, np.array([  4], np.float32));
-            file.WriteItemTimeStepNext(50 + Dfs0Tests.timeOffset, np.array([104], np.float32));
-            file.WriteItemTimeStepNext(60 + Dfs0Tests.timeOffset, np.array([  5], np.float32));
-            file.WriteItemTimeStepNext(60 + Dfs0Tests.timeOffset, np.array([105], np.float32));
-            file.WriteItemTimeStepNext(75 + Dfs0Tests.timeOffset, np.array([ 10], np.float32));
-            file.WriteItemTimeStepNext(75 + Dfs0Tests.timeOffset, np.array([110], np.float32));
-            file.WriteItemTimeStepNext(90 + Dfs0Tests.timeOffset, np.array([ 11], np.float32));
-            file.WriteItemTimeStepNext(90 + Dfs0Tests.timeOffset, np.array([111], np.float32));
-            file.WriteItemTimeStepNext(91 + Dfs0Tests.timeOffset, np.array([ 12], np.float32));
-            file.WriteItemTimeStepNext(91 + Dfs0Tests.timeOffset, np.array([112], np.float32));
-            file.WriteItemTimeStepNext(95 + Dfs0Tests.timeOffset, np.array([ 13], np.float32));
-            file.WriteItemTimeStepNext(95 + Dfs0Tests.timeOffset, np.array([113], np.float32));
+            file.WriteItemTimeStepNext( 0 + Dfs0Tests.timeOffset, np.array([  0], np.float32)) # Water level
+            file.WriteItemTimeStepNext( 0 + Dfs0Tests.timeOffset, np.array([100], np.float32)) # Water depth
+            file.WriteItemTimeStepNext(10 + Dfs0Tests.timeOffset, np.array([  1], np.float32)) # Water level
+            file.WriteItemTimeStepNext(10 + Dfs0Tests.timeOffset, np.array([101], np.float32)) # Water depth
+            file.WriteItemTimeStepNext(20 + Dfs0Tests.timeOffset, np.array([  2], np.float32)) # Water level
+            file.WriteItemTimeStepNext(20 + Dfs0Tests.timeOffset, np.array([102], np.float32)) # Water depth
+            file.WriteItemTimeStepNext(35 + Dfs0Tests.timeOffset, np.array([  3], np.float32)) # etc...
+            file.WriteItemTimeStepNext(35 + Dfs0Tests.timeOffset, np.array([103], np.float32))
+            file.WriteItemTimeStepNext(50 + Dfs0Tests.timeOffset, np.array([  4], np.float32))
+            file.WriteItemTimeStepNext(50 + Dfs0Tests.timeOffset, np.array([104], np.float32))
+            file.WriteItemTimeStepNext(60 + Dfs0Tests.timeOffset, np.array([  5], np.float32))
+            file.WriteItemTimeStepNext(60 + Dfs0Tests.timeOffset, np.array([105], np.float32))
+            file.WriteItemTimeStepNext(75 + Dfs0Tests.timeOffset, np.array([ 10], np.float32))
+            file.WriteItemTimeStepNext(75 + Dfs0Tests.timeOffset, np.array([110], np.float32))
+            file.WriteItemTimeStepNext(90 + Dfs0Tests.timeOffset, np.array([ 11], np.float32))
+            file.WriteItemTimeStepNext(90 + Dfs0Tests.timeOffset, np.array([111], np.float32))
+            file.WriteItemTimeStepNext(91 + Dfs0Tests.timeOffset, np.array([ 12], np.float32))
+            file.WriteItemTimeStepNext(91 + Dfs0Tests.timeOffset, np.array([112], np.float32))
+            file.WriteItemTimeStepNext(95 + Dfs0Tests.timeOffset, np.array([ 13], np.float32))
+            file.WriteItemTimeStepNext(95 + Dfs0Tests.timeOffset, np.array([113], np.float32))
         else:
             data = np.array(
                 [
@@ -180,56 +180,56 @@ class Dfs0Tests(unittest.TestCase):
                     [91 + Dfs0Tests.timeOffset, 12, 112],
                     [95 + Dfs0Tests.timeOffset, 13, 113],
                 ], np.float64)
-            file.WriteDfs0DataDouble(data);
+            file.WriteDfs0DataDouble(data)
 
-        file.Close();
+        file.Close()
 
         # Open file and test content
 
-        dfsFile = DfsFileFactory.DfsGenericOpen(filename);
+        dfsFile = DfsFileFactory.DfsGenericOpen(filename)
 
         if (calendarAxis):
-            FileTemporalNeqCalDfs0.TimeAxisTester(dfsFile, False);
-            FileTemporalNeqCalDfs0.ReadTester(dfsFile, False);
-            FileTemporalNeqCalDfs0.ReadAllTester(dfsFile, False);
+            FileTemporalNeqCalDfs0.TimeAxisTester(dfsFile, False)
+            FileTemporalNeqCalDfs0.ReadTester(dfsFile, False)
+            FileTemporalNeqCalDfs0.ReadAllTester(dfsFile, False)
         else:
-            FileTemporalNeqTimeDfs0.TimeAxisTester(dfsFile, False);
-            FileTemporalNeqTimeDfs0.ReadTester(dfsFile, False);
-            FileTemporalNeqTimeDfs0.ReadAllTester(dfsFile, False);
+            FileTemporalNeqTimeDfs0.TimeAxisTester(dfsFile, False)
+            FileTemporalNeqTimeDfs0.ReadTester(dfsFile, False)
+            FileTemporalNeqTimeDfs0.ReadAllTester(dfsFile, False)
 
-        dfsFile.Close();
+        dfsFile.Close()
 
         # Open file and test content with modifyTimes==True
         if (calendarAxis and platform.system() == "Linux"):
-            print("WARNING: start-time-offset and ModifyTimes=True does not work on Linux");
-            return;
+            print("WARNING: start-time-offset and ModifyTimes=True does not work on Linux")
+            return
 
         modifyTimes = True
-        parameters = DfsFileFactory.CreateDefaultParameters();
-        parameters.ModifyTimes = modifyTimes;
-        dfsFile = DfsFileFactory.DfsGenericOpen(filename, parameters);
+        parameters = DfsFileFactory.CreateDefaultParameters()
+        parameters.ModifyTimes = modifyTimes
+        dfsFile = DfsFileFactory.DfsGenericOpen(filename, parameters)
 
         if (calendarAxis):
-            FileTemporalNeqCalDfs0.TimeAxisTester(dfsFile, modifyTimes);
-            FileTemporalNeqCalDfs0.ReadTester(dfsFile, modifyTimes);
-            FileTemporalNeqCalDfs0.ReadAllTester(dfsFile, modifyTimes);
+            FileTemporalNeqCalDfs0.TimeAxisTester(dfsFile, modifyTimes)
+            FileTemporalNeqCalDfs0.ReadTester(dfsFile, modifyTimes)
+            FileTemporalNeqCalDfs0.ReadAllTester(dfsFile, modifyTimes)
         else:
-            FileTemporalNeqTimeDfs0.TimeAxisTester(dfsFile, modifyTimes);
-            FileTemporalNeqTimeDfs0.ReadTester(dfsFile, modifyTimes);
-            FileTemporalNeqTimeDfs0.ReadAllTester(dfsFile, modifyTimes);
+            FileTemporalNeqTimeDfs0.TimeAxisTester(dfsFile, modifyTimes)
+            FileTemporalNeqTimeDfs0.ReadTester(dfsFile, modifyTimes)
+            FileTemporalNeqTimeDfs0.ReadAllTester(dfsFile, modifyTimes)
 
-        dfsFile.Close();
+        dfsFile.Close()
 
     # Create and append to file matching the TemporalEqTime.dfs0 file
     def test_AppendEqTimeTest(self):
-        Dfs0Tests.CreateEqCalTimeTest(False);
-        Dfs0Tests.AppendEqCalTimeTest(False);
+        Dfs0Tests.CreateEqCalTimeTest(False)
+        Dfs0Tests.AppendEqCalTimeTest(False)
 
 
     # Create and append to file matching the TemporalEqCal.dfs0 file
     def test_AppendEqCalTest(self):
-        Dfs0Tests.CreateEqCalTimeTest(True);
-        Dfs0Tests.AppendEqCalTimeTest(True);
+        Dfs0Tests.CreateEqCalTimeTest(True)
+        Dfs0Tests.AppendEqCalTimeTest(True)
 
 
     # Testing the write methods when appending
@@ -237,169 +237,169 @@ class Dfs0Tests(unittest.TestCase):
     def AppendEqCalTimeTest(calendarAxis):
 
         if (calendarAxis):
-            filename = "testdata/testtmp/test_create_TemporalEqCal.dfs0";
+            filename = "testdata/testtmp/test_create_TemporalEqCal.dfs0"
         else:
-            filename = "testdata/testtmp/test_create_TemporalEqTime.dfs0";
+            filename = "testdata/testtmp/test_create_TemporalEqTime.dfs0"
 
         # Open file and append data to it
-        dfsFile = DfsFileFactory.DfsGenericOpenAppend(filename);
+        dfsFile = DfsFileFactory.DfsGenericOpenAppend(filename)
 
-        assert_equal(10, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
+        assert_equal(10, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
 
-        dfsFile.WriteItemTimeStepNext(0, np.array([20], np.float32));
-        assert_equal(10, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
-        dfsFile.WriteItemTimeStepNext(0, np.array([120], np.float32));
-        assert_equal(11, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);  # timestep has been completed
+        dfsFile.WriteItemTimeStepNext(0, np.array([20], np.float32))
+        assert_equal(10, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
+        dfsFile.WriteItemTimeStepNext(0, np.array([120], np.float32))
+        assert_equal(11, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)  # timestep has been completed
 
-        dfsFile.WriteItemTimeStepNext(0, np.array([21], np.float32));
-        assert_equal(11, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
-        dfsFile.WriteItemTimeStepNext(0, np.array([121], np.float32));
-        assert_equal(12, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);  # timestep has been completed
+        dfsFile.WriteItemTimeStepNext(0, np.array([21], np.float32))
+        assert_equal(11, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
+        dfsFile.WriteItemTimeStepNext(0, np.array([121], np.float32))
+        assert_equal(12, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)  # timestep has been completed
 
-        dfsFile.WriteItemTimeStep(1, 12, 0, np.array([22], np.float32));
-        assert_equal(12, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
-        dfsFile.WriteItemTimeStep(2, 12, 0, np.array([122], np.float32));
-        assert_equal(13, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);  # timestep has been completed
+        dfsFile.WriteItemTimeStep(1, 12, 0, np.array([22], np.float32))
+        assert_equal(12, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
+        dfsFile.WriteItemTimeStep(2, 12, 0, np.array([122], np.float32))
+        assert_equal(13, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)  # timestep has been completed
 
-        dfsFile.WriteItemTimeStep(1, 13, 0, np.array([23], np.float32));
-        assert_equal(13, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
-        dfsFile.WriteItemTimeStep(2, 13, 0, np.array([123], np.float32));
-        assert_equal(14, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);  # timestep has been completed
+        dfsFile.WriteItemTimeStep(1, 13, 0, np.array([23], np.float32))
+        assert_equal(13, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
+        dfsFile.WriteItemTimeStep(2, 13, 0, np.array([123], np.float32))
+        assert_equal(14, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)  # timestep has been completed
 
-        dfsFile.Flush();
-        itemData = dfsFile.ReadItemTimeStep(1, 11);
+        dfsFile.Flush()
+        itemData = dfsFile.ReadItemTimeStep(1, 11)
 
-        dfsFile.Close();
+        dfsFile.Close()
 
         # Open file in edit mode, and append to it
-        dfsFile = DfsFileFactory.DfsGenericOpenEdit(filename);
-        itemData = dfsFile.ReadItemTimeStepNext();
+        dfsFile = DfsFileFactory.DfsGenericOpenEdit(filename)
+        itemData = dfsFile.ReadItemTimeStepNext()
 
-        assert_equal(14, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
+        assert_equal(14, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
 
         # Find "end of file" write data (itemnumber 1 timestepindex 14)
-        dfsFile.FindTimeStep(14);
-        dfsFile.WriteItemTimeStepNext(0, np.array([24], np.float32));
-        assert_equal(14, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
+        dfsFile.FindTimeStep(14)
+        dfsFile.WriteItemTimeStepNext(0, np.array([24], np.float32))
+        assert_equal(14, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
 
         # Reposition file pointer at last time step, and rewrite data for itemnumber 1 timestepindex 14
-        dfsFile.FindTimeStep(14);
-        dfsFile.WriteItemTimeStepNext(0, np.array([124], np.float32));
-        assert_equal(14, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
-        dfsFile.WriteItemTimeStepNext(0, np.array([224], np.float32));
-        assert_equal(15, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
+        dfsFile.FindTimeStep(14)
+        dfsFile.WriteItemTimeStepNext(0, np.array([124], np.float32))
+        assert_equal(14, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
+        dfsFile.WriteItemTimeStepNext(0, np.array([224], np.float32))
+        assert_equal(15, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
 
         # Read the newly written data
-        itemData = dfsFile.ReadItemTimeStep(1, 14);
-        assert_equal(124, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStep(1, 14)
+        assert_equal(124, itemData.Data[0])
 
         # Continue appending (timestep 15)
-        dfsFile.WriteItemTimeStep(1, 15, 0, np.array([25], np.float32));
-        assert_equal(15, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
-        dfsFile.WriteItemTimeStep(2, 15, 0, np.array([125], np.float32));
-        assert_equal(16, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
+        dfsFile.WriteItemTimeStep(1, 15, 0, np.array([25], np.float32))
+        assert_equal(15, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
+        dfsFile.WriteItemTimeStep(2, 15, 0, np.array([125], np.float32))
+        assert_equal(16, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
 
-        dfsFile.Close();
+        dfsFile.Close()
 
 
-        dfsFile = DfsFileFactory.DfsGenericOpen(filename);
+        dfsFile = DfsFileFactory.DfsGenericOpen(filename)
 
-        assert_equal(16, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
+        assert_equal(16, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
 
-        data = dfsFile.ReadItemTimeStep(1,10);
-        assert_equal(10, data.TimeStepIndex);
-        assert_equal(20, data.Data[0]);
+        data = dfsFile.ReadItemTimeStep(1,10)
+        assert_equal(10, data.TimeStepIndex)
+        assert_equal(20, data.Data[0])
 
-        data = dfsFile.ReadItemTimeStep(1, 11);
-        assert_equal(11, data.TimeStepIndex);
-        assert_equal(21, data.Data[0]);
+        data = dfsFile.ReadItemTimeStep(1, 11)
+        assert_equal(11, data.TimeStepIndex)
+        assert_equal(21, data.Data[0])
 
-        data = dfsFile.ReadItemTimeStepNext();
-        assert_equal(11, data.TimeStepIndex);
-        assert_equal(121, data.Data[0]);
+        data = dfsFile.ReadItemTimeStepNext()
+        assert_equal(11, data.TimeStepIndex)
+        assert_equal(121, data.Data[0])
 
-        data = dfsFile.ReadItemTimeStepNext();
-        assert_equal(12, data.TimeStepIndex);
-        assert_equal(22, data.Data[0]);
+        data = dfsFile.ReadItemTimeStepNext()
+        assert_equal(12, data.TimeStepIndex)
+        assert_equal(22, data.Data[0])
 
-        dfsFile.Close();
+        dfsFile.Close()
 
     # Create and append to file matching the TemporalEqTime.dfs0 file
     def test_AppendNeqTimeTest(self):
-        Dfs0Tests.CreateNeqCalTimeTest(False);
-        Dfs0Tests.AppendNeqCalTimeTest(False);
+        Dfs0Tests.CreateNeqCalTimeTest(False)
+        Dfs0Tests.AppendNeqCalTimeTest(False)
 
     # Create and append to file matching the TemporalEqCal.dfs0 file
     def test_AppendNeqCalTest(self):
-        Dfs0Tests.CreateNeqCalTimeTest(True);
-        Dfs0Tests.AppendNeqCalTimeTest(True);
+        Dfs0Tests.CreateNeqCalTimeTest(True)
+        Dfs0Tests.AppendNeqCalTimeTest(True)
 
     # Testing the write methods when appending
     @staticmethod
     def AppendNeqCalTimeTest(calendarAxis):
         if (calendarAxis):
-            filename = "testdata/testtmp/test_create_TemporalNeqCal.dfs0";
+            filename = "testdata/testtmp/test_create_TemporalNeqCal.dfs0"
         else:
-            filename = "testdata/testtmp/test_create_TemporalNeqTime.dfs0";
+            filename = "testdata/testtmp/test_create_TemporalNeqTime.dfs0"
 
         # Open file and append data to it
   
-        dfsFile = DfsFileFactory.DfsGenericOpenAppend(filename);
+        dfsFile = DfsFileFactory.DfsGenericOpenAppend(filename)
 
-        assert_equal(10, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
+        assert_equal(10, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
         #assert_equal(95, dfsFile.FileInfo.TimeAxis.TimeSpanInSeconds());
 
-        dfsFile.WriteItemTimeStepNext(100+Dfs0Tests.timeOffset, np.array([20], np.float32));
-        assert_equal(10, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
+        dfsFile.WriteItemTimeStepNext(100+Dfs0Tests.timeOffset, np.array([20], np.float32))
+        assert_equal(10, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
         #assert_equal(95, dfsFile.FileInfo.TimeAxis.TimeSpanInSeconds());
-        dfsFile.WriteItemTimeStepNext(100+Dfs0Tests.timeOffset, np.array([120], np.float32));
-        assert_equal(11, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);  # timestep has been completed
+        dfsFile.WriteItemTimeStepNext(100+Dfs0Tests.timeOffset, np.array([120], np.float32))
+        assert_equal(11, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)  # timestep has been completed
         #assert_equal(100, dfsFile.FileInfo.TimeAxis.TimeSpanInSeconds());
 
-        dfsFile.WriteItemTimeStepNext(110+Dfs0Tests.timeOffset, np.array([21], np.float32));
-        assert_equal(11, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
+        dfsFile.WriteItemTimeStepNext(110+Dfs0Tests.timeOffset, np.array([21], np.float32))
+        assert_equal(11, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
         #assert_equal(100, dfsFile.FileInfo.TimeAxis.TimeSpanInSeconds());
-        dfsFile.WriteItemTimeStepNext(110+Dfs0Tests.timeOffset, np.array([121], np.float32));
-        assert_equal(12, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);  # timestep has been completed
+        dfsFile.WriteItemTimeStepNext(110+Dfs0Tests.timeOffset, np.array([121], np.float32))
+        assert_equal(12, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)  # timestep has been completed
         #assert_equal(110, dfsFile.FileInfo.TimeAxis.TimeSpanInSeconds());
 
-        dfsFile.WriteItemTimeStep(1, 12, 111+Dfs0Tests.timeOffset, np.array([22], np.float32));
-        assert_equal(12, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
+        dfsFile.WriteItemTimeStep(1, 12, 111+Dfs0Tests.timeOffset, np.array([22], np.float32))
+        assert_equal(12, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
         #assert_equal(110, dfsFile.FileInfo.TimeAxis.TimeSpanInSeconds());
-        dfsFile.WriteItemTimeStep(2, 12, 111+Dfs0Tests.timeOffset, np.array([122], np.float32));
-        assert_equal(13, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);  # timestep has been completed
+        dfsFile.WriteItemTimeStep(2, 12, 111+Dfs0Tests.timeOffset, np.array([122], np.float32))
+        assert_equal(13, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)  # timestep has been completed
         #assert_equal(111, dfsFile.FileInfo.TimeAxis.TimeSpanInSeconds());
 
-        dfsFile.WriteItemTimeStep(1, 13, 115+Dfs0Tests.timeOffset, np.array([22], np.float32));
-        assert_equal(13, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
+        dfsFile.WriteItemTimeStep(1, 13, 115+Dfs0Tests.timeOffset, np.array([22], np.float32))
+        assert_equal(13, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
         #assert_equal(111, dfsFile.FileInfo.TimeAxis.TimeSpanInSeconds());
-        dfsFile.WriteItemTimeStep(2, 13, 115+Dfs0Tests.timeOffset, np.array([22], np.float32));
-        assert_equal(14, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);  # timestep has been completed
+        dfsFile.WriteItemTimeStep(2, 13, 115+Dfs0Tests.timeOffset, np.array([22], np.float32))
+        assert_equal(14, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)  # timestep has been completed
         #assert_equal(115, dfsFile.FileInfo.TimeAxis.TimeSpanInSeconds());
 
-        dfsFile.Close();
+        dfsFile.Close()
 
-        dfsFile = DfsFileFactory.DfsGenericOpen(filename);
+        dfsFile = DfsFileFactory.DfsGenericOpen(filename)
 
-        assert_equal(14, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps);
+        assert_equal(14, dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps)
 
-        data = dfsFile.ReadItemTimeStep(1, 10);
-        assert_equal(10, data.TimeStepIndex);
-        assert_equal(20, data.Data[0]);
+        data = dfsFile.ReadItemTimeStep(1, 10)
+        assert_equal(10, data.TimeStepIndex)
+        assert_equal(20, data.Data[0])
 
-        data = dfsFile.ReadItemTimeStep(1, 11);
-        assert_equal(11, data.TimeStepIndex);
-        assert_equal(21, data.Data[0]);
+        data = dfsFile.ReadItemTimeStep(1, 11)
+        assert_equal(11, data.TimeStepIndex)
+        assert_equal(21, data.Data[0])
 
-        data = dfsFile.ReadItemTimeStepNext();
-        assert_equal(11, data.TimeStepIndex);
-        assert_equal(121, data.Data[0]);
+        data = dfsFile.ReadItemTimeStepNext()
+        assert_equal(11, data.TimeStepIndex)
+        assert_equal(121, data.Data[0])
 
-        data = dfsFile.ReadItemTimeStepNext();
-        assert_equal(12, data.TimeStepIndex);
-        assert_equal(22, data.Data[0]);
+        data = dfsFile.ReadItemTimeStepNext()
+        assert_equal(12, data.TimeStepIndex)
+        assert_equal(22, data.Data[0])
 
-        dfsFile.Close();
+        dfsFile.Close()
 
 
 
@@ -413,18 +413,18 @@ class FileTemporalEqTimeDfs0:
     @staticmethod
     def TimeAxisTester(dfsFile):
   
-        timeAxis = dfsFile.FileInfo.TimeAxis;
+        timeAxis = dfsFile.FileInfo.TimeAxis
 
-        assert_equal(TimeAxisType.TimeEquidistant, timeAxis.TimeAxisType);
-        assert_equal(3, timeAxis.StartTimeOffset);
-        assert_equal(0, timeAxis.FirstTimeStepIndex);
-        assert_equal(10, timeAxis.NumberOfTimeSteps);
-        assert_equal(3, timeAxis.StartTimeOffset);
-        assert_equal(eumUnit.eumUsec, timeAxis.TimeUnit);
+        assert_equal(TimeAxisType.TimeEquidistant, timeAxis.TimeAxisType)
+        assert_equal(3, timeAxis.StartTimeOffset)
+        assert_equal(0, timeAxis.FirstTimeStepIndex)
+        assert_equal(10, timeAxis.NumberOfTimeSteps)
+        assert_equal(3, timeAxis.StartTimeOffset)
+        assert_equal(eumUnit.eumUsec, timeAxis.TimeUnit)
 
-        eqTimeAxis = timeAxis;
+        eqTimeAxis = timeAxis
 
-        assert_equal(10, eqTimeAxis.TimeStep);
+        assert_equal(10, eqTimeAxis.TimeStep)
         #assert_equal(10, eqTimeAxis.TimeStepInSeconds());
 
         #assert_equal(90, timeAxis.TimeSpanInSeconds());
@@ -457,62 +457,62 @@ class FileTemporalEqTimeDfs0:
 
         # Remember that itemData.Time returns the timestep index.
 
-        assert_equal(3, dfsFile.FileInfo.TimeAxis.StartTimeOffset);
+        assert_equal(3, dfsFile.FileInfo.TimeAxis.StartTimeOffset)
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(1, itemData.ItemNumber);
-        assert_equal(3, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(0, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(1, itemData.ItemNumber)
+        assert_equal(3, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(0, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(2, itemData.ItemNumber);
-        assert_equal(3, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(100, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(2, itemData.ItemNumber)
+        assert_equal(3, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(100, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(1, itemData.ItemNumber);
-        assert_equal(13, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(1, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(1, itemData.ItemNumber)
+        assert_equal(13, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(1, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStep(1, 7);
-        assert_equal(1, itemData.ItemNumber);
-        assert_equal(73, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(11, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStep(1, 7)
+        assert_equal(1, itemData.ItemNumber)
+        assert_equal(73, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(11, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(2, itemData.ItemNumber);
-        assert_equal(73, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(111, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(2, itemData.ItemNumber)
+        assert_equal(73, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(111, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(1, itemData.ItemNumber);
-        assert_equal(83, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(12, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(1, itemData.ItemNumber)
+        assert_equal(83, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(12, itemData.Data[0])
 
     @staticmethod
     def ReadAllTester(dfsFile):
 
-        itemData = dfsFile.ReadDfs0DataDouble();
-        assert_equal(10, itemData.shape[0]);
-        assert_equal(3, itemData.shape[1]);
+        itemData = dfsFile.ReadDfs0DataDouble()
+        assert_equal(10, itemData.shape[0])
+        assert_equal(3, itemData.shape[1])
 
-        assert_equal(  3, itemData[0,0]);
-        assert_equal( 13, itemData[1,0]);
-        assert_equal( 23, itemData[2,0]);
+        assert_equal(  3, itemData[0,0])
+        assert_equal( 13, itemData[1,0])
+        assert_equal( 23, itemData[2,0])
 
-        assert_equal(  0, itemData[0,1]);
-        assert_equal(  1, itemData[1,1]);
-        assert_equal(  2, itemData[2,1]);
+        assert_equal(  0, itemData[0,1])
+        assert_equal(  1, itemData[1,1])
+        assert_equal(  2, itemData[2,1])
 
-        assert_equal(100, itemData[0,2]);
-        assert_equal(101, itemData[1,2]);
-        assert_equal(102, itemData[2,2]);
+        assert_equal(100, itemData[0,2])
+        assert_equal(101, itemData[1,2])
+        assert_equal(102, itemData[2,2])
 
 
   
@@ -520,21 +520,21 @@ class FileTemporalEqCalDfs0:
     @staticmethod
     def TimeAxisTester(dfsFile, modifiedTimes):
 
-        timeAxis = dfsFile.FileInfo.TimeAxis;
+        timeAxis = dfsFile.FileInfo.TimeAxis
 
-        assert_equal(TimeAxisType.CalendarEquidistant, timeAxis.TimeAxisType);
-        assert_equal(0, timeAxis.FirstTimeStepIndex);
-        assert_equal(10, timeAxis.NumberOfTimeSteps);
-        assert_equal(0 if modifiedTimes else 4, timeAxis.StartTimeOffset);
-        assert_equal(eumUnit.eumUsec, timeAxis.TimeUnit);
+        assert_equal(TimeAxisType.CalendarEquidistant, timeAxis.TimeAxisType)
+        assert_equal(0, timeAxis.FirstTimeStepIndex)
+        assert_equal(10, timeAxis.NumberOfTimeSteps)
+        assert_equal(0 if modifiedTimes else 4, timeAxis.StartTimeOffset)
+        assert_equal(eumUnit.eumUsec, timeAxis.TimeUnit)
 
         eqCalAxis = timeAxis
 
         if (modifiedTimes):
-            assert_equal(datetime.datetime(2010, 1, 4, 12, 34,  4), eqCalAxis.StartDateTime);
+            assert_equal(datetime.datetime(2010, 1, 4, 12, 34,  4), eqCalAxis.StartDateTime)
         else:
-            assert_equal(datetime.datetime(2010, 1, 4, 12, 34, 00), eqCalAxis.StartDateTime);
-        assert_equal(10, eqCalAxis.TimeStep);
+            assert_equal(datetime.datetime(2010, 1, 4, 12, 34, 00), eqCalAxis.StartDateTime)
+        assert_equal(10, eqCalAxis.TimeStep)
         #assert_equal(10, eqCalAxis.TimeStepInSeconds());
 
         #assert_equal(90, eqCalAxis.TimeSpanInSeconds());
@@ -582,62 +582,62 @@ class FileTemporalEqCalDfs0:
     def ReadTester(dfsFile, modifiedTimes):
 
         # Remember that time returns the timestep index.
-        assert_equal(0 if modifiedTimes else 4, dfsFile.FileInfo.TimeAxis.StartTimeOffset);
+        assert_equal(0 if modifiedTimes else 4, dfsFile.FileInfo.TimeAxis.StartTimeOffset)
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(1, itemData.ItemNumber);
-        assert_equal(0.0 if modifiedTimes else 4.0, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(0, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(1, itemData.ItemNumber)
+        assert_equal(0.0 if modifiedTimes else 4.0, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(0, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(2, itemData.ItemNumber);
-        assert_equal(0.0 if modifiedTimes else 4.0, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(100, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(2, itemData.ItemNumber)
+        assert_equal(0.0 if modifiedTimes else 4.0, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(100, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(1, itemData.ItemNumber);
-        assert_equal(10 if modifiedTimes else 14, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(1, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(1, itemData.ItemNumber)
+        assert_equal(10 if modifiedTimes else 14, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(1, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStep(1, 7);
-        assert_equal(1, itemData.ItemNumber);
-        assert_equal(70.0 if modifiedTimes else 74.0, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(11, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStep(1, 7)
+        assert_equal(1, itemData.ItemNumber)
+        assert_equal(70.0 if modifiedTimes else 74.0, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(11, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(2, itemData.ItemNumber);
-        assert_equal(70.0 if modifiedTimes else 74.0, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(111, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(2, itemData.ItemNumber)
+        assert_equal(70.0 if modifiedTimes else 74.0, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(111, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(1, itemData.ItemNumber);
-        assert_equal(80.0 if modifiedTimes else 84.0, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(12, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(1, itemData.ItemNumber)
+        assert_equal(80.0 if modifiedTimes else 84.0, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(12, itemData.Data[0])
 
     @staticmethod
     def ReadAllTester(dfsFile, modifiedTimes):
 
-        itemData = dfsFile.ReadDfs0DataDouble();
-        assert_equal(10, itemData.shape[0]);
-        assert_equal(3, itemData.shape[1]);
+        itemData = dfsFile.ReadDfs0DataDouble()
+        assert_equal(10, itemData.shape[0])
+        assert_equal(3, itemData.shape[1])
 
-        assert_equal( 0 if modifiedTimes else  4, itemData[0,0]);
-        assert_equal(10 if modifiedTimes else 14, itemData[1,0]);
-        assert_equal(20 if modifiedTimes else 24, itemData[2,0]);
+        assert_equal( 0 if modifiedTimes else  4, itemData[0,0])
+        assert_equal(10 if modifiedTimes else 14, itemData[1,0])
+        assert_equal(20 if modifiedTimes else 24, itemData[2,0])
 
-        assert_equal(  0, itemData[0,1]);
-        assert_equal(  1, itemData[1,1]);
-        assert_equal(  2, itemData[2,1]);
+        assert_equal(  0, itemData[0,1])
+        assert_equal(  1, itemData[1,1])
+        assert_equal(  2, itemData[2,1])
 
-        assert_equal(100, itemData[0,2]);
-        assert_equal(101, itemData[1,2]);
-        assert_equal(102, itemData[2,2]);
+        assert_equal(100, itemData[0,2])
+        assert_equal(101, itemData[1,2])
+        assert_equal(102, itemData[2,2])
 
 # class testing the file TemporalNeqTime.dfs0.
 # File was creating by the TsEditor.exe.
@@ -646,17 +646,17 @@ class FileTemporalNeqTimeDfs0:
     @staticmethod
     def TimeAxisTester(dfsFile, modifyTimes):
   
-        timeAxis = dfsFile.FileInfo.TimeAxis;
+        timeAxis = dfsFile.FileInfo.TimeAxis
 
-        assert_equal(TimeAxisType.TimeNonEquidistant, timeAxis.TimeAxisType);
-        assert_equal(0, timeAxis.FirstTimeStepIndex);
-        assert_equal(10, timeAxis.NumberOfTimeSteps);
-        assert_equal(3, timeAxis.StartTimeOffset);
-        assert_equal(eumUnit.eumUsec, timeAxis.TimeUnit);
+        assert_equal(TimeAxisType.TimeNonEquidistant, timeAxis.TimeAxisType)
+        assert_equal(0, timeAxis.FirstTimeStepIndex)
+        assert_equal(10, timeAxis.NumberOfTimeSteps)
+        assert_equal(3, timeAxis.StartTimeOffset)
+        assert_equal(eumUnit.eumUsec, timeAxis.TimeUnit)
 
         neqCalTime = timeAxis
 
-        assert_allclose(95, neqCalTime.TimeSpan, 1e-4);
+        assert_allclose(95, neqCalTime.TimeSpan, 1e-4)
         #assert_allclose(95, neqCalTime.TimeSpanInSeconds(), 1e-4);
 
         ## Testing search method
@@ -691,78 +691,78 @@ class FileTemporalNeqTimeDfs0:
     def ReadTester(dfsFile, modifiedTimes):
 
         # Remember that itemData.Time is time since first time step, i.e., first itemData.Time is zero
-        dfsFile.Reset();
+        dfsFile.Reset()
 
-        offset = 0 if (modifiedTimes) else 3;
+        offset = 0 if (modifiedTimes) else 3
 
-        assert_equal(3, dfsFile.FileInfo.TimeAxis.StartTimeOffset);
+        assert_equal(3, dfsFile.FileInfo.TimeAxis.StartTimeOffset)
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(1, itemData.ItemNumber);
-        assert_equal(0.0+offset, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(0, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(1, itemData.ItemNumber)
+        assert_equal(0.0+offset, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(0, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(2, itemData.ItemNumber);
-        assert_allclose(0.0 + offset, itemData.Time, 1e-5);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(100, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(2, itemData.ItemNumber)
+        assert_allclose(0.0 + offset, itemData.Time, 1e-5)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(100, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(1, itemData.ItemNumber);
-        assert_allclose(10.0 + offset, itemData.Time, 1e-5);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(1, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(1, itemData.ItemNumber)
+        assert_allclose(10.0 + offset, itemData.Time, 1e-5)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(1, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(2, itemData.ItemNumber);
-        assert_allclose(10.0 + offset, itemData.Time, 1e-5);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(101, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(2, itemData.ItemNumber)
+        assert_allclose(10.0 + offset, itemData.Time, 1e-5)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(101, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStep(1, 5);
-        assert_equal(1, itemData.ItemNumber);
-        assert_allclose(60.0 + offset, itemData.Time, 1e-5);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(5, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStep(1, 5)
+        assert_equal(1, itemData.ItemNumber)
+        assert_allclose(60.0 + offset, itemData.Time, 1e-5)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(5, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(2, itemData.ItemNumber);
-        assert_allclose(60.0 + offset, itemData.Time, 1e-5);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(105, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(2, itemData.ItemNumber)
+        assert_allclose(60.0 + offset, itemData.Time, 1e-5)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(105, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(1, itemData.ItemNumber);
-        assert_allclose(75.0 + offset, itemData.Time, 1e-5);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(10, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(1, itemData.ItemNumber)
+        assert_allclose(75.0 + offset, itemData.Time, 1e-5)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(10, itemData.Data[0])
 
     @staticmethod
     def ReadAllTester(dfsFile, modifiedTimes):
 
-        offset = 0 if (modifiedTimes) else 3;
+        offset = 0 if (modifiedTimes) else 3
 
-        itemData = dfsFile.ReadDfs0DataDouble();
-        assert_equal(10, itemData.shape[0]);
-        assert_equal(3, itemData.shape[1]);
+        itemData = dfsFile.ReadDfs0DataDouble()
+        assert_equal(10, itemData.shape[0])
+        assert_equal(3, itemData.shape[1])
 
-        assert_equal( 0+offset, itemData[0,0]);
-        assert_equal(10+offset, itemData[1,0]);
-        assert_equal(20+offset, itemData[2,0]);
-        assert_equal(35+offset, itemData[3,0]);
-        assert_equal(50+offset, itemData[4,0]);
-        assert_equal(60+offset, itemData[5,0]);
-        assert_equal(75+offset, itemData[6,0]);
+        assert_equal( 0+offset, itemData[0,0])
+        assert_equal(10+offset, itemData[1,0])
+        assert_equal(20+offset, itemData[2,0])
+        assert_equal(35+offset, itemData[3,0])
+        assert_equal(50+offset, itemData[4,0])
+        assert_equal(60+offset, itemData[5,0])
+        assert_equal(75+offset, itemData[6,0])
 
-        assert_equal(  0, itemData[0,1]);
-        assert_equal(  1, itemData[1,1]);
-        assert_equal(  2, itemData[2,1]);
+        assert_equal(  0, itemData[0,1])
+        assert_equal(  1, itemData[1,1])
+        assert_equal(  2, itemData[2,1])
 
-        assert_equal(100, itemData[0,2]);
-        assert_equal(101, itemData[1,2]);
-        assert_equal(102, itemData[2,2]);
+        assert_equal(100, itemData[0,2])
+        assert_equal(101, itemData[1,2])
+        assert_equal(102, itemData[2,2])
 
 
 # class testing the file TemporalNeqCal.dfs0.
@@ -777,21 +777,21 @@ class FileTemporalNeqCalDfs0:
     @staticmethod
     def TimeAxisTester(dfsFile, modifiedTimes):
   
-        dateTimeOffset = 3 if (modifiedTimes) else 0;
-        startTimeOffset = 0 if (modifiedTimes) else 3;
+        dateTimeOffset = 3 if (modifiedTimes) else 0
+        startTimeOffset = 0 if (modifiedTimes) else 3
 
-        timeAxis = dfsFile.FileInfo.TimeAxis;
+        timeAxis = dfsFile.FileInfo.TimeAxis
 
-        assert_equal(TimeAxisType.CalendarNonEquidistant, timeAxis.TimeAxisType);
-        assert_equal(0, timeAxis.FirstTimeStepIndex);
-        assert_equal(10, timeAxis.NumberOfTimeSteps);
-        assert_equal(startTimeOffset, timeAxis.StartTimeOffset);
-        assert_equal(eumUnit.eumUsec, timeAxis.TimeUnit);
+        assert_equal(TimeAxisType.CalendarNonEquidistant, timeAxis.TimeAxisType)
+        assert_equal(0, timeAxis.FirstTimeStepIndex)
+        assert_equal(10, timeAxis.NumberOfTimeSteps)
+        assert_equal(startTimeOffset, timeAxis.StartTimeOffset)
+        assert_equal(eumUnit.eumUsec, timeAxis.TimeUnit)
 
         neqCalAxis = timeAxis
 
-        assert_equal(datetime.datetime(2010, 1, 4, 12, 34, 00) + datetime.timedelta(seconds=dateTimeOffset), neqCalAxis.StartDateTime);
-        assert_allclose(95, neqCalAxis.TimeSpan, 1e-4);
+        assert_equal(datetime.datetime(2010, 1, 4, 12, 34, 00) + datetime.timedelta(seconds=dateTimeOffset), neqCalAxis.StartDateTime)
+        assert_allclose(95, neqCalAxis.TimeSpan, 1e-4)
         #assert_allclose(95, neqCalAxis.TimeSpanInSeconds(), 1e-4);
 
         ## Testing search method
@@ -835,79 +835,79 @@ class FileTemporalNeqCalDfs0:
     @staticmethod
     def ReadTester(dfsFile, modifyTimes):
   
-        dfsFile.Reset();
+        dfsFile.Reset()
 
-        offset = 0 if (modifyTimes) else 3;
+        offset = 0 if (modifyTimes) else 3
 
-        assert_equal(offset, dfsFile.FileInfo.TimeAxis.StartTimeOffset);
+        assert_equal(offset, dfsFile.FileInfo.TimeAxis.StartTimeOffset)
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(1, itemData.ItemNumber);
-        assert_equal(0.0+offset, itemData.Time);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(0, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(1, itemData.ItemNumber)
+        assert_equal(0.0+offset, itemData.Time)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(0, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(2, itemData.ItemNumber);
-        assert_allclose(0.0 + offset, itemData.Time, 1e-5);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(100, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(2, itemData.ItemNumber)
+        assert_allclose(0.0 + offset, itemData.Time, 1e-5)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(100, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(1, itemData.ItemNumber);
-        assert_allclose(10.0 + offset, itemData.Time, 1e-5);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(1, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(1, itemData.ItemNumber)
+        assert_allclose(10.0 + offset, itemData.Time, 1e-5)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(1, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(2, itemData.ItemNumber);
-        assert_allclose(10.0+offset, itemData.Time, 1e-5);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(101, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(2, itemData.ItemNumber)
+        assert_allclose(10.0+offset, itemData.Time, 1e-5)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(101, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStep(1, 5);
-        assert_equal(1, itemData.ItemNumber);
-        assert_allclose(60.0+offset, itemData.Time, 1e-5);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(5, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStep(1, 5)
+        assert_equal(1, itemData.ItemNumber)
+        assert_allclose(60.0+offset, itemData.Time, 1e-5)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(5, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(2, itemData.ItemNumber);
-        assert_allclose(60 + offset, itemData.Time, 1e-5);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(105, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(2, itemData.ItemNumber)
+        assert_allclose(60 + offset, itemData.Time, 1e-5)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(105, itemData.Data[0])
 
-        itemData = dfsFile.ReadItemTimeStepNext();
-        assert_equal(1, itemData.ItemNumber);
-        assert_allclose(75+offset, itemData.Time, 1e-5);
-        assert_equal(1, itemData.Data.size);
-        assert_equal(10, itemData.Data[0]);
+        itemData = dfsFile.ReadItemTimeStepNext()
+        assert_equal(1, itemData.ItemNumber)
+        assert_allclose(75+offset, itemData.Time, 1e-5)
+        assert_equal(1, itemData.Data.size)
+        assert_equal(10, itemData.Data[0])
 
 
     @staticmethod
     def ReadAllTester(dfsFile, modifyTimes):
   
-        offset = 0 if (modifyTimes) else 3;
+        offset = 0 if (modifyTimes) else 3
 
-        itemData = dfsFile.ReadDfs0DataDouble();
-        assert_equal(10, itemData.shape[0]);
-        assert_equal(3, itemData.shape[1]);
+        itemData = dfsFile.ReadDfs0DataDouble()
+        assert_equal(10, itemData.shape[0])
+        assert_equal(3, itemData.shape[1])
 
-        assert_equal( 0+offset, itemData[0,0]);
-        assert_equal(10+offset, itemData[1,0]);
-        assert_equal(20+offset, itemData[2,0]);
-        assert_equal(35+offset, itemData[3,0]);
-        assert_equal(50+offset, itemData[4,0]);
-        assert_equal(60+offset, itemData[5,0]);
-        assert_equal(75+offset, itemData[6,0]);
+        assert_equal( 0+offset, itemData[0,0])
+        assert_equal(10+offset, itemData[1,0])
+        assert_equal(20+offset, itemData[2,0])
+        assert_equal(35+offset, itemData[3,0])
+        assert_equal(50+offset, itemData[4,0])
+        assert_equal(60+offset, itemData[5,0])
+        assert_equal(75+offset, itemData[6,0])
 
-        assert_equal(  0, itemData[0,1]);
-        assert_equal(  1, itemData[1,1]);
-        assert_equal(  2, itemData[2,1]);
+        assert_equal(  0, itemData[0,1])
+        assert_equal(  1, itemData[1,1])
+        assert_equal(  2, itemData[2,1])
 
-        assert_equal(100, itemData[0,2]);
-        assert_equal(101, itemData[1,2]);
-        assert_equal(102, itemData[2,2]);
+        assert_equal(100, itemData[0,2])
+        assert_equal(101, itemData[1,2])
+        assert_equal(102, itemData[2,2])
 
 if __name__ == '__main__':
     unittest.main()

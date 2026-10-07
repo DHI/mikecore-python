@@ -90,7 +90,7 @@ class MeshBuilder:
 
     def SetElementIds(self, elementIds):
         """Set the element id's. Optional. If not set, default values are used (1,2,3,...)"""
-        if (not self.__connectivity is None) and (len(self.__connectivity) != len(elementIds)):
+        if (self.__connectivity is not None) and (len(self.__connectivity) != len(elementIds)):
             raise ValueError("Number of element id's does not match number of elements")
         self.__elementIds = elementIds
 
@@ -126,7 +126,7 @@ class MeshBuilder:
 
         # Creating default eumQuantity in meters
         if self.__eumQuantity is None: 
-            self.__eumQuantity = eumQuantity(eumItem.eumIBathymetry, eumUnit.eumUmeter);
+            self.__eumQuantity = eumQuantity(eumItem.eumIBathymetry, eumUnit.eumUmeter)
 
         # Creating default node id's, if empty
         if self.__nodeIds is None:

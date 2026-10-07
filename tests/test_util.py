@@ -1,14 +1,13 @@
 import shutil
 import os
 import stat
-import unittest
 from numpy.testing import *
 
 class testUtil:
 
     @staticmethod
     def copy_file(originalFilename, filename):
-        shutil.copyfile(originalFilename, filename);
+        shutil.copyfile(originalFilename, filename)
         # remove read-only flag
         mode = os.stat(filename).st_mode
         ro_mask = 777 ^ (stat.S_IWRITE | stat.S_IWGRP | stat.S_IWOTH)
@@ -25,7 +24,7 @@ class Assert:
         if (obj is None):
             raise Exception("Object is null")
     def IsNull(obj):
-        if (not obj is None):
+        if (obj is not None):
             raise Exception("Object is not null")
     def IsTrue(obj):
         if (not obj):

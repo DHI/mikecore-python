@@ -11,7 +11,7 @@ class Dfs123File(DfsFile):
         self.reshape = reshape
         # TODO: Need to check that this is the same for all items
         if (len(self.ItemInfo) > 0):
-            self.SpatialAxis = self.ItemInfo[0].SpatialAxis;
+            self.SpatialAxis = self.ItemInfo[0].SpatialAxis
 
     def Reshape(self, reshape):
         # Set True to reshape item data to multi-dimensional arrays.
@@ -21,7 +21,7 @@ class Dfs123File(DfsFile):
         res = super().ReadItemTimeStepNext(itemData)
         if (self.reshape or reshape):
             res.Data = res.Data.reshape(self.SpatialAxis.Shape, order = 'F')
-        return res;
+        return res
 
 class Dfs2File(Dfs123File):
     pass

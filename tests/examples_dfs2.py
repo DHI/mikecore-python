@@ -10,29 +10,29 @@ class ExamplesDfs2:
     def ReadingDfs2File(filename):
 
         # Open the file as a dfs2 file
-        dfs2File = DfsFileFactory.Dfs2FileOpen(filename);
+        dfs2File = DfsFileFactory.Dfs2FileOpen(filename)
         dfs2File.Reshape(True)
 
         # Spatial axis for this file is a 2D equidistant axis
-        axisEqD2 = dfs2File.SpatialAxis;
-        dx = axisEqD2.Dx;                                           # 900
-        dy = axisEqD2.Dy;                                           # 900
+        axisEqD2 = dfs2File.SpatialAxis
+        dx = axisEqD2.Dx                                           # 900
+        dy = axisEqD2.Dy                                           # 900
 
         # Header information is contained in the IDfsFileInfo
-        fileInfo = dfs2File.FileInfo;
-        steps = fileInfo.TimeAxis.NumberOfTimeSteps;                # 13
-        projectionString = fileInfo.Projection.WKTString;           # "UTM-33"
+        fileInfo = dfs2File.FileInfo
+        steps = fileInfo.TimeAxis.NumberOfTimeSteps                # 13
+        projectionString = fileInfo.Projection.WKTString           # "UTM-33"
 
         # Information on each of the dynamic items, here the first one
-        dynamicItemInfo = dfs2File.ItemInfo[0];
-        nameOfFirstDynamicItem = dynamicItemInfo.Name;              # "H Water Depth m"
-        typeOfFirstDynamicItem = dynamicItemInfo.DataType;          # Float
+        dynamicItemInfo = dfs2File.ItemInfo[0]
+        nameOfFirstDynamicItem = dynamicItemInfo.Name              # "H Water Depth m"
+        typeOfFirstDynamicItem = dynamicItemInfo.DataType          # Float
 
         # Read data of first item, third time step (items start by 1, timesteps by 0),
         # assuming data is of type float.
-        data2D = dfs2File.ReadItemTimeStep(1, 2);
+        data2D = dfs2File.ReadItemTimeStep(1, 2)
         # Get the value at (i,j) = (3,4) of the item and timestep
-        value = data2D.Data[3, 4];                                   # 11.3634329
+        value = data2D.Data[3, 4]                                   # 11.3634329
         print("ReadingDfs2File: data2D.Data[3, 4] = {}".format(value))
 
         # This iterates through all the timesteps and items in the file
@@ -40,35 +40,35 @@ class ExamplesDfs2:
         # first and items second.
         for i in range(steps):
           for j in range(1,len(dfs2File.ItemInfo)):
-            data2D = dfs2File.ReadItemTimeStep(j, i);
-            value = data2D.Data[3, 4];
+            data2D = dfs2File.ReadItemTimeStep(j, i)
+            value = data2D.Data[3, 4]
 
     @staticmethod
     def ModifyDfs2ItemInfo(filename):
 
         # Open the file for editing
-        file = DfsFileFactory.Dfs2FileOpenEdit(filename);
+        file = DfsFileFactory.Dfs2FileOpenEdit(filename)
 
         # Original name is "Landuse" (7 characters), "GroundUse" is truncated to "GroundU"
-        file.ItemInfo[0].Name = "GroundUse";
+        file.ItemInfo[0].Name = "GroundUse"
         # Provide a new quantity (updating the item and unit of the quantity directly does not work!)
-        file.ItemInfo[0].Quantity = eumQuantity(eumItem.eumIAreaFraction, eumUnit.eumUPerCent);
+        file.ItemInfo[0].Quantity = eumQuantity(eumItem.eumIAreaFraction, eumUnit.eumUPerCent)
 
         # done
-        file.Close();
+        file.Close()
 
     @staticmethod
     def ModifyDfs2ItemAxis(filename):
 
-        file = DfsFileFactory.Dfs2FileOpenEdit(filename);
+        file = DfsFileFactory.Dfs2FileOpenEdit(filename)
         
-        axisEqD2 = (file.SpatialAxis);
-        axisEqD2.X0 = 55;
-        axisEqD2.Dx = 905;
-        axisEqD2.Y0 = -55;
-        axisEqD2.Dy = 915;
+        axisEqD2 = (file.SpatialAxis)
+        axisEqD2.X0 = 55
+        axisEqD2.Dx = 905
+        axisEqD2.Y0 = -55
+        axisEqD2.Dy = 915
         
-        file.Close();
+        file.Close()
 
 
 
@@ -86,21 +86,21 @@ class ExamplesDfs2:
     def ModifyDfs2FileData(filename):
 
         # Open the file for editing
-        file = DfsFileFactory.Dfs2FileOpenEdit(filename);
+        file = DfsFileFactory.Dfs2FileOpenEdit(filename)
 
         # Load and modify data from the first item and timestep
-        data2D = file.ReadItemTimeStepNext(reshape = True);
-        data2D.Data[21, 61] = 7;
-        data2D.Data[21, 62] = 6;
-        data2D.Data[21, 63] = 5;
-        data2D.Data[21, 64] = 4;
-        data2D.Data[21, 65] = 3;
+        data2D = file.ReadItemTimeStepNext(reshape = True)
+        data2D.Data[21, 61] = 7
+        data2D.Data[21, 62] = 6
+        data2D.Data[21, 63] = 5
+        data2D.Data[21, 64] = 4
+        data2D.Data[21, 65] = 3
 
         # Write modified data back
-        file.WriteItemTimeStep(1, 0, data2D.Time, data2D.Data);
+        file.WriteItemTimeStep(1, 0, data2D.Time, data2D.Data)
 
         # done
-        file.Close();
+        file.Close()
 
 
     #/ <summary>
@@ -116,23 +116,23 @@ class ExamplesDfs2:
     def ModifyDfs2Bathymetry(bathyFilename):
 
         # Open file
-        dfs2 = DfsFileFactory.Dfs2FileOpenEdit(bathyFilename);
+        dfs2 = DfsFileFactory.Dfs2FileOpenEdit(bathyFilename)
 
         # Second custom block (index 1) contains the M21_MISC values, 
         # where the 4th (index 3) is the land value
-        landValue = dfs2.FileInfo.CustomBlocks[1][3];
+        landValue = dfs2.FileInfo.CustomBlocks[1][3]
 
         # Read bathymetry data
-        bathyData = dfs2.ReadItemTimeStepNext();
+        bathyData = dfs2.ReadItemTimeStepNext()
 
         # Modify bathymetry data
         for i in range(bathyData.Data.size):
           if (bathyData.Data[i] != landValue):
-            bathyData.Data[i] -= 5.61;
+            bathyData.Data[i] -= 5.61
 
         # Write back bathymetry data
-        dfs2.WriteItemTimeStep(1, 0, 0, bathyData.Data);
-        dfs2.Close();
+        dfs2.WriteItemTimeStep(1, 0, 0, bathyData.Data)
+        dfs2.Close()
 
     #/ <summary>
     #/ Example of how to create a Dfs2 file from scratch. This method
@@ -148,36 +148,36 @@ class ExamplesDfs2:
     @staticmethod
     def CreateDfs2File(sourceFilename, filename):
 
-        source = DfsFileFactory.Dfs2FileOpen(sourceFilename);
+        source = DfsFileFactory.Dfs2FileOpen(sourceFilename)
 
-        factory = DfsFactory();
-        builder = DfsBuilder.Create("", r"C:\Program Files\DHI\2010\bin\nmodel.exe", 0);
+        factory = DfsFactory()
+        builder = DfsBuilder.Create("", r"C:\Program Files\DHI\2010\bin\nmodel.exe", 0)
 
         # Set up the header
-        builder.SetDataType(1);
-        builder.SetGeographicalProjection(factory.CreateProjectionGeoOrigin("UTM-33", 12.438741600559766, 55.225707842436385, 326.99999999999955));
-        builder.SetTemporalAxis(factory.CreateTemporalEqCalendarAxis(eumUnit.eumUsec, datetime.datetime(1993, 12,  2, 0, 0, 0), 0, 86400));
-        builder.SetSpatialAxis(factory.CreateAxisEqD2(eumUnit.eumUmeter, 71, 0, 900, 91, 0, 900));
-        builder.DeleteValueFloat = -1e-30;
+        builder.SetDataType(1)
+        builder.SetGeographicalProjection(factory.CreateProjectionGeoOrigin("UTM-33", 12.438741600559766, 55.225707842436385, 326.99999999999955))
+        builder.SetTemporalAxis(factory.CreateTemporalEqCalendarAxis(eumUnit.eumUsec, datetime.datetime(1993, 12,  2, 0, 0, 0), 0, 86400))
+        builder.SetSpatialAxis(factory.CreateAxisEqD2(eumUnit.eumUmeter, 71, 0, 900, 91, 0, 900))
+        builder.DeleteValueFloat = -1e-30
 
         # Add custom block 
         # M21_Misc : {orientation (should match projection), drying depth, -900=has projection, land value, 0, 0, 0}
-        builder.AddCustomBlock(factory.CreateCustomBlock("M21_Misc", np.array([ 327, 0.2, -900, 10, 0, 0, 0 ], np.float32)));
+        builder.AddCustomBlock(factory.CreateCustomBlock("M21_Misc", np.array([ 327, 0.2, -900, 10, 0, 0, 0 ], np.float32)))
 
         # Set up dynamic items
-        builder.AddCreateDynamicItem("H Water Depth m", eumQuantity.Create(eumItem.eumIWaterLevel, eumUnit.eumUmeter), DfsSimpleType.Float, DataValueType.Instantaneous);
-        builder.AddCreateDynamicItem("P Flux m^3/s/m", eumQuantity.Create(eumItem.eumIFlowFlux, eumUnit.eumUm3PerSecPerM), DfsSimpleType.Float, DataValueType.Instantaneous);
-        builder.AddCreateDynamicItem("Q Flux m^3/s/m", eumQuantity.Create(eumItem.eumIFlowFlux, eumUnit.eumUm3PerSecPerM), DfsSimpleType.Float, DataValueType.Instantaneous);
+        builder.AddCreateDynamicItem("H Water Depth m", eumQuantity.Create(eumItem.eumIWaterLevel, eumUnit.eumUmeter), DfsSimpleType.Float, DataValueType.Instantaneous)
+        builder.AddCreateDynamicItem("P Flux m^3/s/m", eumQuantity.Create(eumItem.eumIFlowFlux, eumUnit.eumUm3PerSecPerM), DfsSimpleType.Float, DataValueType.Instantaneous)
+        builder.AddCreateDynamicItem("Q Flux m^3/s/m", eumQuantity.Create(eumItem.eumIFlowFlux, eumUnit.eumUm3PerSecPerM), DfsSimpleType.Float, DataValueType.Instantaneous)
 
         # Create file
-        builder.CreateFile(filename);
+        builder.CreateFile(filename)
 
         # Add static items containing bathymetri data, use data from source
-        sourceStaticItem = source.ReadStaticItemNext();
-        builder.AddCreateStaticItem("Static item", eumQuantity.UnDefined(), sourceStaticItem.Data);
+        sourceStaticItem = source.ReadStaticItemNext()
+        builder.AddCreateStaticItem("Static item", eumQuantity.UnDefined(), sourceStaticItem.Data)
 
         # Get the file
-        file = builder.GetFile();
+        file = builder.GetFile()
 
         # Loop over all time steps
         for i in range(source.FileInfo.TimeAxis.NumberOfTimeSteps):
@@ -186,22 +186,22 @@ class ExamplesDfs2:
             # Add data for all item-timesteps, copying data from source file.
 
             # Read data from source file
-            sourceData = source.ReadItemTimeStepNext(reshape=True);
+            sourceData = source.ReadItemTimeStepNext(reshape=True)
 
             # Create empty item data, and copy over data from source
             # The IDfsItemData2D can handle 2D indexing, on the form data2D[k,l].
             # An ordinary array, float[], can also be used, though indexing from 2D to 1D must be 
             # handled by user code i.e. using data1D[k + l*xCount] compared to data2D[k,l]
-            itemData2D = file.CreateEmptyItemData(j+1, reshape = True);
+            itemData2D = file.CreateEmptyItemData(j+1, reshape = True)
             for k in range(71):
               for l in range(91):
-                itemData2D.Data[k, l] = sourceData.Data[k, l];
+                itemData2D.Data[k, l] = sourceData.Data[k, l]
 
             # the itemData2D.Data is a float[], so any float[] of the correct size is valid here.
-            file.WriteItemTimeStep(j + 1, i, sourceData.Time, itemData2D.Data);
+            file.WriteItemTimeStep(j + 1, i, sourceData.Time, itemData2D.Data)
 
-        source.Close();
-        file.Close();
+        source.Close()
+        file.Close()
 
 #    #/ <summary>
 #    #/ Create maximum velocity field for a dfs2 file
@@ -358,31 +358,31 @@ class ExamplesDfs2:
     @staticmethod
     def CreateM21Bathymetry(bathyDataArray, filename):
 
-        factory = DfsFactory();
-        builder = DfsBuilder.Create(r"C:\0\Training\Bat1_0.dfs2", r"Grid editor", 1);
+        factory = DfsFactory()
+        builder = DfsBuilder.Create(r"C:\0\Training\Bat1_0.dfs2", r"Grid editor", 1)
 
         # Set up the header
-        builder.SetDataType(0);
-        builder.SetGeographicalProjection(factory.CreateProjectionGeoOrigin("UTM-33", 12.438741600559911, 55.2257078424238, 327));
-        builder.SetTemporalAxis(factory.CreateTemporalEqCalendarAxis(eumUnit.eumUsec, datetime.datetime(2003,  1,  1, 0, 0, 0), 0, 1));
-        builder.SetSpatialAxis(factory.CreateAxisEqD2(eumUnit.eumUmeter, 72, 0, 900, 94, 0, 900));
-        builder.DeleteValueFloat = -1e-30;
+        builder.SetDataType(0)
+        builder.SetGeographicalProjection(factory.CreateProjectionGeoOrigin("UTM-33", 12.438741600559911, 55.2257078424238, 327))
+        builder.SetTemporalAxis(factory.CreateTemporalEqCalendarAxis(eumUnit.eumUsec, datetime.datetime(2003,  1,  1, 0, 0, 0), 0, 1))
+        builder.SetSpatialAxis(factory.CreateAxisEqD2(eumUnit.eumUmeter, 72, 0, 900, 94, 0, 900))
+        builder.DeleteValueFloat = -1e-30
 
-        builder.AddCustomBlock(factory.CreateCustomBlock("Display Settings", np.array([ 1, 0, 0 ], np.int32)));
-        builder.AddCustomBlock(factory.CreateCustomBlock("M21_Misc", np.array([ 327, 0, -900, 10, 0, 0, 0 ], np.float32)));
+        builder.AddCustomBlock(factory.CreateCustomBlock("Display Settings", np.array([ 1, 0, 0 ], np.int32)))
+        builder.AddCustomBlock(factory.CreateCustomBlock("M21_Misc", np.array([ 327, 0, -900, 10, 0, 0, 0 ], np.float32)))
 
         # Set up dynamic items
         builder.AddCreateDynamicItem("Bathymetry", eumQuantity.Create(eumItem.eumIWaterLevel, eumUnit.eumUmeter),
-                                     DfsSimpleType.Float, DataValueType.Instantaneous);
+                                     DfsSimpleType.Float, DataValueType.Instantaneous)
 
         # Create and get file
-        builder.CreateFile(filename);
-        file = builder.GetFile();
+        builder.CreateFile(filename)
+        file = builder.GetFile()
 
         # Add bathymetry data
-        file.WriteItemTimeStepNext(0, bathyDataArray);
+        file.WriteItemTimeStepNext(0, bathyDataArray)
 
-        file.Close();
+        file.Close()
 
 #    #/ <summary>
 #    #/ Example of how to resample a dfs2 file in x/y space
