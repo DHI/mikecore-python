@@ -37,5 +37,24 @@ Homepage = "https://github.com/DHI/mikecore-python"
 
 [dependency-groups]
 dev = [
+    "pyright>=1.1.400; python_version >= '3.7'",
     "pytest>=6.1.2",
 ]
+
+[tool.pyright]
+include = ["mikecore", "miketools", "tests"]
+typeCheckingMode = "basic"
+# Many attributes (including the native library wrappers) start as None and
+# are set later, so every access trips these. Re-enable once they are typed.
+reportOptionalMemberAccess = false
+reportOptionalSubscript = false
+reportOptionalIterable = false
+reportOptionalOperand = false
+# Existing violations need typing work (e.g. TimeAxis unions, List[int]
+# parameters that receive numpy arrays). Kept visible as warnings for now.
+reportArgumentType = "warning"
+reportAttributeAccessIssue = "warning"
+reportCallIssue = "warning"
+reportOperatorIssue = "warning"
+reportReturnType = "warning"
+reportRedeclaration = "warning"
