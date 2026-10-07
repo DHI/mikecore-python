@@ -2,7 +2,7 @@ import os
 import ctypes
 from typing import Tuple
 import numpy as np
-from enum import Enum, IntEnum
+from enum import IntEnum
 
 
 class ProjectionException(Exception):
@@ -23,12 +23,12 @@ class MzCartDLL():
     # Static variables
     Wrapper = None
 
-    _cartCreateCount = 0;
-    _cartDestroyCount = 0;
-    _projCreateCount = 0;
-    _projDestroyCount = 0;
-    _converterCreateCount = 0;
-    _converterDestroyCount = 0;
+    _cartCreateCount = 0
+    _cartDestroyCount = 0
+    _projCreateCount = 0
+    _projDestroyCount = 0
+    _converterCreateCount = 0
+    _converterDestroyCount = 0
 
     @staticmethod
     def Init(libfilepath: str = None):
@@ -37,7 +37,7 @@ class MzCartDLL():
         if MzCartDLL.Wrapper is None:
 
             MzCartDLL.libfilepath = None
-            if not libfilepath is None:
+            if libfilepath is not None:
                 MzCartDLL.libfilepath = libfilepath
 
             # TODO: On linux, this looks different!
@@ -45,54 +45,54 @@ class MzCartDLL():
                 MzCartDLL.Wrapper = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, "MzCart.dll"))
             else:
                 MzCartDLL.Wrapper = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, "libMzCart.so"))
-                libfilepathe = MzCartDLL.libfilepath+"/";
+                libfilepathe = MzCartDLL.libfilepath+"/"
                 libfilepatheP = ctypes.c_char_p(libfilepathe.encode("ascii"))
-                MzCartDLL.Wrapper.CARTSETUPLINUX(libfilepatheP, libfilepatheP);
+                MzCartDLL.Wrapper.CARTSETUPLINUX(libfilepatheP, libfilepatheP)
 
 
-            MzCartDLL.Wrapper.C_MZC_GETPROJECTION.restype = ctypes.c_void_p;
-            MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING.restype = None;
-            MzCartDLL.Wrapper.S_GETGOOGLEMAPPROJECTIONSTRING.restype = None;
+            MzCartDLL.Wrapper.C_MZC_GETPROJECTION.restype = ctypes.c_void_p
+            MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING.restype = None
+            MzCartDLL.Wrapper.S_GETGOOGLEMAPPROJECTIONSTRING.restype = None
 
-            MzCartDLL.Wrapper.C_MZC_CREATE.restype = None;
-            MzCartDLL.Wrapper.C_MZC_DESTROY.restype = None;
-            MzCartDLL.Wrapper.C_MZC_GETPROJNORTH.restype = ctypes.c_double;
-            MzCartDLL.Wrapper.C_MZC_GETTRUENORTH.restype = ctypes.c_double;
-            MzCartDLL.Wrapper.C_MZC_GEO2PROJ.restype = None;
-            MzCartDLL.Wrapper.C_MZC_PROJ2GEO.restype = None;
-            MzCartDLL.Wrapper.C_MZC_GEO2XY.restype = None;
-            MzCartDLL.Wrapper.C_MZC_XY2GEO.restype = None;
-            MzCartDLL.Wrapper.C_MZC_PROJ2XY.restype = None;
-            MzCartDLL.Wrapper.C_MZC_XY2PROJ.restype = None;
+            MzCartDLL.Wrapper.C_MZC_CREATE.restype = None
+            MzCartDLL.Wrapper.C_MZC_DESTROY.restype = None
+            MzCartDLL.Wrapper.C_MZC_GETPROJNORTH.restype = ctypes.c_double
+            MzCartDLL.Wrapper.C_MZC_GETTRUENORTH.restype = ctypes.c_double
+            MzCartDLL.Wrapper.C_MZC_GEO2PROJ.restype = None
+            MzCartDLL.Wrapper.C_MZC_PROJ2GEO.restype = None
+            MzCartDLL.Wrapper.C_MZC_GEO2XY.restype = None
+            MzCartDLL.Wrapper.C_MZC_XY2GEO.restype = None
+            MzCartDLL.Wrapper.C_MZC_PROJ2XY.restype = None
+            MzCartDLL.Wrapper.C_MZC_XY2PROJ.restype = None
 
-            MzCartDLL.Wrapper.C_MZMP_CREATE.restype = None;
-            MzCartDLL.Wrapper.C_MZMP_DESTROY.restype = None;
-            MzCartDLL.Wrapper.C_MZMP_GETNAME.restype = None;
-            MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING.restype = None;
-            MzCartDLL.Wrapper.C_MZMP_GEO2PROJ.restype = None;
-            MzCartDLL.Wrapper.C_MZMP_PROJ2GEO.restype = None;
-            MzCartDLL.Wrapper.C_MZMP_GETORIGIN.restype = None;
-            MzCartDLL.Wrapper.C_MZMP_GETCONVERGENCE.restype = ctypes.c_double;
-            MzCartDLL.Wrapper.C_MZMP_GETDEFAULTAREA.restype = None;
-            MzCartDLL.Wrapper.C_MZMP_GEO2XYZ.restype = None;
-            MzCartDLL.Wrapper.C_MZMP_XYZ2GEO.restype = None;
+            MzCartDLL.Wrapper.C_MZMP_CREATE.restype = None
+            MzCartDLL.Wrapper.C_MZMP_DESTROY.restype = None
+            MzCartDLL.Wrapper.C_MZMP_GETNAME.restype = None
+            MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING.restype = None
+            MzCartDLL.Wrapper.C_MZMP_GEO2PROJ.restype = None
+            MzCartDLL.Wrapper.C_MZMP_PROJ2GEO.restype = None
+            MzCartDLL.Wrapper.C_MZMP_GETORIGIN.restype = None
+            MzCartDLL.Wrapper.C_MZMP_GETCONVERGENCE.restype = ctypes.c_double
+            MzCartDLL.Wrapper.C_MZMP_GETDEFAULTAREA.restype = None
+            MzCartDLL.Wrapper.C_MZMP_GEO2XYZ.restype = None
+            MzCartDLL.Wrapper.C_MZMP_XYZ2GEO.restype = None
 
-            MzCartDLL.Wrapper.C_MZDC_CREATE.restype = None;
-            MzCartDLL.Wrapper.C_MZDC_DESTROY.restype = None;
-            MzCartDLL.Wrapper.C_MZDC_CONVERTXY.restype = None;
-            MzCartDLL.Wrapper.C_MZDC_INVCONVERTXY.restype = None;
-            MzCartDLL.Wrapper.C_MZDC_CONVERTXYH.restype = None;
-            MzCartDLL.Wrapper.C_MZDC_INVCONVERTXYH.restype = None;
-            MzCartDLL.Wrapper.C_MZDC_DATUMSHIFT.restype = None;
-            MzCartDLL.Wrapper.C_MZDC_BYPASSXYZ.restype = None;
-            MzCartDLL.Wrapper.C_MZDC_RESETBYPASSXYZ.restype = None;
-            MzCartDLL.Wrapper.C_MZDC_SETDATUMSHIFT.argtypes = [ctypes.c_void_p, ctypes.c_int32, ctypes.c_void_p, ctypes.c_int32];
-            MzCartDLL.Wrapper.C_MZDC_SETDATUMSHIFT.restype = None;
-            MzCartDLL.Wrapper.C_MZDC_INVERTORDER.restype = None;
+            MzCartDLL.Wrapper.C_MZDC_CREATE.restype = None
+            MzCartDLL.Wrapper.C_MZDC_DESTROY.restype = None
+            MzCartDLL.Wrapper.C_MZDC_CONVERTXY.restype = None
+            MzCartDLL.Wrapper.C_MZDC_INVCONVERTXY.restype = None
+            MzCartDLL.Wrapper.C_MZDC_CONVERTXYH.restype = None
+            MzCartDLL.Wrapper.C_MZDC_INVCONVERTXYH.restype = None
+            MzCartDLL.Wrapper.C_MZDC_DATUMSHIFT.restype = None
+            MzCartDLL.Wrapper.C_MZDC_BYPASSXYZ.restype = None
+            MzCartDLL.Wrapper.C_MZDC_RESETBYPASSXYZ.restype = None
+            MzCartDLL.Wrapper.C_MZDC_SETDATUMSHIFT.argtypes = [ctypes.c_void_p, ctypes.c_int32, ctypes.c_void_p, ctypes.c_int32]
+            MzCartDLL.Wrapper.C_MZDC_SETDATUMSHIFT.restype = None
+            MzCartDLL.Wrapper.C_MZDC_INVERTORDER.restype = None
 
-            MzCartDLL.Wrapper.S_LONGITUDETOUTMZONE.restype = None;
-            MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME.restype = None;
-            MzCartDLL.Wrapper.S_PROJECTIONORIGIN.restype = None;
+            MzCartDLL.Wrapper.S_LONGITUDETOUTMZONE.restype = None
+            MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME.restype = None
+            MzCartDLL.Wrapper.S_PROJECTIONORIGIN.restype = None
 
     ################################/
     #region MzCartography methods
@@ -112,21 +112,21 @@ class MzCartDLL():
     @staticmethod
     def MzCartCreate(projstring: str, lon: float, lat: float, ori: float) -> ctypes.c_void_p:
       # TODO: should this require a license?
-      rc = ctypes.c_int32();
-      mzCartPointer = ctypes.c_void_p();
+      rc = ctypes.c_int32()
+      mzCartPointer = ctypes.c_void_p()
       MzCartDLL.Wrapper.C_MZC_CREATE(
           ctypes.c_char_p(projstring.encode("ascii")), 
           ctypes.c_double(lon), 
           ctypes.c_double(lat), 
           ctypes.c_double(ori), 
           ctypes.byref(mzCartPointer), 
-          ctypes.byref(rc));
+          ctypes.byref(rc))
       if (rc.value != 0):
-        raise ProjectionException("Could not create cartography object. Is projection string valid?");
+        raise ProjectionException("Could not create cartography object. Is projection string valid?")
       if (mzCartPointer.value is None):
-        raise ProjectionException("Could not create cartography object. Is projection string valid?");
-      MzCartDLL._cartCreateCount += 1;
-      return (mzCartPointer);
+        raise ProjectionException("Could not create cartography object. Is projection string valid?")
+      MzCartDLL._cartCreateCount += 1
+      return (mzCartPointer)
 
     #/ <summary>
     #/ Destroy the cartography object pointer to by the <paramref name="mzCartPointer"/>.
@@ -141,12 +141,12 @@ class MzCartDLL():
     @staticmethod
     def MzCartDestroy(mzCartPointer: ctypes.c_void_p):
       if (mzCartPointer.value is None):
-        return;
-      rc = ctypes.c_int32();
-      MzCartDLL._cartDestroyCount += 1;
-      MzCartDLL.Wrapper.C_MZC_DESTROY(ctypes.byref(mzCartPointer), ctypes.byref(rc));
+        return
+      rc = ctypes.c_int32()
+      MzCartDLL._cartDestroyCount += 1
+      MzCartDLL.Wrapper.C_MZC_DESTROY(ctypes.byref(mzCartPointer), ctypes.byref(rc))
       if (rc.value != 0):
-        raise ProjectionException("Could not destroy cartography object. Probably invalid pointer argument");
+        raise ProjectionException("Could not destroy cartography object. Probably invalid pointer argument")
 
     #/ <summary>
     #/ <para>
@@ -164,7 +164,7 @@ class MzCartDLL():
     #/ </summary>
     @staticmethod
     def MzCartGetMapProjection(mzCartPointer: ctypes.c_void_p) -> ctypes.c_void_p:
-        return ctypes.c_void_p(MzCartDLL.Wrapper.C_MZC_GETPROJECTION(mzCartPointer));
+        return ctypes.c_void_p(MzCartDLL.Wrapper.C_MZC_GETPROJECTION(mzCartPointer))
 
 
     #/ <summary>
@@ -174,17 +174,17 @@ class MzCartDLL():
     @staticmethod
     def MzCartProjectionName(mzCartPointer: ctypes.c_void_p) -> str:
       if (mzCartPointer.value is None):
-        raise ValueError("Pointer is null", "mzCartPointer");
-      rc = ctypes.c_int32();
+        raise ValueError("Pointer is null", "mzCartPointer")
+      rc = ctypes.c_int32()
       projName = ctypes.c_char_p((" " * 1024).encode("ascii"))
-      MzCartDLL.Wrapper.C_MZC_GETPROJECTIONNAME(mzCartPointer, projName, ctypes.c_int32(1024), ctypes.byref(rc));
+      MzCartDLL.Wrapper.C_MZC_GETPROJECTIONNAME(mzCartPointer, projName, ctypes.c_int32(1024), ctypes.byref(rc))
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
         projName = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"))
-        MzCartDLL.Wrapper.C_MZC_GETPROJECTIONNAME(mzCartPointer, projName, rc.value + 1, ctypes.byref(rc));
+        MzCartDLL.Wrapper.C_MZC_GETPROJECTIONNAME(mzCartPointer, projName, rc.value + 1, ctypes.byref(rc))
       if (rc.value != 0):
-        raise ProjectionException("Could not get projection name from cartography object");
-      return (projName.value.decode("ascii"));
+        raise ProjectionException("Could not get projection name from cartography object")
+      return (projName.value.decode("ascii"))
 
     #/ <summary>
     #/ Returns the WKT projection string, or one of the projection abbreviation strings 
@@ -193,33 +193,33 @@ class MzCartDLL():
     @staticmethod
     def MzCartProjectionString(mzCartPointer: ctypes.c_void_p) -> str:
       if (mzCartPointer.value is None):
-        raise ValueError("Pointer is null", "mzCartPointer");
-      rc = ctypes.c_int32();
-      projName = ctypes.c_char_p((" " * 2048).encode("ascii"));
-      MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING(mzCartPointer, projName, ctypes.c_int32(2048), ctypes.byref(rc));
+        raise ValueError("Pointer is null", "mzCartPointer")
+      rc = ctypes.c_int32()
+      projName = ctypes.c_char_p((" " * 2048).encode("ascii"))
+      MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING(mzCartPointer, projName, ctypes.c_int32(2048), ctypes.byref(rc))
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        projName = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"));
-        MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING(mzCartPointer, projName, ctypes.c_int32(rc.value+1), ctypes.byref(rc));
+        projName = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"))
+        MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING(mzCartPointer, projName, ctypes.c_int32(rc.value+1), ctypes.byref(rc))
       if (rc.value != 0):
-        raise ProjectionException("Could not get projection string from cartography object");
-      return (projName.value.decode("ascii"));
+        raise ProjectionException("Could not get projection string from cartography object")
+      return (projName.value.decode("ascii"))
 
     #/ <summary>
     #/ Returns the google map projection string
     #/ </summary>
     @staticmethod
     def GoogleMapProjectionString() -> str:
-      rc = ctypes.c_int32();
-      googleMapProjection = ctypes.c_char_p((" " * 2048).encode("ascii"));
-      S_GETGOOGLEMAPPROJECTIONSTRING(googleMapProjection, ctypes.c_int(2048), ctypes.byref(rc));
+      rc = ctypes.c_int32()
+      googleMapProjection = ctypes.c_char_p((" " * 2048).encode("ascii"))
+      MzCartDLL.Wrapper.S_GETGOOGLEMAPPROJECTIONSTRING(googleMapProjection, ctypes.c_int(2048), ctypes.byref(rc))
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        googleMapProjection = ctypes.c_char_p((" " * (rc.value+1)).encode("ascii"));
-        S_GETGOOGLEMAPPROJECTIONSTRING(googleMapProjection, ctypes.c_int32(rc.value+1), ctypes.byref(rc));
-      if (rc != 0):
-        raise ProjectionException("Could not get google map projection string from cartography object");
-      return (googleMapProjection.value.decode("ascii"));
+        googleMapProjection = ctypes.c_char_p((" " * (rc.value+1)).encode("ascii"))
+        MzCartDLL.Wrapper.S_GETGOOGLEMAPPROJECTIONSTRING(googleMapProjection, ctypes.c_int32(rc.value+1), ctypes.byref(rc))
+      if (rc.value != 0):
+        raise ProjectionException("Could not get google map projection string from cartography object")
+      return (googleMapProjection.value.decode("ascii"))
 
 
     #/ <summary>
@@ -248,7 +248,7 @@ class MzCartDLL():
         MzCartDLL.Wrapper.C_MZC_GEO2PROJ(mzCartPointer, 
                                          ctypes.c_double(lon), ctypes.c_double(lat),
                                          ctypes.byref(east), ctypes.byref(north))
-        return east.value, north.value;
+        return east.value, north.value
 
     #/ <summary>
     #/ Convert coordinates from projection coordinates to geographical coordinates 
@@ -260,7 +260,7 @@ class MzCartDLL():
         MzCartDLL.Wrapper.C_MZC_PROJ2GEO(mzCartPointer, 
                                          ctypes.c_double(east), ctypes.c_double(north),
                                          ctypes.byref(lon), ctypes.byref(lat))
-        return lon.value, lat.value;
+        return lon.value, lat.value
 
     #/ <summary>
     #/ Convert coordinates from geographical coordinates to local grid x-y coordinates
@@ -272,7 +272,7 @@ class MzCartDLL():
         MzCartDLL.Wrapper.C_MZC_GEO2XY(mzCartPointer, 
                                          ctypes.c_double(lon), ctypes.c_double(lat),
                                          ctypes.byref(x), ctypes.byref(y))
-        return x.value, y.value;
+        return x.value, y.value
 
     #/ <summary>
     #/ Convert coordinates from local grid x-y coordinates to geographical coordinates 
@@ -284,7 +284,7 @@ class MzCartDLL():
         MzCartDLL.Wrapper.C_MZC_XY2GEO(mzCartPointer, 
                                          ctypes.c_double(x), ctypes.c_double(y),
                                          ctypes.byref(lon), ctypes.byref(lat))
-        return lon.value, lat.value;
+        return lon.value, lat.value
 
     #/ <summary>
     #/ Convert coordinates from projetion coordinates to local grid x-y coordinates
@@ -296,7 +296,7 @@ class MzCartDLL():
         MzCartDLL.Wrapper.C_MZC_PROJ2XY(mzCartPointer, 
                                          ctypes.c_double(east), ctypes.c_double(north),
                                          ctypes.byref(x), ctypes.byref(y))
-        return x.value, y.value;
+        return x.value, y.value
 
     #/ <summary>
     #/ Convert coordinates from local grid x-y coordinates to projection coordinates 
@@ -308,7 +308,7 @@ class MzCartDLL():
         MzCartDLL.Wrapper.C_MZC_XY2PROJ(mzCartPointer, 
                                          ctypes.c_double(x), ctypes.c_double(y),
                                          ctypes.byref(east), ctypes.byref(north))
-        return east.value, north.value;
+        return east.value, north.value
 
     # endregion
 
@@ -327,15 +327,15 @@ class MzCartDLL():
     @staticmethod
     def MzMapProjCreate(projstring: str) -> ctypes.c_void_p:
       # TODO: should this require a license?
-      rc = ctypes.c_int32();
-      mzMapProjPointer = ctypes.c_void_p();
-      MzCartDLL.Wrapper.C_MZMP_CREATE(ctypes.c_char_p(projstring.encode("ascii")), ctypes.byref(mzMapProjPointer), ctypes.byref(rc));
+      rc = ctypes.c_int32()
+      mzMapProjPointer = ctypes.c_void_p()
+      MzCartDLL.Wrapper.C_MZMP_CREATE(ctypes.c_char_p(projstring.encode("ascii")), ctypes.byref(mzMapProjPointer), ctypes.byref(rc))
       if (rc.value != 0):
-        raise ProjectionException("Could not create cartography object. Is projection string valid?");
+        raise ProjectionException("Could not create cartography object. Is projection string valid?")
       if (mzMapProjPointer.value is None):
-        raise ProjectionException("Could not create cartography object. Is projection string valid?");
-      MzCartDLL._projCreateCount += 1;
-      return (mzMapProjPointer);
+        raise ProjectionException("Could not create cartography object. Is projection string valid?")
+      MzCartDLL._projCreateCount += 1
+      return (mzMapProjPointer)
 
     #/ <summary>
     #/ Destroy the cartography object pointer to by the <paramref name="mzConverterPointer"/>.
@@ -350,12 +350,12 @@ class MzCartDLL():
     @staticmethod
     def MzMapProjDestroy(mzConverterPointer: ctypes.c_void_p):
       if (mzConverterPointer.value is None):
-        return;
-      rc = ctypes.c_int32();
-      MzCartDLL._projDestroyCount += 1;
-      MzCartDLL.Wrapper.C_MZMP_DESTROY(ctypes.byref(mzConverterPointer), ctypes.byref(rc));
+        return
+      rc = ctypes.c_int32()
+      MzCartDLL._projDestroyCount += 1
+      MzCartDLL.Wrapper.C_MZMP_DESTROY(ctypes.byref(mzConverterPointer), ctypes.byref(rc))
       if (rc.value != 0):
-        raise ProjectionException("Could not destroy cartography object. Probably invalid pointer argument");
+        raise ProjectionException("Could not destroy cartography object. Probably invalid pointer argument")
 
     #/ <summary>
     #/ Returns the name of the projection of the cartography object 
@@ -364,17 +364,17 @@ class MzCartDLL():
     @staticmethod
     def MzMapProjName(mzMapProjPointer: ctypes.c_void_p) -> str:
       if (mzMapProjPointer is None):
-        raise Exception("Pointer is null", "mzMapProjPointer");
-      rc = ctypes.c_int32();
-      projName = ctypes.c_char_p((" " * 128).encode("ascii"));
-      MzCartDLL.Wrapper.C_MZMP_GETNAME(mzMapProjPointer, projName, ctypes.c_int32(128), ctypes.byref(rc));
+        raise Exception("Pointer is null", "mzMapProjPointer")
+      rc = ctypes.c_int32()
+      projName = ctypes.c_char_p((" " * 128).encode("ascii"))
+      MzCartDLL.Wrapper.C_MZMP_GETNAME(mzMapProjPointer, projName, ctypes.c_int32(128), ctypes.byref(rc))
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        projName = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"));
-        MzCartDLL.Wrapper.C_MZMP_GETNAME(mzMapProjPointer, projName, ctypes.c_int32(rc.value+1), ctypes.byref(rc));
+        projName = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"))
+        MzCartDLL.Wrapper.C_MZMP_GETNAME(mzMapProjPointer, projName, ctypes.c_int32(rc.value+1), ctypes.byref(rc))
       if (rc.value != 0):
-        raise ProjectionException("Could not get projection name from cartography object");
-      return (projName.value.decode("ascii"));
+        raise ProjectionException("Could not get projection name from cartography object")
+      return (projName.value.decode("ascii"))
 
     #/ <summary>
     #/ Returns the WKT projection string, or one of the projection abbreviation strings 
@@ -383,17 +383,17 @@ class MzCartDLL():
     @staticmethod
     def MzMapProjProjectionString(mzMapProjPointer: ctypes.c_void_p) -> str:
       if (mzMapProjPointer.value is None):
-        raise Exception("Pointer is null", "mzMapProjPointer");
-      rc = ctypes.c_int32();
-      projName = ctypes.c_char_p((" " * 2048).encode("ascii"));
-      MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING(mzMapProjPointer, projName, ctypes.c_int32(2048), ctypes.byref(rc));
+        raise Exception("Pointer is null", "mzMapProjPointer")
+      rc = ctypes.c_int32()
+      projName = ctypes.c_char_p((" " * 2048).encode("ascii"))
+      MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING(mzMapProjPointer, projName, ctypes.c_int32(2048), ctypes.byref(rc))
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        projName = ctypes.c_char_p((" " * (rc.value+1)).encode("ascii"));
-        MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING(mzMapProjPointer, projName, ctypes.c_int32(rc.value+1), ctypes.byref(rc));
+        projName = ctypes.c_char_p((" " * (rc.value+1)).encode("ascii"))
+        MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING(mzMapProjPointer, projName, ctypes.c_int32(rc.value+1), ctypes.byref(rc))
       if (rc.value != 0):
-        raise ProjectionException("Could not get projection string from cartography object");
-      return (projName.value.decode("ascii"));
+        raise ProjectionException("Could not get projection string from cartography object")
+      return (projName.value.decode("ascii"))
 
     #/ <summary>
     #/ Convert coordinates from geographical coordinates to projection coordinates
@@ -405,7 +405,7 @@ class MzCartDLL():
         MzCartDLL.Wrapper.C_MZMP_GEO2PROJ(mzMapProjPointer, 
                                          ctypes.c_double(lon), ctypes.c_double(lat),
                                          ctypes.byref(east), ctypes.byref(north))
-        return east.value, north.value;
+        return east.value, north.value
 
     #/ <summary>
     #/ Convert coordinates from projection coordinates to geographical coordinates 
@@ -417,7 +417,7 @@ class MzCartDLL():
         MzCartDLL.Wrapper.C_MZMP_PROJ2GEO(mzMapProjPointer, 
                                          ctypes.c_double(east), ctypes.c_double(north),
                                          ctypes.byref(lon), ctypes.byref(lat))
-        return (lon.value, lat.value);
+        return (lon.value, lat.value)
 
 
     #/ <summary>
@@ -428,7 +428,7 @@ class MzCartDLL():
         lon = ctypes.c_double() 
         lat = ctypes.c_double() 
         MzCartDLL.Wrapper.C_MZMP_GETORIGIN(mzMapProjPointer, ctypes.byref(lon), ctypes.byref(lat))
-        return (lon.value, lat.value);
+        return (lon.value, lat.value)
 
     #/ <summary>
     #/ Gets the convergence (angle towards true north) at the given geographical location
@@ -442,10 +442,10 @@ class MzCartDLL():
     #/ </summary>
     @staticmethod
     def GetDefaultArea(mzMapProjPointer: ctypes.c_void_p) -> Tuple[float,float,float,float]:
-        x0 = ctypes.c_double();
-        y0 = ctypes.c_double();
-        x1 = ctypes.c_double();
-        y1 = ctypes.c_double();
+        x0 = ctypes.c_double()
+        y0 = ctypes.c_double()
+        x1 = ctypes.c_double()
+        y1 = ctypes.c_double()
         MzCartDLL.Wrapper.C_MZMP_GETDEFAULTAREA(mzMapProjPointer, 
                                                 ctypes.byref(x0), ctypes.byref(y0),
                                                 ctypes.byref(x1), ctypes.byref(y1))
@@ -455,26 +455,26 @@ class MzCartDLL():
     #/ </summary>
     @staticmethod
     def MzMapProjGeo2Xyz(mzMapProjPointer: ctypes.c_void_p, lon: float, lat: float, height: float) -> Tuple[float,float,float]:
-        x = ctypes.c_double();
-        y = ctypes.c_double();
-        z = ctypes.c_double();
+        x = ctypes.c_double()
+        y = ctypes.c_double()
+        z = ctypes.c_double()
         MzCartDLL.Wrapper.C_MZMP_GEO2XYZ(mzMapProjPointer, 
                                          ctypes.c_double(lon), ctypes.c_double(lat), ctypes.c_double(height),
                                          ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
-        return (x.value, y.value, z.value);
+        return (x.value, y.value, z.value)
 
     #/ <summary>
     #/ Convert coordinates from 3D coordinates to geographical coordinates 
     #/ </summary>
     @staticmethod
     def MzMapProjXyz2Geo(mzMapProjPointer: ctypes.c_void_p, x: float, y: float, z: float) -> Tuple[float,float,float]:
-        lon = ctypes.c_double();
-        lat = ctypes.c_double();
-        height = ctypes.c_double();
+        lon = ctypes.c_double()
+        lat = ctypes.c_double()
+        height = ctypes.c_double()
         MzCartDLL.Wrapper.C_MZMP_XYZ2GEO(mzMapProjPointer, 
                                          ctypes.c_double(x), ctypes.c_double(y), ctypes.c_double(z),
                                          ctypes.byref(lon), ctypes.byref(lat), ctypes.byref(height))
-        return (lon.value, lat.value, height.value);
+        return (lon.value, lat.value, height.value)
 
     #endregion
 
@@ -493,18 +493,18 @@ class MzCartDLL():
     #/ <param name="projstringTarget">A projection string in the WKT format for the target map projection </param>
     @staticmethod
     def MzConverterCreate(projstringSource: str, projstringTarget: str) -> ctypes.c_void_p:
-      rc = ctypes.c_int32();
-      mzConverterPointer = ctypes.c_void_p();
+      rc = ctypes.c_int32()
+      mzConverterPointer = ctypes.c_void_p()
       MzCartDLL.Wrapper.C_MZDC_CREATE(
           ctypes.c_char_p(projstringSource.encode("ascii")), 
           ctypes.c_char_p(projstringTarget.encode("ascii")), 
-          ctypes.byref(mzConverterPointer), ctypes.byref(rc));
+          ctypes.byref(mzConverterPointer), ctypes.byref(rc))
       if (rc.value != 0):
-        raise ProjectionException("Could not create converter object. are projection strings valid?");
+        raise ProjectionException("Could not create converter object. are projection strings valid?")
       if (mzConverterPointer.value is None):
-        raise ProjectionException("Could not create converter object. are projection strings valid?");
-      MzCartDLL._converterCreateCount += 1;
-      return (mzConverterPointer);
+        raise ProjectionException("Could not create converter object. are projection strings valid?")
+      MzCartDLL._converterCreateCount += 1
+      return (mzConverterPointer)
 
     #/ <summary>
     #/ Destroy the converter object pointer to by the <paramref name="mzConverterPointer"/>.
@@ -519,12 +519,12 @@ class MzCartDLL():
     @staticmethod
     def MzConverterDestroy(mzConverterPointer: ctypes.c_void_p):
       if (mzConverterPointer.value is None):
-        return;
-      rc = ctypes.c_int32();
-      MzCartDLL._converterDestroyCount += 1;
-      MzCartDLL.Wrapper.C_MZDC_DESTROY(ctypes.byref(mzConverterPointer), ctypes.byref(rc));
+        return
+      rc = ctypes.c_int32()
+      MzCartDLL._converterDestroyCount += 1
+      MzCartDLL.Wrapper.C_MZDC_DESTROY(ctypes.byref(mzConverterPointer), ctypes.byref(rc))
       if (rc.value != 0):
-        raise ProjectionException("Could not destroy converter object. Probably invalid pointer argument");
+        raise ProjectionException("Could not destroy converter object. Probably invalid pointer argument")
 
 
     #/ <summary>
@@ -532,22 +532,22 @@ class MzCartDLL():
     #/ </summary>
     @staticmethod
     def MzConverterConvertXY(mzConverterPointer: ctypes.c_void_p, x: float, y: float) -> Tuple[float,float]:
-        resx = ctypes.c_double(x);
-        resy = ctypes.c_double(y);
+        resx = ctypes.c_double(x)
+        resy = ctypes.c_double(y)
         MzCartDLL.Wrapper.C_MZDC_CONVERTXY(mzConverterPointer, 
                                            ctypes.byref(resx), ctypes.byref(resy))
-        return (resx.value, resy.value);
+        return (resx.value, resy.value)
         
     #/ <summary>
     #/ Converts a point (x, y) from the target map projection to the source map projection.
     #/ </summary>
     @staticmethod
     def MzConverterInvConvertXY(mzConverterPointer: ctypes.c_void_p, x: float, y: float) -> Tuple[float,float]:
-        resx = ctypes.c_double(x);
-        resy = ctypes.c_double(y);
+        resx = ctypes.c_double(x)
+        resy = ctypes.c_double(y)
         MzCartDLL.Wrapper.C_MZDC_INVCONVERTXY(mzConverterPointer, 
                                               ctypes.byref(resx), ctypes.byref(resy))
-        return (resx.value, resy.value);
+        return (resx.value, resy.value)
 
 
     #/ <summary>
@@ -555,24 +555,24 @@ class MzCartDLL():
     #/ </summary>
     @staticmethod
     def MzConverterConvertXYH(mzConverterPointer: ctypes.c_void_p, x: float, y: float, h: float) -> Tuple[float,float,float]:
-        resx = ctypes.c_double(x);
-        resy = ctypes.c_double(y);
-        resh = ctypes.c_double(h);
+        resx = ctypes.c_double(x)
+        resy = ctypes.c_double(y)
+        resh = ctypes.c_double(h)
         MzCartDLL.Wrapper.C_MZDC_CONVERTXYH(mzConverterPointer, 
                                             ctypes.byref(resx), ctypes.byref(resy), ctypes.byref(resh))
-        return (resx.value, resy.value, resh.value);
+        return (resx.value, resy.value, resh.value)
 
     #/ <summary>
     #/ Converts a point (x, y, h) from the target map projection to the source map projection.
     #/ </summary>
     @staticmethod
     def MzConverterInvConvertXYH(mzConverterPointer: ctypes.c_void_p, x: float, y: float, h: float) -> Tuple[float,float,float]:
-        resx = ctypes.c_double(x);
-        resy = ctypes.c_double(y);
-        resh = ctypes.c_double(h);
+        resx = ctypes.c_double(x)
+        resy = ctypes.c_double(y)
+        resh = ctypes.c_double(h)
         MzCartDLL.Wrapper.C_MZDC_INVCONVERTXYH(mzConverterPointer, 
                                                ctypes.byref(resx), ctypes.byref(resy), ctypes.byref(resh))
-        return (resx.value, resy.value, resh.value);
+        return (resx.value, resy.value, resh.value)
 
 
     #/ <summary>
@@ -581,12 +581,12 @@ class MzCartDLL():
     #/ </summary>
     @staticmethod
     def MzConverterDatumShift(mzConverterPointer: ctypes.c_void_p, x: float, y: float, z: float) -> Tuple[float,float,float]:
-        resx = ctypes.c_double(x);
-        resy = ctypes.c_double(y);
-        resz = ctypes.c_double(z);
+        resx = ctypes.c_double(x)
+        resy = ctypes.c_double(y)
+        resz = ctypes.c_double(z)
         MzCartDLL.Wrapper.C_MZDC_DATUMSHIFT(mzConverterPointer, 
                                             ctypes.byref(resx), ctypes.byref(resy), ctypes.byref(resz))
-        return (resx.value, resy.value, resz.value);
+        return (resx.value, resy.value, resz.value)
 
     #/ <summary>
     #/ Converts a point in Euclidean coordinates (x, y, z) relative to the target datum center to 
@@ -594,12 +594,12 @@ class MzCartDLL():
     #/ </summary>
     @staticmethod
     def MzConverterInvDatumShift(mzConverterPointer: ctypes.c_void_p, x: float, y: float, z: float) -> Tuple[float,float,float]:
-        resx = ctypes.c_double(x);
-        resy = ctypes.c_double(y);
-        resz = ctypes.c_double(z);
+        resx = ctypes.c_double(x)
+        resy = ctypes.c_double(y)
+        resz = ctypes.c_double(z)
         MzCartDLL.Wrapper.C_MZDC_INVDATUMSHIFT(mzConverterPointer, 
                                                ctypes.byref(resx), ctypes.byref(resy), ctypes.byref(resz))
-        return (resx.value, resy.value, resz.value);
+        return (resx.value, resy.value, resz.value)
 
     #/ <summary>
     #/ Sets the type of conversion
@@ -613,7 +613,7 @@ class MzCartDLL():
     #/ </summary>
     @staticmethod
     def MzConverterGetBypassXYZ(mzConverterPointer: ctypes.c_void_p) -> bool:
-      return MzCartDLL.Wrapper.C_MZDC_GETBYPASSXYZ(mzConverterPointer) != 0;
+      return MzCartDLL.Wrapper.C_MZDC_GETBYPASSXYZ(mzConverterPointer) != 0
 
     #/ <summary>
     #/ Configure the datum converter object to exclude conversion to and from Euclidean space.
@@ -621,21 +621,21 @@ class MzCartDLL():
     #/ </summary>
     @staticmethod
     def MzConverterBypassXYZ(mzConverterPointer: ctypes.c_void_p):
-        MzCartDLL.Wrapper.C_MZDC_BYPASSXYZ(mzConverterPointer);
+        MzCartDLL.Wrapper.C_MZDC_BYPASSXYZ(mzConverterPointer)
 
     #/ <summary>
     #/ Configures the datum converter object to reset the bypass flag to its default value
     #/ </summary>
     @staticmethod
     def MzConverterResetBypassXYZ(mzConverterPointer: ctypes.c_void_p):
-        MzCartDLL.Wrapper.C_MZDC_RESETBYPASSXYZ(mzConverterPointer);
+        MzCartDLL.Wrapper.C_MZDC_RESETBYPASSXYZ(mzConverterPointer)
 
     #/ <summary>
     #/ Functions that swaps the source and the target map projection including the datum shift parameters.
     #/ </summary>
     @staticmethod
     def MzConverterInvertOrder(mzConverterPointer: ctypes.c_void_p):
-        MzCartDLL.Wrapper.C_MZDC_INVERTORDER(mzConverterPointer);
+        MzCartDLL.Wrapper.C_MZDC_INVERTORDER(mzConverterPointer)
     
     #endregion
 
@@ -648,7 +648,7 @@ class MzCartDLL():
     #/ <param name="projectionString">Name of map projection, WKT string or a projection abbreviation</param>
     @staticmethod
     def IsValid(projectionString: str) -> bool:
-      return (MzCartDLL.Wrapper.S_ISVALID(ctypes.c_char_p(projectionString.encode("ascii"))) != 0);
+      return (MzCartDLL.Wrapper.S_ISVALID(ctypes.c_char_p(projectionString.encode("ascii"))) != 0)
 
     #/ <summary>
     #/ Returns true if the <paramref name="projectionString"/> projection has a datum definition.
@@ -660,7 +660,7 @@ class MzCartDLL():
     #/ <param name="projectionString">Name of map projection, WKT string or a projection abbreviation</param>
     @staticmethod
     def HasDatum(projectionString: str) -> bool:
-      return (MzCartDLL.Wrapper.S_HASDATUM(ctypes.c_char_p(projectionString.encode("ascii"))) != 0);
+      return (MzCartDLL.Wrapper.S_HASDATUM(ctypes.c_char_p(projectionString.encode("ascii"))) != 0)
 
     #/ <summary>
     #/ Returns true if the <paramref name="projectionString"/> defines a local 
@@ -672,7 +672,7 @@ class MzCartDLL():
     #/ <param name="projectionString">Name of map projection, WKT string or a projection abbreviation</param>
     @staticmethod
     def IsLocal(projectionString: str) -> bool:
-      return (MzCartDLL.Wrapper.S_ISLOCAL(ctypes.c_char_p(projectionString.encode("ascii"))) != 0);
+      return (MzCartDLL.Wrapper.S_ISLOCAL(ctypes.c_char_p(projectionString.encode("ascii"))) != 0)
 
     #/ <summary>
     #/ Returns true if the <paramref name="projectionString"/> projection is "LONG/LAT"
@@ -680,7 +680,7 @@ class MzCartDLL():
     #/ <param name="projectionString">Name of map projection, WKT string or a projection abbreviation</param>
     @staticmethod
     def IsLongLat(projectionString: str) -> bool:
-      return (MzCartDLL.Wrapper.S_ISLONGLAT(ctypes.c_char_p(projectionString.encode("ascii"))) != 0);
+      return (MzCartDLL.Wrapper.S_ISLONGLAT(ctypes.c_char_p(projectionString.encode("ascii"))) != 0)
 
     #/ <summary>
     #/ Returns true if the <paramref name="projectionString"/> projection is georeferenced,
@@ -689,7 +689,7 @@ class MzCartDLL():
     #/ <param name="projectionString">Name of map projection, WKT string or a projection abbreviation</param>
     @staticmethod
     def IsGeoreferenced(projectionString: str) -> bool:
-      return (MzCartDLL.Wrapper.S_ISGEOREFERENCED(ctypes.c_char_p(projectionString.encode("ascii"))) != 0);
+      return (MzCartDLL.Wrapper.S_ISGEOREFERENCED(ctypes.c_char_p(projectionString.encode("ascii"))) != 0)
 
     #/ <summary>
     #/ Returns true if the <paramref name="projectionString"/> projection is a geographical projection, i.e. based
@@ -698,23 +698,23 @@ class MzCartDLL():
     #/ <param name="projectionString">Name of map projection, WKT string or a projection abbreviation</param>
     @staticmethod
     def IsGeographical(projectionString: str) -> bool:
-      return (MzCartDLL.Wrapper.S_ISGEOGRAPHICAL(ctypes.c_char_p(projectionString.encode("ascii"))) != 0);
+      return (MzCartDLL.Wrapper.S_ISGEOGRAPHICAL(ctypes.c_char_p(projectionString.encode("ascii"))) != 0)
 
     #/ <summary>
     #/ Get the UTM zone best matching the longitude coordinate
     #/ </summary>
     @staticmethod
     def Longitude2UtmZone(longitude: float) -> str:
-      res = ctypes.c_char_p((" " * 128).encode("ascii"));
-      rc = ctypes.c_int32();
-      MzCartDLL.Wrapper.S_LONGITUDETOUTMZONE(ctypes.c_double(longitude), res, ctypes.c_int32(128), ctypes.byref(rc));
+      res = ctypes.c_char_p((" " * 128).encode("ascii"))
+      rc = ctypes.c_int32()
+      MzCartDLL.Wrapper.S_LONGITUDETOUTMZONE(ctypes.c_double(longitude), res, ctypes.c_int32(128), ctypes.byref(rc))
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        res = ctypes.c_char_p((" " * (rc.value+1)).encode("ascii"));
-        MzCartDLL.Wrapper.S_LONGITUDETOUTMZONE(ctypes.c_double(longitude), res, ctypes.c_int32(rc.value+1), ctypes.byref(rc));
+        res = ctypes.c_char_p((" " * (rc.value+1)).encode("ascii"))
+        MzCartDLL.Wrapper.S_LONGITUDETOUTMZONE(ctypes.c_double(longitude), res, ctypes.c_int32(rc.value+1), ctypes.byref(rc))
       if (rc.value != 0):
-        raise ProjectionException("Could not get short name out of projection string");
-      return (res.value.decode("ascii"));
+        raise ProjectionException("Could not get short name out of projection string")
+      return (res.value.decode("ascii"))
 
     #/ <summary>
     #/ Get the short name out of a WKT projetion string. 
@@ -729,16 +729,16 @@ class MzCartDLL():
     #/ <param name="projString">A WKT projection string</param>
     @staticmethod
     def ProjectionShortName(projString: str) -> str:
-      shortNameBuffer = ctypes.c_char_p((" " * 128).encode("ascii"));
-      rc = ctypes.c_int32();
-      MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME(ctypes.c_char_p(projString.encode("ascii")), shortNameBuffer, ctypes.c_int32(128), ctypes.byref(rc));
+      shortNameBuffer = ctypes.c_char_p((" " * 128).encode("ascii"))
+      rc = ctypes.c_int32()
+      MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME(ctypes.c_char_p(projString.encode("ascii")), shortNameBuffer, ctypes.c_int32(128), ctypes.byref(rc))
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        shortNameBuffer = ctypes.c_char_p((" " * (rc.value+1)).encode("ascii"));
-        MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME(ctypes.c_char_p(projString.encode("ascii")), shortNameBuffer, ctypes.c_int32(128), ctypes.byref(rc));
+        shortNameBuffer = ctypes.c_char_p((" " * (rc.value+1)).encode("ascii"))
+        MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME(ctypes.c_char_p(projString.encode("ascii")), shortNameBuffer, ctypes.c_int32(128), ctypes.byref(rc))
       if (rc.value != 0):
-        raise ProjectionException("Could not get short name ctypes.byref(of projection string)");
-      return (shortNameBuffer.value.decode("ascii"));
+        raise ProjectionException("Could not get short name ctypes.byref(of projection string)")
+      return (shortNameBuffer.value.decode("ascii"))
 
     #/ <summary>
     #/ If the projection string is not a valid WKT string, an exception is thrown.
@@ -748,13 +748,13 @@ class MzCartDLL():
     #/ <param name="lat">Latitude coordinate of the projection origin</param>
     @staticmethod
     def ProjectionOrigin(projstring: str) -> Tuple[float,float]:
-      lon = ctypes.c_double() ;
-      lat = ctypes.c_double() ;
-      rc = ctypes.c_int32();
-      MzCartDLL.Wrapper.S_PROJECTIONORIGIN(ctypes.c_char_p(projstring.encode("ascii")), ctypes.byref(lon), ctypes.byref(lat), ctypes.byref(rc));
+      lon = ctypes.c_double() 
+      lat = ctypes.c_double() 
+      rc = ctypes.c_int32()
+      MzCartDLL.Wrapper.S_PROJECTIONORIGIN(ctypes.c_char_p(projstring.encode("ascii")), ctypes.byref(lon), ctypes.byref(lat), ctypes.byref(rc))
       if (rc.value != 0):
-        raise ProjectionException("Could not get origin of projection string. Is projection string valid?");
-      return (lon.value, lat.value);
+        raise ProjectionException("Could not get origin of projection string. Is projection string valid?")
+      return (lon.value, lat.value)
 
     #/ <summary>
     #/ Function that checks if two projecions are identical
@@ -766,8 +766,8 @@ class MzCartDLL():
     def AreIdentical(projstring1: str, projstring2: str) -> bool:
       rc = MzCartDLL.Wrapper.S_AREIDENTICAL(
           ctypes.c_char_p(projstring1.encode("ascii")), 
-          ctypes.c_char_p(projstring2.encode("ascii")));
-      return (rc != 0);
+          ctypes.c_char_p(projstring2.encode("ascii")))
+      return (rc != 0)
 
     #/ <summary>
     #/ Function that converts a map projection string in WKT (PRJ) format to PROJ.4 format.
@@ -784,15 +784,15 @@ class MzCartDLL():
     #/ <param name="datumShiftParameters">Optional array of datum shift parameters, null if not applicable.</param>
     @staticmethod
     def ConvertWkt2Proj4(wktProjectionString: str, datumShiftParameters: np.ndarray) -> str:
-      noOfParams = 0;
+      noOfParams = 0
       if (datumShiftParameters is not None):
-        noOfParams= datumShiftParameters.size;
+        noOfParams= datumShiftParameters.size
 
       if ( not (noOfParams==0 or noOfParams==3 or noOfParams==7) ):
-        raise Exception("Invalid number of datum shift parameters specified. Only 0, 3 or 7 is allowed", "datumShiftParameters");
+        raise Exception("Invalid number of datum shift parameters specified. Only 0, 3 or 7 is allowed", "datumShiftParameters")
 
-      rc = ctypes.c_int32();
-      proj4 = ctypes.c_char_p((" " * 1024).encode("ascii"));
+      rc = ctypes.c_int32()
+      proj4 = ctypes.c_char_p((" " * 1024).encode("ascii"))
 
       MzCartDLL.Wrapper.C_MZC_CONVERT2PROJ4(
           ctypes.c_char_p(wktProjectionString.encode("ascii")), 
@@ -800,21 +800,21 @@ class MzCartDLL():
           ctypes.c_int32(noOfParams), 
           proj4, 
           ctypes.c_int32(rc.value + 1), 
-          ctypes.byref(rc));
+          ctypes.byref(rc))
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
-        proj4 = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"));
+        proj4 = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"))
         MzCartDLL.Wrapper.C_MZC_CONVERT2PROJ4(
             ctypes.c_char_p(wktProjectionString.encode("ascii")), 
             datumShiftParameters.ctypes.data, 
             ctypes.c_int32(noOfParams), 
             proj4, 
             ctypes.c_int32(rc.value + 1), 
-            ctypes.byref(rc));
+            ctypes.byref(rc))
       if (rc != 0):
-        raise ProjectionException("Could not convert Prj string to Proj.4 string");
+        raise ProjectionException("Could not convert Prj string to Proj.4 string")
 
-      return (proj4.value.decode("ascii"));
+      return (proj4.value.decode("ascii"))
 
 
 
@@ -831,13 +831,13 @@ class MzCartDLL():
 # Must be kept synchronized with enum EType in MzProjectionInfo.h
 class AxisType(IntEnum):
   #/ <summary> Type of axis is eastbound</summary>
-  EastAxis = 0;
+  EastAxis = 0
   #/ <summary> Type of axis is northbound</summary>
-  NorthAxis = 1;
+  NorthAxis = 1
   #/ <summary> Type of axis is westbound</summary>
-  WestAxis = 2;
+  WestAxis = 2
   #/ <summary> Type of axis is southbound</summary>
-  SouthAxis = 3;
+  SouthAxis = 3
 
 #/ <summary>
 #/ Type of coordinate systems
@@ -845,23 +845,23 @@ class AxisType(IntEnum):
 # Must be kept synchronized with enum ECoordSysType in MzMapProjection.h
 class CoordSysType(IntEnum):
   #/ <summary> Type of projected coordinate system being undefined</summary>
-  TypeUndefined = 0;
+  TypeUndefined = 0
   #/ <summary> Type of projected coordinate system being east/north oriented</summary>
-  EastNorth = (AxisType.EastAxis << 2) | AxisType.NorthAxis;
+  EastNorth = (AxisType.EastAxis << 2) | AxisType.NorthAxis
   #/ <summary> Type of projected coordinate system being north/east oriented</summary>
-  NorthEast = (AxisType.NorthAxis << 2) | AxisType.EastAxis;
+  NorthEast = (AxisType.NorthAxis << 2) | AxisType.EastAxis
   #/ <summary> Type of projected coordinate system being west/north oriented</summary>
-  WestNorth = (AxisType.WestAxis << 2) | AxisType.NorthAxis;
+  WestNorth = (AxisType.WestAxis << 2) | AxisType.NorthAxis
   #/ <summary> Type of projected coordinate system being north/west oriented</summary>
-  NorthWest = (AxisType.NorthAxis << 2) | AxisType.WestAxis;
+  NorthWest = (AxisType.NorthAxis << 2) | AxisType.WestAxis
   #/ <summary> Type of projected coordinate system being west/south oriented</summary>
-  WestSouth = (AxisType.WestAxis << 2) | AxisType.SouthAxis;
+  WestSouth = (AxisType.WestAxis << 2) | AxisType.SouthAxis
   #/ <summary> Type of projected coordinate system being south/west oriented</summary>
-  SouthWest = (AxisType.SouthAxis << 2) | AxisType.WestAxis;
+  SouthWest = (AxisType.SouthAxis << 2) | AxisType.WestAxis
   #/ <summary> Type of projected coordinate system being east/south oriented</summary>
-  EastSouth = (AxisType.EastAxis << 2) | AxisType.SouthAxis;
+  EastSouth = (AxisType.EastAxis << 2) | AxisType.SouthAxis
   #/ <summary> Type of projected coordinate system being south/east oriented</summary>
-  SouthEast = (AxisType.SouthAxis << 2) | AxisType.EastAxis;
+  SouthEast = (AxisType.SouthAxis << 2) | AxisType.EastAxis
 
 
   #/ <summary>
@@ -888,8 +888,8 @@ class CoordSysType(IntEnum):
 class MapProjection:
 
     def __init__(self, projectionString: str, mzMapProjPointer: ctypes.c_void_p = None, mustFree: bool = False, objectHolder: object = None):
-        self.ProjectionString = projectionString;
-        self._mzMapProjPointer = mzMapProjPointer;
+        self.ProjectionString = projectionString
+        self._mzMapProjPointer = mzMapProjPointer
         #/ <summary>
         #/ Reference to object that actually holds the unmanaged
         #/ data, and that will free unmanaged ressources.
@@ -897,15 +897,15 @@ class MapProjection:
         #/ of the holding object and thereby the release of 
         #/ the MzMapProjection object that this object relies on.
         #/ </summary>
-        self._objectHolder = objectHolder;
-        self._mustFree = mustFree;
+        self._objectHolder = objectHolder
+        self._mustFree = mustFree
 
         if (self._mzMapProjPointer is None):
-            self._mzMapProjPointer = MzCartDLL.MzMapProjCreate(projectionString);
+            self._mzMapProjPointer = MzCartDLL.MzMapProjCreate(projectionString)
         if (self.ProjectionString is None):
-            self.ProjectionString = MzCartDLL.MzMapProjProjectionString(self._mzMapProjPointer);
+            self.ProjectionString = MzCartDLL.MzMapProjProjectionString(self._mzMapProjPointer)
 
-        self.Name = MzCartDLL.MzMapProjName(self._mzMapProjPointer);
+        self.Name = MzCartDLL.MzMapProjName(self._mzMapProjPointer)
 
     #/ <summary>
     #/ Create and initialize a mapprojection with the specifed projection string.
@@ -917,11 +917,11 @@ class MapProjection:
     @staticmethod
     def Create(projectionString: str, validateProjectionString: bool = True):
       if (projectionString is None or projectionString == ""):
-        raise Exception("Projection string cannot be null or empty", "projectionString");
+        raise Exception("Projection string cannot be null or empty", "projectionString")
       if (validateProjectionString):
         if (not MapProjection.IsValid(projectionString)):
-          raise Exception("Not a valid projection string", "projectionString");
-      return MapProjection(projectionString, mustFree=True);
+          raise Exception("Not a valid projection string", "projectionString")
+      return MapProjection(projectionString, mustFree=True)
 
     #/ <summary>
     #/ Creates a map-projection from a pointer to a map-projection object that
@@ -946,8 +946,8 @@ class MapProjection:
       # Release ressources on the unmanaged side when garbage collected
       if (self._mustFree):
         if (self._mzMapProjPointer.value != None):
-          MzCartDLL.MzMapProjDestroy(self._mzMapProjPointer);
-      _mzMapProjPointer = ctypes.c_void_p();
+          MzCartDLL.MzMapProjDestroy(self._mzMapProjPointer)
+      _mzMapProjPointer = ctypes.c_void_p()
 
     ##/ <summary>
     ##/ The short name of a projection. 
@@ -974,7 +974,7 @@ class MapProjection:
     #/ <param name="east">Easting</param>
     #/ <param name="north">Northing</param>
     def Geo2Proj(self, lon: float, lat: float) -> Tuple[float,float]:
-      return MzCartDLL.MzMapProjGeo2Proj(self._mzMapProjPointer, lon, lat);
+      return MzCartDLL.MzMapProjGeo2Proj(self._mzMapProjPointer, lon, lat)
 
     #/ <summary>
     #/ Convert coordinates from projection coordinates to geographical coordinates 
@@ -984,7 +984,7 @@ class MapProjection:
     #/ <param name="lon">Longitude</param>
     #/ <param name="lat">Latitude</param>
     def Proj2Geo(self, east: float, north: float) -> Tuple[float,float]:
-      return MzCartDLL.MzMapProjProj2Geo(self._mzMapProjPointer, east, north);
+      return MzCartDLL.MzMapProjProj2Geo(self._mzMapProjPointer, east, north)
 
     #/ <summary>
     #/ Get the geographical origin of the map projection
@@ -992,7 +992,7 @@ class MapProjection:
     #/ <param name="lon">Longitude</param>
     #/ <param name="lat">Latitude</param>
     def GetOrigin(self) -> Tuple[float,float]:
-      return MzCartDLL.MzMapProjGetOrigin(self._mzMapProjPointer);
+      return MzCartDLL.MzMapProjGetOrigin(self._mzMapProjPointer)
 
     #/ <summary>
     #/ Get the convergence (orientation towards true north) at the given geographical location.
@@ -1004,7 +1004,7 @@ class MapProjection:
     #/ <param name="lon">Longitude</param>
     #/ <param name="lat">Latitude</param>
     def GetConvergence(self, lon: float, lat: float) -> float:
-      return (MzCartDLL.MzMapProjGetConvergence(self._mzMapProjPointer, lon, lat));
+      return (MzCartDLL.MzMapProjGetConvergence(self._mzMapProjPointer, lon, lat))
 
     #/ <summary>
     #/ Function that returns the default area in map projection coordinates of the projection.
@@ -1019,7 +1019,7 @@ class MapProjection:
     #/ <param name="x1">the x-coordinate of the upper righthand corner</param>
     #/ <param name="y1">the y-coordinate of the upper righthand corner</param>
     def GetDefaultArea(self) -> Tuple[float,float,float,float]:
-      return MzCartDLL.GetDefaultArea(self._mzMapProjPointer);
+      return MzCartDLL.GetDefaultArea(self._mzMapProjPointer)
 
     #/ <summary>
     #/ Convert coordinates from geographical coordinates and height to 3D Euclidean coordinates.
@@ -1034,7 +1034,7 @@ class MapProjection:
     #/ <param name="y">Eucledian y coordinate</param>
     #/ <param name="z">Eucledian z coordinate</param>
     def Geo2Xyz(self, lon: float, lat: float, height: float) -> Tuple[float,float,float]:
-      return MzCartDLL.MzMapProjGeo2Xyz(self._mzMapProjPointer, lon, lat, height);
+      return MzCartDLL.MzMapProjGeo2Xyz(self._mzMapProjPointer, lon, lat, height)
 
     #/ <summary>
     #/ Convert coordinates from Euclidean 3D coordinates to geographical coordinates and height.
@@ -1049,7 +1049,7 @@ class MapProjection:
     #/ <param name="lat">Latitude</param>
     #/ <param name="height">Height over ellipsoid</param>
     def Xyz2Geo(self, x: float, y: float, z: float) -> Tuple[float,float,float]:
-      return MzCartDLL.MzMapProjXyz2Geo(self._mzMapProjPointer, x, y, z);
+      return MzCartDLL.MzMapProjXyz2Geo(self._mzMapProjPointer, x, y, z)
 
     #/ <summary>
     #/ Convert a rotation from map projection north
@@ -1066,9 +1066,9 @@ class MapProjection:
     #/ <param name="rotation">Rotation clock-wise from map projection north</param>
     #/ <returns>Rotation clock-wise from true north</returns>
     def Proj2GeoRotation(self, east: float, north: float, rotation: float) -> float:
-      lon, lat = self.Proj2Geo(east, north);
-      convergence = self.GetConvergence(lon, lat);
-      return rotation + convergence;
+      lon, lat = self.Proj2Geo(east, north)
+      convergence = self.GetConvergence(lon, lat)
+      return rotation + convergence
 
     #/ <summary>
     #/ Convert a rotation from true north
@@ -1085,8 +1085,8 @@ class MapProjection:
     #/ <param name="rotation">Rotation clock-wise from true north</param>
     #/ <returns>Rotation clock-wise from map projection north</returns>
     def Geo2ProjRotation(self, lon: float, lat: float, rotation: float) -> float:
-      convergence = self.GetConvergence(lon, lat);
-      return rotation - convergence;
+      convergence = self.GetConvergence(lon, lat)
+      return rotation - convergence
 
     ################################/
     #region static methods
@@ -1099,7 +1099,7 @@ class MapProjection:
     #/ <param name="projectionString">Name of map projection, WKT string or a projection abbreviation</param>
     @staticmethod
     def IsValid(projectionString: str) -> bool:
-      return MzCartDLL.IsValid(projectionString);
+      return MzCartDLL.IsValid(projectionString)
 #      # The C += 1 IsValid method is fairly expensive, so buffer values for future use.
 #      lock (_validProjectionStrings)
 #        bool isValid;
@@ -1119,7 +1119,7 @@ class MapProjection:
     #/ <param name="projectionString">Name of map projection, WKT string or a projection abbreviation</param>
     @staticmethod
     def HasDatum(projectionString: str) -> bool:
-      return (MzCartDLL.HasDatum(projectionString));
+      return (MzCartDLL.HasDatum(projectionString))
 
     #/ <summary>
     #/ Returns true if the <paramref name="projectionString"/> defines a local 
@@ -1131,7 +1131,7 @@ class MapProjection:
     #/ <param name="projectionString">Name of map projection, WKT string or a projection abbreviation</param>
     @staticmethod
     def IsLocal(projectionString: str) -> bool:
-      return (MzCartDLL.IsLocal(projectionString));
+      return (MzCartDLL.IsLocal(projectionString))
 
     #/ <summary>
     #/ Returns true if the <paramref name="projectionString"/> projection is "LONG/LAT"
@@ -1143,7 +1143,7 @@ class MapProjection:
     #/ <param name="projectionString">Name of map projection, WKT string or a projection abbreviation</param>
     @staticmethod
     def IsLongLat(projectionString: str) -> bool:
-      return (MzCartDLL.IsLongLat(projectionString));
+      return (MzCartDLL.IsLongLat(projectionString))
 
     #/ <summary>
     #/ Returns true if the <paramref name="projectionString"/> projection is georeferenced,
@@ -1152,7 +1152,7 @@ class MapProjection:
     #/ <param name="projectionString">Name of map projection, WKT string or a projection abbreviation</param>
     @staticmethod
     def IsGeoreferenced(projectionString: str) -> bool:
-      return (MzCartDLL.IsGeoreferenced(projectionString));
+      return (MzCartDLL.IsGeoreferenced(projectionString))
 
     #/ <summary>
     #/ Returns true if the <paramref name="projectionString"/> projection is a geographical projection, i.e. based
@@ -1161,7 +1161,7 @@ class MapProjection:
     #/ <param name="projectionString">Name of map projection, WKT string or a projection abbreviation</param>
     @staticmethod
     def IsGeographical(projectionString: str) -> bool:
-      return (MzCartDLL.IsGeographical(projectionString));
+      return (MzCartDLL.IsGeographical(projectionString))
 
 
     #/ <summary>
@@ -1171,7 +1171,7 @@ class MapProjection:
     #/ <returns>UTM zone WKT string</returns>
     @staticmethod
     def Longitude2UtmZone(lon: float) -> str:
-      return (MzCartDLL.Longitude2UtmZone(lon));
+      return (MzCartDLL.Longitude2UtmZone(lon))
 
     #/ <summary>
     #/ Get the short name out of a WKT projetion string. 
@@ -1186,7 +1186,7 @@ class MapProjection:
     #/ <param name="projString">A WKT projection string</param>
     @staticmethod
     def ProjectionShortName(projString: str) -> str:
-      return (MzCartDLL.ProjectionShortName(projString));
+      return (MzCartDLL.ProjectionShortName(projString))
 
     #/ <summary>
     #/ Returns the geographical origin of the projection defined by the
@@ -1204,19 +1204,19 @@ class MapProjection:
     @staticmethod
     def ProjectionOrigin(projstring: str, validateProjectionString: bool = True) -> Tuple[float,float]:
       if (validateProjectionString and not MzCartDLL.IsValid(projstring)):
-        raise Exception("Projection string is not a valid WKT projection string", "projstring");
-      return MzCartDLL.ProjectionOrigin(projstring);
+        raise Exception("Projection string is not a valid WKT projection string", "projstring")
+      return MzCartDLL.ProjectionOrigin(projstring)
 
     #/ <summary>
     #/ Returns the Google Map projection string
     #/ </summary>
     @staticmethod
     def GoogleMapProjectionString() -> str:
-        return MzCartDLL.GoogleMapProjectionString();
+        return MzCartDLL.GoogleMapProjectionString()
 
     @staticmethod
     def LocalCoordinatesProjectionString() -> str:
-        return "NON-UTM";
+        return "NON-UTM"
 
 
     #/ <summary>
@@ -1238,7 +1238,7 @@ class MapProjection:
     #/ <returns></returns>
     @staticmethod
     def AreIdentical(projstring1: str, projstring2: str) -> bool:
-      return MzCartDLL.AreIdentical(projstring1, projstring2);
+      return MzCartDLL.AreIdentical(projstring1, projstring2)
 
     #/ <summary>
     #/ Function that returns the coordinate system type.
@@ -1252,8 +1252,8 @@ class MapProjection:
     #/ <returns></returns>
     @staticmethod
     def GetCoordSysType(projstring: str) -> CoordSysType:
-        rc = MzCartDLL.Wrapper.S_GETCOORDSYSTYPE(ctypes.c_char_p(projstring.encode("ascii")));
-        return (CoordSysType(rc));
+        rc = MzCartDLL.Wrapper.S_GETCOORDSYSTYPE(ctypes.c_char_p(projstring.encode("ascii")))
+        return (CoordSysType(rc))
     #endregion
 
 
@@ -1319,50 +1319,50 @@ class Cartography:
                  validateProjectionString: bool = True,
                  ):
 
-        self._mzCartPointer = ctypes.c_void_p(0);
+        self._mzCartPointer = ctypes.c_void_p(0)
 
         if (validateProjectionString):
           if (not MapProjection.IsValid(projectionString)):
-            raise Exception("Not a valid projection string", "projectionString");
+            raise Exception("Not a valid projection string", "projectionString")
 
         if (lonOrigin is None):
-            lonOrigin, latOrigin = MapProjection.ProjectionOrigin(projectionString, False);
-        self.LonOrigin        = lonOrigin;
-        self.LatOrigin        = latOrigin;
-        self.Orientation      = orientation;
+            lonOrigin, latOrigin = MapProjection.ProjectionOrigin(projectionString, False)
+        self.LonOrigin        = lonOrigin
+        self.LatOrigin        = latOrigin
+        self.Orientation      = orientation
 
-        self._mzCartPointer = MzCartDLL.MzCartCreate(projectionString, self.LonOrigin, self.LatOrigin, self.Orientation);
+        self._mzCartPointer = MzCartDLL.MzCartCreate(projectionString, self.LonOrigin, self.LatOrigin, self.Orientation)
 
         # Override - to expand abbreviations
         self.ProjectionString = MzCartDLL.MzCartProjectionString(self._mzCartPointer)
-        self.ProjectionName = MzCartDLL.MzCartProjectionName(self._mzCartPointer);
+        self.ProjectionName = MzCartDLL.MzCartProjectionName(self._mzCartPointer)
 
         if (eastOrigin is None):
-            self.__InitProjOrigin();
+            self.__InitProjOrigin()
         else:
-            self.EastOrigin       = eastOrigin;
-            self.NorthOrigin      = northOrigin;
-            self.OrientationProj  = orientationProj;
+            self.EastOrigin       = eastOrigin
+            self.NorthOrigin      = northOrigin
+            self.OrientationProj  = orientationProj
 
-        self._myProjection = None;
+        self._myProjection = None
 
 
     def __InitProjOrigin(self):
       if (MapProjection.IsGeographical(self.ProjectionString)):
-        self.EastOrigin = self.LonOrigin;
-        self.NorthOrigin = self.LatOrigin;
-        self.OrientationProj = self.Orientation;
+        self.EastOrigin = self.LonOrigin
+        self.NorthOrigin = self.LatOrigin
+        self.OrientationProj = self.Orientation
       else:
-        eastOrigin, northOrigin = self.Geo2Proj(self.LonOrigin, self.LatOrigin);
-        self.EastOrigin  = eastOrigin;
-        self.NorthOrigin = northOrigin;
-        self.OrientationProj = MzCartDLL.MzCartProjectionNorth(self._mzCartPointer);
+        eastOrigin, northOrigin = self.Geo2Proj(self.LonOrigin, self.LatOrigin)
+        self.EastOrigin  = eastOrigin
+        self.NorthOrigin = northOrigin
+        self.OrientationProj = MzCartDLL.MzCartProjectionNorth(self._mzCartPointer)
 
     #/ <summary>
     #/ Release ressources on the unmanaged side when garbage collected.
     #/ </summary>
     def __del__(self):
-      self.Dispose();
+      self.Dispose()
 
     #/ <summary>
     #/ Release ressources on the unmanaged side.
@@ -1376,19 +1376,19 @@ class Cartography:
     def Dispose(self):
       # Release ressources on the unmanaged side
       if (self._mzCartPointer.value != None):
-        MzCartDLL.MzCartDestroy(self._mzCartPointer);
+        MzCartDLL.MzCartDestroy(self._mzCartPointer)
         # Prevent subsequent finalization of this object. This is not needed 
         # because managed and unmanaged resources have been explicitly released
         #GC.SuppressFinalize(this);
-      self._mzCartPointer = ctypes.c_void_p();
+      self._mzCartPointer = ctypes.c_void_p()
 
     #/ <summary>
     #/ Get the map projection that this cartography object uses.
     #/ </summary>
     def Projection(self):
         if (self._myProjection is None):
-          self._myProjection = MapProjection(None, MzCartDLL.MzCartGetMapProjection(self._mzCartPointer), objectHolder=self);
-        return (self._myProjection);
+          self._myProjection = MapProjection(None, MzCartDLL.MzCartGetMapProjection(self._mzCartPointer), objectHolder=self)
+        return (self._myProjection)
 
     #/ <summary>
     #/ Returns the angle between true north and a line parallel to the 
@@ -1400,7 +1400,7 @@ class Cartography:
     #/ <param name="x">Local grid x coordinate</param>
     #/ <param name="y">Local grid y coordinate</param>
     def GetTrueNorth(self, x: float, y: float) -> float:
-      return (MzCartDLL.MzCartTrueNorth(self._mzCartPointer, x, y));
+      return (MzCartDLL.MzCartTrueNorth(self._mzCartPointer, x, y))
 
     #/ <summary>
     #/ Convert coordinates from geographical coordinates to projection coordinates
@@ -1410,7 +1410,7 @@ class Cartography:
     #/ <param name="east">Easting</param>
     #/ <param name="north">Northing</param>
     def Geo2Proj(self, lon: float, lat: float) -> Tuple[float,float]:
-      return MzCartDLL.MzCartGeo2Proj(self._mzCartPointer, lon, lat);
+      return MzCartDLL.MzCartGeo2Proj(self._mzCartPointer, lon, lat)
 
     #/ <summary>
     #/ Convert coordinates from projection coordinates to geographical coordinates 
@@ -1420,7 +1420,7 @@ class Cartography:
     #/ <param name="lon">Longitude</param>
     #/ <param name="lat">Latitude</param>
     def Proj2Geo(self, east: float, north: float) -> Tuple[float,float]:
-      return MzCartDLL.MzCartProj2Geo(self._mzCartPointer, east, north);
+      return MzCartDLL.MzCartProj2Geo(self._mzCartPointer, east, north)
 
     #/ <summary>
     #/ Convert coordinates from geographical coordinates to local grid x-y coordinates
@@ -1430,7 +1430,7 @@ class Cartography:
     #/ <param name="x">Local grid x coordinate</param>
     #/ <param name="y">Local grid y coordinate</param>
     def Geo2Xy(self, lon: float, lat: float) -> Tuple[float,float]:
-      return MzCartDLL.MzCartGeo2Xy(self._mzCartPointer, lon, lat);
+      return MzCartDLL.MzCartGeo2Xy(self._mzCartPointer, lon, lat)
 
     #/ <summary>
     #/ Convert coordinates from local grid x-y coordinates to geographical coordinates 
@@ -1440,7 +1440,7 @@ class Cartography:
     #/ <param name="lon">Longitude</param>
     #/ <param name="lat">Latitude</param>
     def Xy2Geo(self, x: float, y: float) -> Tuple[float,float]:
-      return MzCartDLL.MzCartXy2Geo(self._mzCartPointer, x, y);
+      return MzCartDLL.MzCartXy2Geo(self._mzCartPointer, x, y)
 
     #/ <summary>
     #/ Convert coordinates from projetion coordinates to local grid x-y coordinates
@@ -1450,7 +1450,7 @@ class Cartography:
     #/ <param name="x">Local grid x coordinate</param>
     #/ <param name="y">Local grid y coordinate</param>
     def Proj2Xy(self, east: float, north: float) -> Tuple[float,float]:
-      return MzCartDLL.MzCartProj2Xy(self._mzCartPointer, east, north);
+      return MzCartDLL.MzCartProj2Xy(self._mzCartPointer, east, north)
 
     #/ <summary>
     #/ Convert coordinates from local grid x-y coordinates to projection coordinates 
@@ -1460,7 +1460,7 @@ class Cartography:
     #/ <param name="east">Easting</param>
     #/ <param name="north">Northing</param>
     def Xy2Proj(self, x: float, y: float) -> Tuple[float,float]:
-      return MzCartDLL.MzCartXy2Proj(self._mzCartPointer, x, y);
+      return MzCartDLL.MzCartXy2Proj(self._mzCartPointer, x, y)
 
     #region Static factory methods
     
@@ -1486,8 +1486,8 @@ class Cartography:
       if (validateProjectionString):
         if (not MapProjection.IsValid(projectionString)):
           raise ValueError("Not a valid projection string")
-      cart = Cartography(projectionString, lonOrigin, latOrigin, orientation, validateProjectionString=False);
-      return cart;
+      cart = Cartography(projectionString, lonOrigin, latOrigin, orientation, validateProjectionString=False)
+      return cart
 
     #/ <summary>
     #/ Create and initialize a cartography object using the
@@ -1510,10 +1510,10 @@ class Cartography:
       if (validateProjectionString):
         if (not MapProjection.IsValid(projectionString)):
           raise ValueError("Not a valid projection string")
-      proj = MapProjection.Create(projectionString, validateProjectionString);
-      lonOrigin, latOrigin = proj.Proj2Geo(east, north);
-      orientationGeo = proj.Proj2GeoRotation(east, north, orientationProj);
-      return Cartography(projectionString, lonOrigin, latOrigin, orientationGeo, east, north, orientationProj, validateProjectionString=False);
+      proj = MapProjection.Create(projectionString, validateProjectionString)
+      lonOrigin, latOrigin = proj.Proj2Geo(east, north)
+      orientationGeo = proj.Proj2GeoRotation(east, north, orientationProj)
+      return Cartography(projectionString, lonOrigin, latOrigin, orientationGeo, east, north, orientationProj, validateProjectionString=False)
 
 
 #/ <summary>
@@ -1521,9 +1521,9 @@ class Cartography:
 #/ </summary>
 class ReprojectorSide(IntEnum):
   #/ <summary> Source side </summary>
-  Source = 0;
+  Source = 0
   #/ <summary> Target side </summary>
-  Target = 1;
+  Target = 1
 
 #/ <summary>
 #/ Type of conversion
@@ -1531,22 +1531,22 @@ class ReprojectorSide(IntEnum):
 # Must be kept synchronized with enum ETypeOfConversion in MzDatumConverter.h
 class ReprojectorConversionType(IntEnum):
   #/ <summary> Convert from source projection coordinates to target projection coordinates</summary>
-  Proj2Proj = 0;
+  Proj2Proj = 0
   #/ <summary> Convert from source projection coordinates to target geographic coordinates</summary>
-  Proj2Geo = 1;
+  Proj2Geo = 1
   #/ <summary> Convert from source geographic coordinates to target projection coordinates</summary>
-  Geo2Proj = 2;
+  Geo2Proj = 2
   #/ <summary> Convert from source geographic coordinates to target geographic coordinates</summary>
-  Geo2Geo = 3;
+  Geo2Geo = 3
 
 # Must be kept synchronized with enum ETypeOfDatumShift in MzDatumConverter.h
 class ReprojectorDatumShiftType(IntEnum):
   #/ <summary> No datum shift is to be applied </summary>
-  NoDatumShift = 0;
+  NoDatumShift = 0
   #/ <summary> Using 3 parameter datum shift </summary>
-  Param3 = 1;
+  Param3 = 1
   #/ <summary> Using 7 parameter datum shift </summary>
-  Param7 = 2;
+  Param7 = 2
     
 
 
@@ -1633,25 +1633,25 @@ class Reprojector:
     #/ Then the user must beforehand check that the projection is valid by calling <see cref="MapProjection.IsValid"/>. </param>
     def __init__(self, projectionStringSource: str, projectionStringTarget: str, validateProjectionStrings: bool = True):
       if (projectionStringSource is None or projectionStringSource == ""):
-        raise Exception("Projection string cannot be null or empty", "projectionStringSource");
+        raise Exception("Projection string cannot be null or empty", "projectionStringSource")
       if (projectionStringTarget is None or projectionStringTarget == ""):
-        raise Exception("Projection string cannot be null or empty", "projectionStringTarget");
+        raise Exception("Projection string cannot be null or empty", "projectionStringTarget")
       if (validateProjectionStrings):
         if (not MapProjection.IsValid(projectionStringSource)):
-          raise Exception("Not a valid projection string", "projectionStringSource");
+          raise Exception("Not a valid projection string", "projectionStringSource")
         if (not MapProjection.IsValid(projectionStringTarget)):
-          raise Exception("Not a valid projection string", "projectionStringTarget");
-      self.ProjectionStringSource = projectionStringSource;
-      self.ProjectionStringTarget = projectionStringTarget;
-      self._mzConverterPointer = MzCartDLL.MzConverterCreate(projectionStringSource, projectionStringTarget);
-      self._typeOfConversion = ReprojectorConversionType.Proj2Proj;
+          raise Exception("Not a valid projection string", "projectionStringTarget")
+      self.ProjectionStringSource = projectionStringSource
+      self.ProjectionStringTarget = projectionStringTarget
+      self._mzConverterPointer = MzCartDLL.MzConverterCreate(projectionStringSource, projectionStringTarget)
+      self._typeOfConversion = ReprojectorConversionType.Proj2Proj
 
 
     #/ <summary>
     #/ Release ressources on the unmanaged side when garbage collected.
     #/ </summary>
     def __del__(self):
-      self.Dispose();
+      self.Dispose()
 
     #/ <summary>
     #/ Release ressources on the unmanaged side.
@@ -1662,22 +1662,22 @@ class Reprojector:
     #/ </remarks>
     def Dispose(self):
       # Release ressources on the unmanaged side
-      if (not self._mzConverterPointer is None):
-        MzCartDLL.MzConverterDestroy(self._mzConverterPointer);
+      if (self._mzConverterPointer is not None):
+        MzCartDLL.MzConverterDestroy(self._mzConverterPointer)
         # Prevent subsequent finalization of this object. This is not needed 
         # because managed and unmanaged resources have been explicitly released
         #GC.SuppressFinalize(this);
-      self._mzConverterPointer = ctypes.c_void_p();
+      self._mzConverterPointer = ctypes.c_void_p()
 
     def __getConversionType(self):
         return self._typeOfConversion
     def __setConversionType(self, value):
-        self._typeOfConversion = value; 
-        MzCartDLL.MzConverterSetConversionType(self._mzConverterPointer, self._typeOfConversion);
+        self._typeOfConversion = value 
+        MzCartDLL.MzConverterSetConversionType(self._mzConverterPointer, self._typeOfConversion)
     #/ <summary>
     #/ Type of conversion. Default is <see cref="ConversionType.Proj2Proj"/>.
     #/ </summary>
-    TypeOfConversion = property(__getConversionType, __setConversionType);
+    TypeOfConversion = property(__getConversionType, __setConversionType)
 
     #/ <summary>
     #/ Invert the order of the conversion, by swapping the source and the target map 
@@ -1689,23 +1689,23 @@ class Reprojector:
     #/ </para>
     #/ </summary>
     def InvertOrder(self):
-      MzCartDLL.MzConverterInvertOrder(self._mzConverterPointer);
+      MzCartDLL.MzConverterInvertOrder(self._mzConverterPointer)
       # Invert projection strings
       tmp = self.ProjectionStringSource
       _projectionStringSource = self.ProjectionStringTarget
       _projectionStringTarget = tmp
       # Also invert conversion type for the "non-symmetric" cases, as CMzDatumConverter class does
       if (self._typeOfConversion == ReprojectorConversionType.Proj2Geo):
-        self._typeOfConversion = ReprojectorConversionType.Geo2Proj;
+        self._typeOfConversion = ReprojectorConversionType.Geo2Proj
       elif (self._typeOfConversion == ReprojectorConversionType.Geo2Proj):
-        self._typeOfConversion = ReprojectorConversionType.Proj2Geo;
+        self._typeOfConversion = ReprojectorConversionType.Proj2Geo
 
     def __getDoDatumConversions(self):
         # The method in MZCart is GetBypassXYZ(), and the method to bypass is BypassXYZ().
         # It is not possible to have an BypassXYZ get-property and method at the same time,
         # so this is instead called DoDatumConversion with the inverted bolean value,
         # and then the BypassXYZ method is kept.
-        return not MzCartDLL.MzConverterGetBypassXYZ(self._mzConverterPointer);
+        return not MzCartDLL.MzConverterGetBypassXYZ(self._mzConverterPointer)
 
     #/ <summary>
     #/ Flag informing whether datum conversions are enabled or disabled.
@@ -1729,13 +1729,13 @@ class Reprojector:
     #/ Explicitly bypass datum conversions, setting the <see cref="DoDatumConversions"/> to false.
     #/ </summary>
     def BypassDatumConversions(self):
-      MzCartDLL.MzConverterBypassXYZ(self._mzConverterPointer);
+      MzCartDLL.MzConverterBypassXYZ(self._mzConverterPointer)
 
     #/ <summary>
     #/ Reset the <see cref="DoDatumConversions"/> flag to its default value.
     #/ </summary>
     def ResetDoDatumConversions(self):
-      MzCartDLL.MzConverterResetBypassXYZ(self._mzConverterPointer);
+      MzCartDLL.MzConverterResetBypassXYZ(self._mzConverterPointer)
 
     #/ <summary>
     #/ Disable datum shift calculations for either the source or the target.
@@ -1745,7 +1745,7 @@ class Reprojector:
     #/ </summary>
     #/ <param name="side">Side to apply to, source or target</param>
     def SetNoDatumShift(self, side: ReprojectorSide):
-      self.SetDatumShift(ReprojectorDatumShiftType.NoDatumShift, None, side == ReprojectorSide.Source);
+      self.SetDatumShift(ReprojectorDatumShiftType.NoDatumShift, None, side == ReprojectorSide.Source)
 
     #/ <summary>
     #/ Sets the 3-parameter datum shift parameters of either the source or the target map projection.
@@ -1758,8 +1758,8 @@ class Reprojector:
     #/ <param name="dy">dy in meters</param>
     #/ <param name="dz">dz in meters</param>
     def SetDatumShift3Parameters(self, side: ReprojectorSide, dx: float, dy: float, dz: float):
-      datumParams = np.array([dx, dy, dz], dtype=np.float64);
-      self.SetDatumShift(ReprojectorDatumShiftType.Param3, datumParams, side == ReprojectorSide.Source);
+      datumParams = np.array([dx, dy, dz], dtype=np.float64)
+      self.SetDatumShift(ReprojectorDatumShiftType.Param3, datumParams, side == ReprojectorSide.Source)
 
     #/ <summary>
     #/ Sets the 7-parameter datum shift parameters of either the source or the target map projection.
@@ -1773,8 +1773,8 @@ class Reprojector:
     #/ <param name="rz">Rz in radians. Be aware: Often rotation parameters are given in arcsec</param>
     #/ <param name="sc">Scale difference, dimensionless. Be aware: Often the scale difference is given in ppm</param>
     def SetDatumShift7Parameters(self, side: ReprojectorSide, dx: float, dy: float, dz: float, rx: float, ry: float, rz: float, sc: float):
-      datumParams = np.array([dx, dy, dz, rx, ry, rz, sc], dtype=np.float64);
-      self.SetDatumShift(ReprojectorDatumShiftType.Param7, datumParams, side == ReprojectorSide.Source);
+      datumParams = np.array([dx, dy, dz, rx, ry, rz, sc], dtype=np.float64)
+      self.SetDatumShift(ReprojectorDatumShiftType.Param7, datumParams, side == ReprojectorSide.Source)
 
     #/ <summary>
     #/ Functions that sets the datum shift parameters of either the source or the target map projection.
@@ -1782,47 +1782,47 @@ class Reprojector:
     def SetDatumShift(self, typeOfDatumShift: ReprojectorDatumShiftType, datumParams: np.ndarray, source: bool):
       if   typeOfDatumShift is ReprojectorDatumShiftType.NoDatumShift:
           datumParamsdata = ctypes.c_void_p(0)
-          pass;
+          pass
       elif typeOfDatumShift is ReprojectorDatumShiftType.Param3:
           if (datumParams is None):
             raise TypeError("datumParams is None")
           if (datumParams.size < 3):
-            raise Exception("Length of datum shift parameters must be at least three");
+            raise Exception("Length of datum shift parameters must be at least three")
           datumParamsdata = datumParams.ctypes.data
       elif typeOfDatumShift is ReprojectorDatumShiftType.Param7:
           if (datumParams is None):
             raise TypeError("datumParams is None")
           if (datumParams.size < 7):
-            raise Exception("Length of datum shift parameters must be at least seven");
+            raise Exception("Length of datum shift parameters must be at least seven")
           datumParamsdata = datumParams.ctypes.data
       else:
           raise IndexError("typeOfDatumShift")
-      MzCartDLL.Wrapper.C_MZDC_SETDATUMSHIFT(self._mzConverterPointer, ctypes.c_int32(typeOfDatumShift), datumParamsdata, ctypes.c_int32(1 if source else 0));
+      MzCartDLL.Wrapper.C_MZDC_SETDATUMSHIFT(self._mzConverterPointer, ctypes.c_int32(typeOfDatumShift), datumParamsdata, ctypes.c_int32(1 if source else 0))
 
 
     #/ <summary>
     #/ Converts a point (x, y) from the source map projection to the target map projection.
     #/ </summary>
     def ConvertXY(self, x: float, y: float) -> Tuple[float,float]:
-      return MzCartDLL.MzConverterConvertXY(self._mzConverterPointer, x, y);
+      return MzCartDLL.MzConverterConvertXY(self._mzConverterPointer, x, y)
 
     #/ <summary>
     #/ Inverse conversion, converts a point (x, y) from the target map projection to the source map projection.
     #/ </summary>
     def InvConvertXY(self, x: float, y: float) -> Tuple[float,float]:
-      return MzCartDLL.MzConverterInvConvertXY(self._mzConverterPointer, x, y);
+      return MzCartDLL.MzConverterInvConvertXY(self._mzConverterPointer, x, y)
 
     #/ <summary>
     #/ Converts a point (x, y, h) from the source map projection to the target map projection.
     #/ </summary>
     def ConvertXYH(self, x: float, y: float, h: float) -> Tuple[float,float,float]:
-      return MzCartDLL.MzConverterConvertXYH(self._mzConverterPointer, x, y, h);
+      return MzCartDLL.MzConverterConvertXYH(self._mzConverterPointer, x, y, h)
 
     #/ <summary>
     #/ Inverse conversion, converts a point (x, y, h) from the target map projection to the source map projection.
     #/ </summary>
     def InvConvertXYH(self, x: float, y: float, h: float) -> Tuple[float,float,float]:
-      return MzCartDLL.MzConverterInvConvertXYH(self._mzConverterPointer, x, y, h);
+      return MzCartDLL.MzConverterInvConvertXYH(self._mzConverterPointer, x, y, h)
 
     #/ <summary>
     #/ Converts a point in Euclidean coordinates (x, y, z) relative to the source datum center to 
@@ -1837,7 +1837,7 @@ class Reprojector:
     #/ <param name="y">Euclidean y coordinate</param>
     #/ <param name="z">Euclidean z coordinate</param>
     def DatumShift(self, x: float, y: float, z: float) -> Tuple[float,float,float]:
-      return MzCartDLL.MzConverterDatumShift(self._mzConverterPointer, x, y, z);
+      return MzCartDLL.MzConverterDatumShift(self._mzConverterPointer, x, y, z)
 
     #/ <summary>
     #/ Inverse conversion, converts a point in Euclidean coordinates (x, y, z) relative to the 
@@ -1852,4 +1852,4 @@ class Reprojector:
     #/ <param name="y">Euclidean y coordinate</param>
     #/ <param name="z">Euclidean z coordinate</param>
     def InvDatumShift(self, x: float, y: float, z: float) -> Tuple[float,float,float]:
-      return MzCartDLL.MzConverterInvDatumShift(self._mzConverterPointer, x, y, z);
+      return MzCartDLL.MzConverterInvDatumShift(self._mzConverterPointer, x, y, z)
