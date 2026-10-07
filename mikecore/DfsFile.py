@@ -5,7 +5,7 @@ import ctypes
 import numpy as np
 from mikecore.eum import *
 from mikecore.DfsDLL import DfsDLL
-from typing import Union
+from typing import Optional, Union
 from mikecore.eum import eumQuantity
 
 class NotSupportedException(Exception):
@@ -890,7 +890,7 @@ class DfsFile:
         self.fpItemNumber += 1;
 
 
-    def ReadItemTimeStepNext(self, itemData: DfsItemData = None, reshape: bool = False) -> DfsItemData:
+    def ReadItemTimeStepNext(self, itemData: Optional[DfsItemData] = None, reshape: bool = False) -> Optional[DfsItemData]:
         """
         Reads the next dynamic item-timestep. First time called it returns the first
         timestep of the first item. It cycles through each timestep, and each 
@@ -978,7 +978,7 @@ class DfsFile:
         if (itemNumber <= 0 or itemNumber > itemInfoCount):
             raise Exception("itemNumber","Must be within [1,NumberOfItems].");
         if (timestepIndex < 0 or timestepIndex >= self.FileInfo.TimeAxis.NumberOfTimeSteps):
-            raise Exception("timestepIndex", "Must be within [0," + (self.FileInfo.TimeAxis.NumberOfTimeSteps-1) + "].");
+            raise Exception("timestepIndex", "Must be within [0," + str(self.FileInfo.TimeAxis.NumberOfTimeSteps-1) + "].");
 
         # Position file pointer
         self.__FpFindItemTimeStep(itemNumber, timestepIndex);
@@ -1027,7 +1027,7 @@ class DfsFile:
         if (itemNumber <= 0 or itemNumber > itemInfoCount):
             raise Exception("itemNumber must be within [1,NumberOfItems].");
         if (timestepIndex < 0 or timestepIndex > self.FileInfo.TimeAxis.NumberOfTimeSteps):
-            raise Exception("timestepIndex must be within [0," + (self.FileInfo.TimeAxis.NumberOfTimeSteps - 1) + "].");
+            raise Exception("timestepIndex must be within [0," + str(self.FileInfo.TimeAxis.NumberOfTimeSteps - 1) + "].");
 
         # More elaborate action is required, when appending to file. If appending then
         # (itemNumber == _fpItemNumber && timestepIndex == _fileInfo.TimeAxis.NumberOfTimeSteps == _fpTimeStepIndex)

@@ -1551,7 +1551,7 @@ class eumWrapper:
     #/ <returns>returns a boolean variable which is TRUE if an item type with a
     #/ matching textual description is found, and FALSE otherwise</returns>
     @staticmethod
-    def GetItemTypeTag(itemDesc: str) -> eumItem:
+    def GetItemTypeTag(itemDesc: str) -> Optional[eumItem]:
       found = False;
       itemKey = None;
       for i in range(1, eumWrapper.eumGetItemTypeCount() + 1):
@@ -1716,7 +1716,7 @@ class eumWrapper:
     #/ s-endings, e.g. "hour" and "hours". 
     #/ </remarks>
     @staticmethod
-    def eumGetUnitTag(unitDesc: str) -> eumUnit:
+    def eumGetUnitTag(unitDesc: str) -> Optional[eumUnit]:
         unitKey = ctypes.c_int32();
         if 0 != eumDLL.Wrapper.eumGetUnitTag(ctypes.c_char_p(unitDesc.encode("ascii")),
                                              ctypes.byref(unitKey)):
@@ -1728,7 +1728,7 @@ class eumWrapper:
     #/ the unit if any unit attached to an item with this text description exists. 
     #/ </summary>
     @staticmethod
-    def eumGetItemUnitTag(itemKey: eumItem, unitDesc: str) -> Tuple[bool,eumUnit]:
+    def eumGetItemUnitTag(itemKey: eumItem, unitDesc: str) -> Optional[eumUnit]:
         unitKey = ctypes.c_int32();
         if 0 != eumDLL.Wrapper.eumGetItemUnitTag(ctypes.c_int32(itemKey), 
                                                  ctypes.c_char_p(unitDesc.encode("ascii")),
@@ -1917,7 +1917,7 @@ class eumWrapper:
     #/ <param name="nElements">Specifies the number of elements in the array</param>
     #/ <param name="fDeleteValue">Specifies the single precision delete value - these are not converted</param>
     @staticmethod
-    def eumConvertItemArrayToUserUnitF(UBGitemKey: eumItem, localunitKey: eumUnit, pData: float, fDeleteValue: np.float32 = np.float32(0.0)) -> bool:
+    def eumConvertItemArrayToUserUnitF(UBGitemKey: eumItem, localunitKey: eumUnit, pData: np.ndarray, fDeleteValue: np.float32 = np.float32(0.0)) -> bool:
         return 0 != eumDLL.Wrapper.eumConvertItemArrayToUserUnitF(ctypes.c_int32(UBGitemKey),
                                                                   ctypes.c_int32(localunitKey),
                                                                   pData.ctypes.data,
@@ -1934,7 +1934,7 @@ class eumWrapper:
     #/ <param name="nElements">Specifies the number of elements in the array</param>
     #/ <param name="dDeleteValue">Specifies the double precision delete value</param>
     @staticmethod
-    def eumConvertItemArrayFromUserUnitD(UBGitemKey: eumItem, localunitKey: eumUnit, pData: float, dDeleteValue: float = 0.0) -> bool:
+    def eumConvertItemArrayFromUserUnitD(UBGitemKey: eumItem, localunitKey: eumUnit, pData: np.ndarray, dDeleteValue: float = 0.0) -> bool:
         return 0 != eumDLL.Wrapper.eumConvertItemArrayFromUserUnitD(ctypes.c_int32(UBGitemKey),
                                                                     ctypes.c_int32(localunitKey),
                                                                     pData.ctypes.data,
@@ -1951,7 +1951,7 @@ class eumWrapper:
     #/ <param name="nElements">Specifies the number of elements in the array</param>
     #/ <param name="fDeleteValue">Specifies the single precision delete value</param>
     @staticmethod
-    def eumConvertItemArrayFromUserUnitF(UBGitemKey: eumItem, localunitKey: eumUnit, pData: float, fDeleteValue: np.float32 = np.float32(0.0)) -> bool:
+    def eumConvertItemArrayFromUserUnitF(UBGitemKey: eumItem, localunitKey: eumUnit, pData: np.ndarray, fDeleteValue: np.float32 = np.float32(0.0)) -> bool:
         return 0 != eumDLL.Wrapper.eumConvertItemArrayFromUserUnitF(ctypes.c_int32(UBGitemKey),
                                                                     ctypes.c_int32(localunitKey),
                                                                     pData.ctypes.data,

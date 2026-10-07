@@ -212,12 +212,12 @@ class MzCartDLL():
     def GoogleMapProjectionString() -> str:
       rc = ctypes.c_int32();
       googleMapProjection = ctypes.c_char_p((" " * 2048).encode("ascii"));
-      S_GETGOOGLEMAPPROJECTIONSTRING(googleMapProjection, ctypes.c_int(2048), ctypes.byref(rc));
+      MzCartDLL.Wrapper.S_GETGOOGLEMAPPROJECTIONSTRING(googleMapProjection, ctypes.c_int(2048), ctypes.byref(rc));
       if (rc.value > 0):
         # String was too short (length returned as rc), create one with the required length
         googleMapProjection = ctypes.c_char_p((" " * (rc.value+1)).encode("ascii"));
-        S_GETGOOGLEMAPPROJECTIONSTRING(googleMapProjection, ctypes.c_int32(rc.value+1), ctypes.byref(rc));
-      if (rc != 0):
+        MzCartDLL.Wrapper.S_GETGOOGLEMAPPROJECTIONSTRING(googleMapProjection, ctypes.c_int32(rc.value+1), ctypes.byref(rc));
+      if (rc.value != 0):
         raise ProjectionException("Could not get google map projection string from cartography object");
       return (googleMapProjection.value.decode("ascii"));
 
@@ -449,6 +449,7 @@ class MzCartDLL():
         MzCartDLL.Wrapper.C_MZMP_GETDEFAULTAREA(mzMapProjPointer, 
                                                 ctypes.byref(x0), ctypes.byref(y0),
                                                 ctypes.byref(x1), ctypes.byref(y1))
+        return (x0.value, y0.value, x1.value, y1.value);
 
     #/ <summary>
     #/ Convert coordinates from geographical coordinates to 3D coordinates
@@ -605,7 +606,7 @@ class MzCartDLL():
     #/ Sets the type of conversion
     #/ </summary>
     @staticmethod
-    def MzConverterSetConversionType(mzConverterPointer: ctypes.c_void_p,  typeOfConversion: int):
+    def MzConverterSetConversionType(mzConverterPointer: ctypes.c_void_p,  typeOfConversion: "ReprojectorConversionType"):
         MzCartDLL.Wrapper.C_MZDC_SETCONVERSIONTYPE(mzConverterPointer, ctypes.c_int32(typeOfConversion.value))
 
     #/ <summary>
