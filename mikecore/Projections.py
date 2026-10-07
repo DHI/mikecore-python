@@ -790,7 +790,7 @@ class MzCartDLL():
       if (datumShiftParameters is not None):
         datumShiftParameters = np.ascontiguousarray(datumShiftParameters, dtype=np.float64);
         noOfParams= datumShiftParameters.size;
-        datumShiftPointer = datumShiftParameters.ctypes.data;
+        datumShiftPointer = ctypes.c_void_p(datumShiftParameters.ctypes.data);
 
       if ( not (noOfParams==0 or noOfParams==3 or noOfParams==7) ):
         raise Exception("Invalid number of datum shift parameters specified. Only 0, 3 or 7 is allowed", "datumShiftParameters");
