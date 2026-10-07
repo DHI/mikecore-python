@@ -37,11 +37,13 @@ def test_read_itemtimestep():
     dfs = DfsFileFactory.DfsGenericOpen("testdata/TemporalEqCal.dfs0")
     dfs.Reset()
 
+    data = None
     for _ in range(2 * 5):
         data = dfs.ReadItemTimeStepNext()
 
     dfs.Close()
 
+    assert data is not None
     assert data.Data[0] == 104
 
 

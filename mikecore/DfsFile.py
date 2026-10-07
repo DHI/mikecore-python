@@ -579,7 +579,7 @@ class DfsDynamicItemInfo:
         elif self.DataType == DfsSimpleType.UShort:
             values = np.zeros(self.ElementCount, dtype=np.uint16)
         else:
-            print(f"Ahhrrggg!!!!: {self.DataType}-{self.ElementCount}")
+            raise ValueError(f"Unsupported item data type: {self.DataType}")
         if reshape:
             values = values.reshape(self.SpatialAxis.Shape, order="F")
         return values
@@ -820,18 +820,20 @@ class DfsFile:
                 ctypes.byref(self.headPointer),
                 ctypes.byref(self.filePointer),
             )
-        if mode is DfsFileMode.Edit:
+        elif mode is DfsFileMode.Edit:
             rok = DfsDLL.Wrapper.dfsFileEdit(
                 fnp.value,
                 ctypes.byref(self.headPointer),
                 ctypes.byref(self.filePointer),
             )
-        if mode is DfsFileMode.Append:
+        elif mode is DfsFileMode.Append:
             rok = DfsDLL.Wrapper.dfsFileAppend(
                 fnp.value,
                 ctypes.byref(self.headPointer),
                 ctypes.byref(self.filePointer),
             )
+        else:
+            raise ValueError(f"Cannot open a file in mode {mode!r}")
 
         if rok != 0:
             raise Exception(f"Could not load file {filename} (Error code {rok})")

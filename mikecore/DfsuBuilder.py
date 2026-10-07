@@ -640,7 +640,7 @@ class DfsuBuilder:
             ):
                 if self.__dfsuFileType == DfsuFileType.DfsuSpectral1D:
                     size = self.__x.size
-                if self.__dfsuFileType == DfsuFileType.DfsuSpectral2D:
+                else:
                     size = len(self.__connectivity)
 
                 if self.__frequencies is not None:

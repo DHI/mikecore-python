@@ -49,6 +49,8 @@ class DfsFactory:
             dataType = DfsSimpleType.Short
         elif data.dtype == np.uint16:
             dataType = DfsSimpleType.UShort
+        else:
+            raise ValueError(f"Unsupported custom block data type: {data.dtype}")
         return DfsCustomBlock(name, dataType, data)
 
     # endregion

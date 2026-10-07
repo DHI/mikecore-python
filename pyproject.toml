@@ -50,7 +50,7 @@ dev = [
 [tool.pyright]
 include = ["mikecore", "miketools", "tests"]
 pythonVersion = "3.11"
-typeCheckingMode = "basic"
+typeCheckingMode = "standard"
 # Many attributes (e.g. FileInfo, TimeAxis, X/Y/Z) start as None and are set
 # later, so most accesses trip these. Kept as warnings so real None
 # dereferences stay visible; make them errors once those attributes are typed.
