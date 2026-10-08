@@ -9,6 +9,10 @@ New code reads like the module it lands in: same decomposition, naming and idiom
 - Extend an existing class or pattern before adding a module. A new module earns its place with a responsibility no existing module holds, not as a home for a few helper lines. Example: the native wrapper classes name their library in a `libfilename` static variable (`eumDLL` in `mikecore/eum.py`); a change to how libraries load extends that pattern in each wrapper.
 - Prefer the smallest diff that fits the existing structure over a cleaner structure of the agent's own.
 
+## Types state what the code really does
+
+The type checker is part of verification, so a declared type must match every value the code handles. Fix a mismatch by changing the code or the type, not with `typing.cast` or a checker suppression; keep one only when the fix would change the public API, and give the reason on that line.
+
 ## Tests check behaviour a user sees
 
 Tests call the public API (`mikecore.*`, `miketools.*`) against the bundled libraries and files in `testdata/`, and assert on results a user would observe.
