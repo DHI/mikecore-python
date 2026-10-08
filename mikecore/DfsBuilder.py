@@ -137,7 +137,9 @@ class DfsBuilder:
         self.__CheckBuildStage1
         self.FileInfo.DeleteValueDouble = value
 
-    DeleteValuedouble = property(GetDeleteValueDouble, SetDeleteValueDouble)
+    DeleteValueDouble = property(GetDeleteValueDouble, SetDeleteValueDouble)
+    # Misspelled name, kept for existing callers
+    DeleteValuedouble = DeleteValueDouble
 
     def GetDeleteValueByte(self):
         return self.FileInfo.DeleteValueByte

@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime
+import datetime
 from mikecore.DfsFileFactory import *
 from mikecore.DfsBuilder import *
 from mikecore.DfsFactory import *

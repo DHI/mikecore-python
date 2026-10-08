@@ -105,3 +105,12 @@ def test_static_item_builder_reports_missing_data_and_axis():
 
     assert "Spatial axis has not been set." in errors
     assert "Data has not been set." in errors
+
+
+def test_delete_value_double_is_written(landuse: DfsBuilder, tmp_path):
+    landuse.DeleteValueDouble = -7.5
+    landuse.CreateFile(str(tmp_path / "deletevalue.dfs2"))
+    file = landuse.GetFile()
+
+    assert -7.5 == file.FileInfo.DeleteValueDouble
+    file.Close()
