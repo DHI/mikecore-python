@@ -199,7 +199,7 @@ class DfsTemporalAxis:
 
     # Method that is invoked when ever the temporal axis is updated.
     def _InvokeOnUpdate(self):
-        if self._OnUpdate != None:
+        if self._OnUpdate is not None:
             self._OnUpdate()
 
     def __getTimeUnit(self):
@@ -523,7 +523,7 @@ class DfsDynamicItemInfo:
         self.ConversionUnit = 0
         self.AxisConversionType = UnitConversionType.NoConversion
         self.AxisConversionUnit = 0
-        self.AssociatedStaticItemNumbers = []
+        self.AssociatedStaticItemNumbers: list[int] | None = []
         self.SpatialAxis = None
 
     def __repr__(self):
@@ -788,7 +788,7 @@ class DfsFile:
         """
 
         # Close file, if already open
-        if self.filePointer.value != None:
+        if self.filePointer.value is not None:
             self.Close()
 
         if not os.path.isfile(filename):
@@ -886,11 +886,11 @@ class DfsFile:
         Close the file and release all ressources associated with it. The header information
         is still valid (for reading) even though the file has been closed.
         """
-        if self.filePointer.value != None:
+        if self.filePointer.value is not None:
             DfsDLL.Wrapper.dfsFileClose(
                 self.headPointer, ctypes.byref(self.filePointer)
             )
-        if self.headPointer.value != None:
+        if self.headPointer.value is not None:
             DfsDLL.Wrapper.dfsHeaderDestroy(ctypes.byref(self.headPointer))
 
     def GetNextItemNumber(self):
@@ -926,7 +926,7 @@ class DfsFile:
 
         staticItem = self.__StaticItemReadAndCreate(self.fpItemNumber, False)
 
-        if staticItem != None:
+        if staticItem is not None:
             self.fpItemNumber += 1
         return staticItem
 
@@ -1955,7 +1955,7 @@ class DfsDLLUtil:
         )
         DfsDLL.CheckReturnCode(rok)
         customBlocks = []
-        while customBlockP.value != None:
+        while customBlockP.value is not None:
             customBlockP, dfsCustomBlock = DfsDLLUtil.__CustomBlockRead(customBlockP)
             customBlocks.append(dfsCustomBlock)
         return customBlocks

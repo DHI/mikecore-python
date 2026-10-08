@@ -1,5 +1,10 @@
 from datetime import datetime
-from mikecore.DfsBuilder import DfsBuilder, DfsSimpleType, DataValueType
+from mikecore.DfsBuilder import (
+    DfsBuilder,
+    DfsSimpleType,
+    DataValueType,
+    DfsStaticItemBuilder,
+)
 from mikecore.DfsFactory import DfsFactory
 from mikecore.eum import eumUnit, eumQuantity, eumItem
 
@@ -93,3 +98,10 @@ def test_apptitle_after_create_not_possible(landuse: DfsBuilder, tmp_path):
 
     with pytest.raises(Exception):
         builder.SetApplicationTitle("too late")
+
+
+def test_static_item_builder_reports_missing_data_and_axis():
+    errors = DfsStaticItemBuilder().Validate()
+
+    assert "Spatial axis has not been set." in errors
+    assert "Data has not been set." in errors

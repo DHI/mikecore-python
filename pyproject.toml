@@ -55,11 +55,9 @@ python-version = "3.11"
 
 [tool.pyrefly.errors]
 # Many attributes (e.g. FileInfo, TimeAxis, X/Y/Z) start as None and are set
-# later, so most accesses trip missing-attribute and not-iterable. Kept as
-# warnings so real None dereferences stay visible; make them errors once those
-# attributes are typed.
+# later, so most accesses trip missing-attribute. Kept as warnings so real None
+# dereferences stay visible; make them errors once those attributes are typed.
 missing-attribute = "warn"
-not-iterable = "warn"
 # Existing violations need typing work (e.g. TimeAxis unions, List[int]
 # parameters that receive numpy arrays). Kept visible as warnings for now.
 bad-argument-type = "warn"

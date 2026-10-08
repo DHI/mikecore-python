@@ -34,9 +34,9 @@ def DfsShowInfo(dfsFileName, showAxis=False):
         )
 
     item = dfs.ReadStaticItemNext()
-    if None != item:
+    if item is not None:
         txt.write("---- Static items  ---- \n")
-    while None != item:
+    while item is not None:
         txt.write(
             f"item {item.ItemNumber!s:>2}: {item.Name!s:<40}: {item.ElementCount!s:>5}: {item.DataType.name!s:>6} ({item.Quantity.ItemDescription!s:>11}: {item.Quantity.UnitDescription!s:>11}) \n"
         )
