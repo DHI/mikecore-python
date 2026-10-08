@@ -43,29 +43,27 @@ Homepage = "https://github.com/DHI/mikecore-python"
 
 [dependency-groups]
 dev = [
-    "pyright>=1.1.414",
+    "pyrefly>=1.3.2",
     "pytest>=6.1.2",
 ]
 
-[tool.pyright]
-include = ["mikecore", "miketools", "tests"]
-pythonVersion = "3.11"
-typeCheckingMode = "standard"
+[tool.pyrefly]
+project-includes = ["mikecore", "miketools", "tests"]
+python-version = "3.11"
+
+[tool.pyrefly.errors]
 # Many attributes (e.g. FileInfo, TimeAxis, X/Y/Z) start as None and are set
-# later, so most accesses trip these. Kept as warnings so real None
-# dereferences stay visible; make them errors once those attributes are typed.
-reportOptionalMemberAccess = "warning"
-reportOptionalSubscript = "warning"
-reportOptionalIterable = "warning"
-reportOptionalOperand = "warning"
+# later, so most accesses trip missing-attribute and not-iterable. Kept as
+# warnings so real None dereferences stay visible; make them errors once those
+# attributes are typed.
+missing-attribute = "warn"
+not-iterable = "warn"
 # Existing violations need typing work (e.g. TimeAxis unions, List[int]
 # parameters that receive numpy arrays). Kept visible as warnings for now.
-reportArgumentType = "warning"
-reportAttributeAccessIssue = "warning"
-reportCallIssue = "warning"
-reportOperatorIssue = "warning"
-reportReturnType = "warning"
-reportRedeclaration = "warning"
+bad-argument-type = "warn"
+unsupported-operation = "warn"
+no-matching-overload = "warn"
+read-only = "warn"
 
 # ruff takes its target version from requires-python.
 [tool.ruff.lint]

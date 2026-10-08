@@ -85,7 +85,7 @@ class DfsuFile:
             None  # this can be null, then set default id's, starting from 1
         )
         self.ElementType = None
-        self.ElementTable = []
+        self.ElementTable: list | np.ndarray = []
 
         # Spectral definition
         self.Frequencies = None

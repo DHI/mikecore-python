@@ -2,6 +2,7 @@ import os
 import ctypes
 import numpy as np
 from enum import IntEnum
+from typing import cast
 
 
 class DfsError(IntEnum):
@@ -41,14 +42,15 @@ class DfsDLL:
     """description of class"""
 
     # Static variables
-    Wrapper: ctypes.CDLL = None  # pyright: ignore[reportAssignmentType]
+    Wrapper: ctypes.CDLL = None  # pyrefly: ignore[bad-assignment]
     MCCUWrapper = None
 
     @staticmethod
     def Init(libfilepath=None):
 
         # ufs lib should be loaded only once
-        if DfsDLL.Wrapper is None:
+        # Wrapper is typed as loaded; the cast keeps this block type checked
+        if cast("ctypes.CDLL | None", DfsDLL.Wrapper) is None:
             DfsDLL.libfilepath = None
             if libfilepath is not None:
                 DfsDLL.libfilepath = libfilepath

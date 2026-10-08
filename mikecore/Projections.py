@@ -2,6 +2,7 @@ import os
 import ctypes
 import numpy as np
 from enum import IntEnum
+from typing import cast
 
 
 def _ReadString(dllFunction, args: tuple, size: int, errorMessage: str) -> str:
@@ -39,7 +40,7 @@ class ProjectionException(Exception):
 
 class MzCartDLL:
     # Static variables
-    Wrapper: ctypes.CDLL = None  # pyright: ignore[reportAssignmentType]
+    Wrapper: ctypes.CDLL = None  # pyrefly: ignore[bad-assignment]
 
     _cartCreateCount = 0
     _cartDestroyCount = 0
@@ -49,10 +50,11 @@ class MzCartDLL:
     _converterDestroyCount = 0
 
     @staticmethod
-    def Init(libfilepath: str = None):
+    def Init(libfilepath: str | None = None):
 
         # ufs lib should be loaded only once
-        if MzCartDLL.Wrapper is None:
+        # Wrapper is typed as loaded; the cast keeps this block type checked
+        if cast("ctypes.CDLL | None", MzCartDLL.Wrapper) is None:
             MzCartDLL.libfilepath = None
             if libfilepath is not None:
                 MzCartDLL.libfilepath = libfilepath
@@ -1056,8 +1058,8 @@ class CoordSysType(IntEnum):
 class MapProjection:
     def __init__(
         self,
-        projectionString: str,
-        mzMapProjPointer: ctypes.c_void_p = None,
+        projectionString: str | None,
+        mzMapProjPointer: ctypes.c_void_p | None = None,
         mustFree: bool = False,
         objectHolder: object = None,
     ):
@@ -1498,11 +1500,11 @@ class Cartography:
     def __init__(
         self,
         projectionString: str,
-        lonOrigin: float = None,
-        latOrigin: float = None,
+        lonOrigin: float | None = None,
+        latOrigin: float | None = None,
         orientation: float = 0.0,
-        eastOrigin: float = None,
-        northOrigin: float = None,
+        eastOrigin: float | None = None,
+        northOrigin: float | None = None,
         orientationProj: float = 0.0,
         validateProjectionString: bool = True,
     ):

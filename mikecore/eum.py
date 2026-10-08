@@ -2,6 +2,7 @@ import os
 import ctypes
 import numpy as np
 from enum import IntEnum
+from typing import cast
 
 
 # Predefined enums of EUM item types.
@@ -1377,7 +1378,7 @@ class UnitConverter:
     # / </summary>
     # / <param name="pData"></param>
     # / <param name="dDeleteValue"></param>
-    def ConvertArray(self, pData: np.ndarray, dDeleteValue: float = None):
+    def ConvertArray(self, pData: np.ndarray, dDeleteValue: float | None = None):
         if dDeleteValue is None:
             for i in range(pData.size):
                 pData[i] = self.Convert(pData[i])
@@ -1399,7 +1400,7 @@ class UnitConverter:
     # / </summary>
     # / <param name="pData"></param>
     # / <param name="dDeleteValue"></param>
-    def InvConvertArray(self, pData: np.ndarray, dDeleteValue: float = None):
+    def InvConvertArray(self, pData: np.ndarray, dDeleteValue: float | None = None):
         if dDeleteValue is None:
             for i in range(pData.size):
                 pData[i] = self.InvConvert(pData[i])
@@ -1413,7 +1414,7 @@ class eumDLL:
     """description of class"""
 
     # Static variables
-    Wrapper: ctypes.CDLL = None  # pyright: ignore[reportAssignmentType]
+    Wrapper: ctypes.CDLL = None  # pyrefly: ignore[bad-assignment]
     # Leaving out extension should make it work for both Windows and Linux
     libfilename = "libeum.so"
     # libfilename = "eum";
@@ -1431,7 +1432,8 @@ class eumDLL:
             eumDLL.libfilename = libfilename
 
         # eum lib should be loaded only once
-        if eumDLL.Wrapper is None:
+        # Wrapper is typed as loaded; the cast keeps this block type checked
+        if cast("ctypes.CDLL | None", eumDLL.Wrapper) is None:
             # TODO: Is there a smarter way to have the eum library loaded (especially when xcopy-deployed)
             if os.name == "nt":
                 eumDLL.Wrapper = ctypes.CDLL(os.path.join(eumDLL.libfilepath, "eum"))
