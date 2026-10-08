@@ -44,7 +44,7 @@ class DfsFactory:
     #region Spatial axis factory methods
 
     def CreateAxisDummy(self, numberOfValues):
-        return (DfsAxisEqD1(0, numberOfValues, 0, 1));
+        return (DfsAxisEqD1.CreateDummyAxis(numberOfValues));
 
     def CreateAxisEqD0(self):
         return(DfsAxisEqD0());
