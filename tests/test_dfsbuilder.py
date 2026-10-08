@@ -1,4 +1,6 @@
 from datetime import datetime
+
+import numpy as np
 from mikecore.DfsBuilder import (
     DfsBuilder,
     DfsSimpleType,
@@ -114,3 +116,49 @@ def test_delete_value_double_is_written(landuse: DfsBuilder, tmp_path):
 
     assert -7.5 == file.FileInfo.DeleteValueDouble
     file.Close()
+
+
+def test_static_item_builder_reports_data_not_matching_axis():
+    builder = DfsStaticItemBuilder()
+    builder.Set(
+        "Static",
+        eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined),
+        DfsSimpleType.Float,
+    )
+    builder.SetAxis(DfsFactory().CreateAxisEqD1(eumUnit.eumUmeter, 3, 0, 1))
+    builder.SetData(np.array([1.0, 2.0], dtype=np.float32))
+
+    errors = builder.Validate()
+
+    assert ["Size of data (2) does not match spatial axis size (3)."] == errors
+
+
+def _dfs0_with_associated_static_item(staticItemNumber):
+    factory = DfsFactory()
+    builder = DfsBuilder.Create("title", "application", 1)
+    builder.SetDataType(0)
+    builder.SetGeographicalProjection(factory.CreateProjectionUndefined())
+    builder.SetTemporalAxis(factory.CreateTemporalEqTimeAxis(eumUnit.eumUsec, 0, 1))
+    item = builder.CreateDynamicItemBuilder()
+    item.Set(
+        "Value",
+        eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined),
+        DfsSimpleType.Float,
+    )
+    item.SetValueType(DataValueType.Instantaneous)
+    item.SetAxis(factory.CreateAxisEqD0())
+    item.SetAssociatedStaticItem(staticItemNumber)
+    builder.AddDynamicItem(item.GetDynamicItemInfo())
+    return builder
+
+
+def test_associated_static_item_number_is_checked(tmp_path):
+    # mikecore does not read associated static items back; the native
+    # library checks the number when the file is created
+    builder = _dfs0_with_associated_static_item(1)
+    builder.CreateFile(str(tmp_path / "associated.dfs0"))
+    builder.GetFile().Close()
+
+    builder = _dfs0_with_associated_static_item(-1)
+    with pytest.raises(Exception, match="An item number is out of range"):
+        builder.CreateFile(str(tmp_path / "invalid.dfs0"))

@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import pytest
 from tests.test_util import *
 from mikecore.Projections import *
 
@@ -508,6 +509,23 @@ class ProjectionStrings:
     GeoWatch14Km = 'PROJCS["watch14km",GEOGCS["Unused",DATUM["User defined",SPHEROID["Sphere (Radius = 6371000)",6371000,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Rotated_Longitude_Latitude"],PARAMETER["Longitude_Of_South_Pole",80],PARAMETER["Latitude_Of_South_Pole",-10],PARAMETER["Angle_Of_Rotation",0],UNIT["Degree",1]]'
     EastRef = 627928.19137650891
     NorthRef = 6096620.7064931244
+
+
+def test_ProjectionShortName_longer_than_first_buffer():
+    # A string that is not WKT is returned as its own short name, here longer
+    # than the 128 characters first asked for
+    name = "X" * 300
+
+    with pytest.raises(ProjectionException, match="Could not get short name"):
+        MapProjection.ProjectionShortName(name)
+
+
+def test_Cartography_projection_string():
+    projectionString = Cartography("UTM-33").Projection().ProjectionString
+
+    assert projectionString is not None
+    assert projectionString.startswith('PROJCS["UTM-33"')
+    assert "UTM-33" == MapProjection.ProjectionShortName(projectionString)
 
 
 if __name__ == "__main__":

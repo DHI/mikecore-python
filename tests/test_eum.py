@@ -1,5 +1,8 @@
 import ctypes
 import unittest
+
+import pytest
+
 from tests.test_util import *
 from mikecore.eum import *
 
@@ -179,3 +182,21 @@ class TestEUM(unittest.TestCase):
         array = np.array([0.1524, 0.3048, 0.6096, 1])
         uc.InvConvertArray(array)
         Assert.AreEqual(np.array([0.5, 1, 2, 3.280839895]), array, 1e-6)
+
+
+def test_eumGetNextEqvUnit_first_unit():
+    # The native call succeeds and returns meter, but the wrapper reads its
+    # success code (1) as failure
+    assert (False, eumUnit.eumUUnitUndefined, "") == eumWrapper.eumGetNextEqvUnit(
+        eumUnit.eumUmeter, eumUnit.eumUUnitUndefined
+    )
+
+
+def test_eumGetNextEqvUnit_after_last_unit():
+    # The native call returns no unit, with a null description
+    with pytest.raises(AttributeError, match="'NoneType' object has no attribute"):
+        eumWrapper.eumGetNextEqvUnit(eumUnit.eumUmeter, eumUnit.eumUmileUS)
+
+
+def test_GetItemTypeTag_unknown_description():
+    assert eumWrapper.GetItemTypeTag("No such item type") is None

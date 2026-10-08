@@ -1,4 +1,8 @@
 import unittest
+
+import pytest
+from numpy.testing import assert_array_equal
+
 from mikecore.MeshFile import MeshFile
 from mikecore.MeshBuilder import MeshBuilder
 from mikecore.eum import *
@@ -119,3 +123,73 @@ class MeshTests(unittest.TestCase):
         # Assert.AreEqual(eumUnit.eumUmeter, quantity.Unit)
         # Assert.AreEqual(2057, numNodes)
         # Assert.AreEqual(utm33Full, proj)
+
+
+# Two triangles over four nodes
+X = [0.0, 1.0, 1.0, 0.0]
+Y = [0.0, 0.0, 1.0, 1.0]
+Z = [-1.0, -2.0, -3.0, -4.0]
+CODE = [1, 0, 0, 1]
+ELEMENTS = [[1, 2, 3], [1, 3, 4]]
+
+
+def test_MeshBuilder_mesh_is_written(tmp_path):
+    filename = str(tmp_path / "built.mesh")
+    builder = MeshBuilder()
+    builder.SetProjection("NON-UTM")
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.CreateMesh().Write(filename)
+
+    mesh = MeshFile.ReadMesh(filename)
+    quantity = mesh.EumQuantity
+    assert quantity is not None
+    assert "NON-UTM" == mesh.ProjectionString
+    assert eumItem.eumIBathymetry == quantity.Item
+    assert eumUnit.eumUmeter == quantity.Unit
+    assert_array_equal([1, 2, 3, 4], mesh.NodeIds)
+    assert_array_equal(X, mesh.X)
+    assert_array_equal(Y, mesh.Y)
+    assert_array_equal(Z, mesh.Z)
+    assert_array_equal(CODE, mesh.Code)
+    assert_array_equal([1, 2], mesh.ElementIds)
+    assert 2 == len(mesh.ElementTable)
+    for expected, element in zip(ELEMENTS, mesh.ElementTable):
+        assert_array_equal(expected, element)
+
+
+def test_MeshBuilder_validate_reports_missing_values():
+    errors = MeshBuilder().Validate()
+
+    assert [
+        "Projection has not been set",
+        "Nodes have not been set",
+        "Elements have not been set",
+    ] == errors
+
+
+def test_MeshBuilder_create_mesh_without_values_fails():
+    with pytest.raises(Exception, match="Nodes have not been set"):
+        MeshBuilder().CreateMesh()
+
+
+def _mesh_builder_with_node_number(nodeNumber):
+    builder = MeshBuilder()
+    builder.SetProjection("NON-UTM")
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements([[1, 2, 3], [1, 3, nodeNumber]])
+    return builder
+
+
+@pytest.mark.parametrize("nodeNumber", [0, 5])
+def test_MeshBuilder_validate_reports_node_number_outside_the_nodes(nodeNumber):
+    errors = _mesh_builder_with_node_number(nodeNumber).Validate()
+
+    assert [
+        "At least one element has an invalid node number. Node numbers must be within [1,numberOfNodes]"
+    ] == errors
+
+
+def test_MeshBuilder_create_mesh_with_node_number_outside_the_nodes_fails():
+    with pytest.raises(Exception, match="invalid node number"):
+        _mesh_builder_with_node_number(5).CreateMesh()
