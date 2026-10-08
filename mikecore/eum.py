@@ -2,7 +2,6 @@ import os
 import ctypes
 import numpy as np
 from enum import IntEnum
-from typing import cast
 
 
 # Predefined enums of EUM item types.
@@ -1414,7 +1413,9 @@ class eumDLL:
     """description of class"""
 
     # Static variables
-    Wrapper: ctypes.CDLL = None  # pyrefly: ignore[bad-assignment]
+    # Set by Init(), which mikecore/__init__.py calls on import
+    Wrapper: ctypes.CDLL
+    _loaded = False
     # Leaving out extension should make it work for both Windows and Linux
     libfilename = "libeum.so"
     # libfilename = "eum";
@@ -1432,71 +1433,72 @@ class eumDLL:
             eumDLL.libfilename = libfilename
 
         # eum lib should be loaded only once
-        # Wrapper is typed as loaded; the cast keeps this block type checked
-        if cast("ctypes.CDLL | None", eumDLL.Wrapper) is None:
-            # TODO: Is there a smarter way to have the eum library loaded (especially when xcopy-deployed)
-            if os.name == "nt":
-                eumDLL.Wrapper = ctypes.CDLL(os.path.join(eumDLL.libfilepath, "eum"))
-            else:
-                eumDLL.Wrapper = ctypes.CDLL(
-                    os.path.join(eumDLL.libfilepath, "libeum.so")
-                )
+        if eumDLL._loaded:
+            return
+        # TODO: Is there a smarter way to have the eum library loaded (especially when xcopy-deployed)
+        if os.name == "nt":
+            lib = ctypes.CDLL(os.path.join(eumDLL.libfilepath, "eum"))
+        else:
+            lib = ctypes.CDLL(os.path.join(eumDLL.libfilepath, "libeum.so"))
 
-                eumDLL.Wrapper.eumSetupLoadLinux.argtypes = [ctypes.c_char_p]
-                # TODO: Should this not be simpler?
-                eumFilePath = eumDLL.libfilepath + "/EUM.xml"
-                eumFilePathP = ctypes.c_char_p(eumFilePath.encode("ascii"))
-                res = eumDLL.Wrapper.eumSetupLoadLinux(eumFilePathP)
+            lib.eumSetupLoadLinux.argtypes = [ctypes.c_char_p]
+            # TODO: Should this not be simpler?
+            eumFilePath = eumDLL.libfilepath + "/EUM.xml"
+            eumFilePathP = ctypes.c_char_p(eumFilePath.encode("ascii"))
+            res = lib.eumSetupLoadLinux(eumFilePathP)
 
-            eumDLL.Wrapper.eumUnitGetParameters.argtypes = [
-                ctypes.c_int32,
-                ctypes.POINTER(ctypes.c_double),
-                ctypes.POINTER(ctypes.c_double),
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-            ]
-            eumDLL.Wrapper.eumConvertItemArrayD.argtypes = [
-                ctypes.c_int32,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_double,
-            ]
-            eumDLL.Wrapper.eumConvertItemArrayF.argtypes = [
-                ctypes.c_int32,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_float,
-            ]
-            eumDLL.Wrapper.eumConvertItemArrayToUserUnitD.argtypes = [
-                ctypes.c_int32,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_double,
-            ]
-            eumDLL.Wrapper.eumConvertItemArrayToUserUnitF.argtypes = [
-                ctypes.c_int32,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_float,
-            ]
-            eumDLL.Wrapper.eumConvertItemArrayFromUserUnitD.argtypes = [
-                ctypes.c_int32,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_double,
-            ]
-            eumDLL.Wrapper.eumConvertItemArrayFromUserUnitF.argtypes = [
-                ctypes.c_int32,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_float,
-            ]
+        lib.eumUnitGetParameters.argtypes = [
+            ctypes.c_int32,
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+        ]
+        lib.eumConvertItemArrayD.argtypes = [
+            ctypes.c_int32,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_double,
+        ]
+        lib.eumConvertItemArrayF.argtypes = [
+            ctypes.c_int32,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_float,
+        ]
+        lib.eumConvertItemArrayToUserUnitD.argtypes = [
+            ctypes.c_int32,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_double,
+        ]
+        lib.eumConvertItemArrayToUserUnitF.argtypes = [
+            ctypes.c_int32,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_float,
+        ]
+        lib.eumConvertItemArrayFromUserUnitD.argtypes = [
+            ctypes.c_int32,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_double,
+        ]
+        lib.eumConvertItemArrayFromUserUnitF.argtypes = [
+            ctypes.c_int32,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_float,
+        ]
+
+        eumDLL.Wrapper = lib
+        eumDLL._loaded = True
 
 
 # / <summary>

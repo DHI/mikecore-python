@@ -2,7 +2,6 @@ import os
 import ctypes
 import numpy as np
 from enum import IntEnum
-from typing import cast
 
 
 def _ReadString(dllFunction, args: tuple, size: int, errorMessage: str) -> str:
@@ -40,7 +39,9 @@ class ProjectionException(Exception):
 
 class MzCartDLL:
     # Static variables
-    Wrapper: ctypes.CDLL = None  # pyrefly: ignore[bad-assignment]
+    # Set by Init(), which mikecore/__init__.py calls on import
+    Wrapper: ctypes.CDLL
+    _loaded = False
 
     _cartCreateCount = 0
     _cartDestroyCount = 0
@@ -53,73 +54,72 @@ class MzCartDLL:
     def Init(libfilepath: str | None = None):
 
         # ufs lib should be loaded only once
-        # Wrapper is typed as loaded; the cast keeps this block type checked
-        if cast("ctypes.CDLL | None", MzCartDLL.Wrapper) is None:
-            MzCartDLL.libfilepath = None
-            if libfilepath is not None:
-                MzCartDLL.libfilepath = libfilepath
+        if MzCartDLL._loaded:
+            return
+        MzCartDLL.libfilepath = None
+        if libfilepath is not None:
+            MzCartDLL.libfilepath = libfilepath
 
-            # TODO: On linux, this looks different!
-            if os.name == "nt":
-                MzCartDLL.Wrapper = ctypes.CDLL(
-                    os.path.join(MzCartDLL.libfilepath, "MzCart.dll")
-                )
-            else:
-                MzCartDLL.Wrapper = ctypes.CDLL(
-                    os.path.join(MzCartDLL.libfilepath, "libMzCart.so")
-                )
-                libfilepathe = MzCartDLL.libfilepath + "/"
-                libfilepatheP = ctypes.c_char_p(libfilepathe.encode("ascii"))
-                MzCartDLL.Wrapper.CARTSETUPLINUX(libfilepatheP, libfilepatheP)
+        # TODO: On linux, this looks different!
+        if os.name == "nt":
+            lib = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, "MzCart.dll"))
+        else:
+            lib = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, "libMzCart.so"))
+            libfilepathe = MzCartDLL.libfilepath + "/"
+            libfilepatheP = ctypes.c_char_p(libfilepathe.encode("ascii"))
+            lib.CARTSETUPLINUX(libfilepatheP, libfilepatheP)
 
-            MzCartDLL.Wrapper.C_MZC_GETPROJECTION.restype = ctypes.c_void_p
-            MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING.restype = None
-            MzCartDLL.Wrapper.S_GETGOOGLEMAPPROJECTIONSTRING.restype = None
+        lib.C_MZC_GETPROJECTION.restype = ctypes.c_void_p
+        lib.C_MZC_GETPROJECTIONSTRING.restype = None
+        lib.S_GETGOOGLEMAPPROJECTIONSTRING.restype = None
 
-            MzCartDLL.Wrapper.C_MZC_CREATE.restype = None
-            MzCartDLL.Wrapper.C_MZC_DESTROY.restype = None
-            MzCartDLL.Wrapper.C_MZC_GETPROJNORTH.restype = ctypes.c_double
-            MzCartDLL.Wrapper.C_MZC_GETTRUENORTH.restype = ctypes.c_double
-            MzCartDLL.Wrapper.C_MZC_GEO2PROJ.restype = None
-            MzCartDLL.Wrapper.C_MZC_PROJ2GEO.restype = None
-            MzCartDLL.Wrapper.C_MZC_GEO2XY.restype = None
-            MzCartDLL.Wrapper.C_MZC_XY2GEO.restype = None
-            MzCartDLL.Wrapper.C_MZC_PROJ2XY.restype = None
-            MzCartDLL.Wrapper.C_MZC_XY2PROJ.restype = None
+        lib.C_MZC_CREATE.restype = None
+        lib.C_MZC_DESTROY.restype = None
+        lib.C_MZC_GETPROJNORTH.restype = ctypes.c_double
+        lib.C_MZC_GETTRUENORTH.restype = ctypes.c_double
+        lib.C_MZC_GEO2PROJ.restype = None
+        lib.C_MZC_PROJ2GEO.restype = None
+        lib.C_MZC_GEO2XY.restype = None
+        lib.C_MZC_XY2GEO.restype = None
+        lib.C_MZC_PROJ2XY.restype = None
+        lib.C_MZC_XY2PROJ.restype = None
 
-            MzCartDLL.Wrapper.C_MZMP_CREATE.restype = None
-            MzCartDLL.Wrapper.C_MZMP_DESTROY.restype = None
-            MzCartDLL.Wrapper.C_MZMP_GETNAME.restype = None
-            MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING.restype = None
-            MzCartDLL.Wrapper.C_MZMP_GEO2PROJ.restype = None
-            MzCartDLL.Wrapper.C_MZMP_PROJ2GEO.restype = None
-            MzCartDLL.Wrapper.C_MZMP_GETORIGIN.restype = None
-            MzCartDLL.Wrapper.C_MZMP_GETCONVERGENCE.restype = ctypes.c_double
-            MzCartDLL.Wrapper.C_MZMP_GETDEFAULTAREA.restype = None
-            MzCartDLL.Wrapper.C_MZMP_GEO2XYZ.restype = None
-            MzCartDLL.Wrapper.C_MZMP_XYZ2GEO.restype = None
+        lib.C_MZMP_CREATE.restype = None
+        lib.C_MZMP_DESTROY.restype = None
+        lib.C_MZMP_GETNAME.restype = None
+        lib.C_MZMP_GETPROJECTIONSTRING.restype = None
+        lib.C_MZMP_GEO2PROJ.restype = None
+        lib.C_MZMP_PROJ2GEO.restype = None
+        lib.C_MZMP_GETORIGIN.restype = None
+        lib.C_MZMP_GETCONVERGENCE.restype = ctypes.c_double
+        lib.C_MZMP_GETDEFAULTAREA.restype = None
+        lib.C_MZMP_GEO2XYZ.restype = None
+        lib.C_MZMP_XYZ2GEO.restype = None
 
-            MzCartDLL.Wrapper.C_MZDC_CREATE.restype = None
-            MzCartDLL.Wrapper.C_MZDC_DESTROY.restype = None
-            MzCartDLL.Wrapper.C_MZDC_CONVERTXY.restype = None
-            MzCartDLL.Wrapper.C_MZDC_INVCONVERTXY.restype = None
-            MzCartDLL.Wrapper.C_MZDC_CONVERTXYH.restype = None
-            MzCartDLL.Wrapper.C_MZDC_INVCONVERTXYH.restype = None
-            MzCartDLL.Wrapper.C_MZDC_DATUMSHIFT.restype = None
-            MzCartDLL.Wrapper.C_MZDC_BYPASSXYZ.restype = None
-            MzCartDLL.Wrapper.C_MZDC_RESETBYPASSXYZ.restype = None
-            MzCartDLL.Wrapper.C_MZDC_SETDATUMSHIFT.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-            ]
-            MzCartDLL.Wrapper.C_MZDC_SETDATUMSHIFT.restype = None
-            MzCartDLL.Wrapper.C_MZDC_INVERTORDER.restype = None
+        lib.C_MZDC_CREATE.restype = None
+        lib.C_MZDC_DESTROY.restype = None
+        lib.C_MZDC_CONVERTXY.restype = None
+        lib.C_MZDC_INVCONVERTXY.restype = None
+        lib.C_MZDC_CONVERTXYH.restype = None
+        lib.C_MZDC_INVCONVERTXYH.restype = None
+        lib.C_MZDC_DATUMSHIFT.restype = None
+        lib.C_MZDC_BYPASSXYZ.restype = None
+        lib.C_MZDC_RESETBYPASSXYZ.restype = None
+        lib.C_MZDC_SETDATUMSHIFT.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+        ]
+        lib.C_MZDC_SETDATUMSHIFT.restype = None
+        lib.C_MZDC_INVERTORDER.restype = None
 
-            MzCartDLL.Wrapper.S_LONGITUDETOUTMZONE.restype = None
-            MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME.restype = None
-            MzCartDLL.Wrapper.S_PROJECTIONORIGIN.restype = None
+        lib.S_LONGITUDETOUTMZONE.restype = None
+        lib.S_PROJECTIONSHORTNAME.restype = None
+        lib.S_PROJECTIONORIGIN.restype = None
+
+        MzCartDLL.Wrapper = lib
+        MzCartDLL._loaded = True
 
     ################################/
     # region MzCartography methods
