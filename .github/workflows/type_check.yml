@@ -37,7 +37,7 @@ jobs:
         # (the step above checks it); if it crashes, the JSON parse fails.
         shell: bash
         env:
-          MAX_WARNINGS: 394
+          MAX_WARNINGS: 377
         run: |
           warnings=$( (uv run pyrefly check --output-format=json --min-severity=warn --summary=none || true) | uv run python -c "import json, sys; print(sum(e['severity'] == 'warn' for e in json.load(sys.stdin)['errors']))")
           echo "pyrefly warnings: $warnings (ceiling $MAX_WARNINGS)"

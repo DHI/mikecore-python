@@ -4,6 +4,7 @@ import datetime
 import ctypes
 import numpy as np
 from mikecore.eum import *
+from mikecore.eum import _DecodeString
 from mikecore.DfsDLL import DfsDLL
 from mikecore.eum import eumQuantity
 
@@ -1517,9 +1518,9 @@ class DfsFile:
             ctypes.byref(eumUnitDescP),
             ctypes.byref(itemDataTypeP),
         )
-        eumItemDesc = eumItemDescP.value.decode("ascii")
-        eumUnitDesc = eumUnitDescP.value.decode("ascii")
-        itemName = itemNameP.value.decode("cp1252", "replace")
+        eumItemDesc = _DecodeString(eumItemDescP)
+        eumUnitDesc = _DecodeString(eumUnitDescP)
+        itemName = _DecodeString(itemNameP, "cp1252", "replace")
         itemDataType = DfsSimpleType(itemDataTypeP.value)
 
         quantity = eumQuantity(eumItem(eumItemIntP.value), eumUnit(eumUnitIntP.value))
@@ -1587,7 +1588,7 @@ class DfsDLLUtil:
             )
             projection = DfsProjection(
                 type,
-                wktString.value.decode("ascii"),
+                _DecodeString(wktString),
                 lon0.value,
                 lat0.value,
                 orientation.value,
@@ -1674,8 +1675,8 @@ class DfsDLLUtil:
                 ctypes.byref(numTimeSteps),
                 ctypes.byref(firstIndex),
             )
-            dateStr = startDateStr.value.decode("ascii")
-            timeStr = startTimeStr.value.decode("ascii")
+            dateStr = _DecodeString(startDateStr)
+            timeStr = _DecodeString(startTimeStr)
             # startDateTime = datetime.fromisoformat("{dateStr}T{timeStr}".format(dateStr,timeStr));
             startDateTime = datetime.datetime.strptime(
                 f"{dateStr} {timeStr}", "%Y-%m-%d %H:%M:%S"
@@ -1711,8 +1712,8 @@ class DfsDLLUtil:
                 ctypes.byref(firstIndex),
             )
 
-            dateStr = startDateStr.value.decode("ascii")
-            timeStr = startTimeStr.value.decode("ascii")
+            dateStr = _DecodeString(startDateStr)
+            timeStr = _DecodeString(startTimeStr)
             # startDateTime = datetime.fromisoformat("{}T{}".format(dateStr,timeStr));
             startDateTime = datetime.datetime.strptime(
                 f"{dateStr} {timeStr}", "%Y-%m-%d %H:%M:%S"
@@ -2027,7 +2028,7 @@ class DfsDLLUtil:
             data = np.ctypeslib.as_array(datap, shape=(size,))
 
         customBlock = DfsCustomBlock(
-            name.value.decode("ascii"), DfsSimpleType(dataType.value), data
+            _DecodeString(name), DfsSimpleType(dataType.value), data
         )
 
         return customBlockPointer, customBlock

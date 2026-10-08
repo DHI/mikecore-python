@@ -148,7 +148,7 @@ class TestEUM(unittest.TestCase):
                 ctypes.c_int32(i), ctypes.byref(key), ctypes.byref(desc)
             )
             if key.value not in known:
-                missing.append((key.value, desc.value.decode("ascii")))
+                missing.append((key.value, desc.value))
         Assert.AreEqual([], missing)
 
     def test_unit_enum_covers_native_table(self):

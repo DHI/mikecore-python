@@ -4,6 +4,15 @@ import numpy as np
 from enum import IntEnum
 
 
+def _DecodeString(
+    charP: ctypes.c_char_p, encoding: str = "ascii", errors: str = "strict"
+) -> str:
+    """Decode a string returned by a native library, which must not be null."""
+    if charP.value is None:
+        raise ValueError("Native library returned a null string")
+    return charP.value.decode(encoding, errors)
+
+
 # Predefined enums of EUM item types.
 #
 # Must be updated with every new release, or if the EUM.xml is updated
@@ -1619,7 +1628,7 @@ class eumWrapper:
             ctypes.c_int32(seqNo), ctypes.byref(itemKey), ctypes.byref(lpItemDesc)
         )
         if 0 != iok:
-            return True, eumItem(itemKey.value), lpItemDesc.value.decode("ascii")
+            return True, eumItem(itemKey.value), _DecodeString(lpItemDesc)
         return False, eumItem.eumIItemUndefined, ""
 
     # / <summary>
@@ -1629,7 +1638,7 @@ class eumWrapper:
     def eumGetItemTypeKey(itemKey: eumItem) -> str | None:
         lpItDesc = ctypes.c_char_p()
         if 0 != eumDLL.Wrapper.eumGetItemTypeKey(itemKey, ctypes.byref(lpItDesc)):
-            return lpItDesc.value.decode("ascii")
+            return _DecodeString(lpItDesc)
         return None
 
     # / <summary>
@@ -1672,7 +1681,7 @@ class eumWrapper:
         if 0 != eumDLL.Wrapper.eumGetItemUnitSeq(
             itemKey, UniSeq, ctypes.byref(unitKey), ctypes.byref(lpUniDesc)
         ):
-            return True, eumUnit(unitKey.value), lpUniDesc.value.decode("ascii")
+            return True, eumUnit(unitKey.value), _DecodeString(lpUniDesc)
         return False, eumUnit.eumUUnitUndefined, ""
 
     # / <summary>
@@ -1710,7 +1719,7 @@ class eumWrapper:
         if 0 != eumDLL.Wrapper.eumGetUnitKey(
             ctypes.c_int32(unitKey), ctypes.byref(lpUniDesc)
         ):
-            return lpUniDesc.value.decode("ascii")
+            return _DecodeString(lpUniDesc)
         raise Exception("Unit not defined")
 
     # / <summary>
@@ -1723,7 +1732,7 @@ class eumWrapper:
         if 1 == eumDLL.Wrapper.eumGetUnitAbbreviation(
             unitKey, ctypes.byref(lpUnitDesc)
         ):
-            return lpUnitDesc.value.decode("ascii")
+            return _DecodeString(lpUnitDesc)
         raise Exception("Unit not defined")
 
     # / <summary>
@@ -1805,7 +1814,7 @@ class eumWrapper:
         if 0 != eumDLL.Wrapper.eumGetNextUnit(
             prevUnitKey, ctypes.byref(unitKey), ctypes.byref(lpUnitDesc)
         ):
-            return True, unitKey.value, lpUnitDesc.value.decode("ascii")
+            return True, unitKey.value, _DecodeString(lpUnitDesc)
         return False, eumUnit.eumUUnitUndefined.value, ""
 
     # / <summary>
@@ -1829,7 +1838,7 @@ class eumWrapper:
         )
         if rc != 0:
             return False, eumUnit.eumUUnitUndefined, ""
-        return True, eumUnit(unitKey.value), lpUnitDesc.value.decode("ascii")
+        return True, eumUnit(unitKey.value), _DecodeString(lpUnitDesc)
 
     # / <summary>
     # / Converts a floating point value from <paramref name="fromUnitKey"/>-units to
