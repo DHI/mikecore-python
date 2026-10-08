@@ -65,6 +65,9 @@ unsupported-operation = "warn"
 no-matching-overload = "warn"
 read-only = "warn"
 
+[tool.ruff.format]
+line-ending = "lf"
+
 # ruff takes its target version from requires-python.
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "UP"]

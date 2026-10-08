@@ -1,0 +1,21 @@
+# Coding standards
+
+Judgement calls for review. Formatting, lint and line endings are enforced by ruff and pre-commit; skip anything they check.
+
+## Match the surrounding code
+
+New code reads like the module it lands in: same decomposition, naming and idiom.
+
+- Extend an existing class or pattern before adding a module. A new module earns its place with a responsibility no existing module holds, not as a home for a few helper lines. Example: the native wrapper classes name their library in a `libfilename` static variable (`eumDLL` in `mikecore/eum.py`); a change to how libraries load extends that pattern in each wrapper.
+- Prefer the smallest diff that fits the existing structure over a cleaner structure of the agent's own.
+
+## Tests check behaviour a user sees
+
+Tests call the public API (`mikecore.*`, `miketools.*`) against the bundled libraries and files in `testdata/`, and assert on results a user would observe.
+
+- A test that restates the implementation (file names, loader flags, symbol tables, which code path ran) fails review.
+- Mocks or stand-ins for the native libraries or MIKE engines are not accepted. When a behaviour cannot be tested with the real libraries, leave it untested and say so in the PR.
+
+## User docs describe use, not mechanism
+
+README text tells a user what to do, when it applies, and its limits, in a few lines. How it works belongs in code comments, commit messages or the PR.
