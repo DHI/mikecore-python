@@ -527,6 +527,10 @@ class DfsDynamicItemInfo:
         self.AssociatedStaticItemNumbers: list[int] | None = []
         self.SpatialAxis = None
 
+    # Set on dynamic items read from a file, and by
+    # DfsDynamicItemBuilder.SetValueType before an item is built
+    ValueType: DataValueType
+
     def __repr__(self):
         return (
             'DfsItem("'
@@ -593,6 +597,7 @@ class DfsStaticItem(DfsDynamicItemInfo):
         super().__init__(itemPointer, itemNumber)
         self.DfsFile = dfsFile
         self.VectorPointer = vectorPointer
+        self.StaticVectorPointer = vectorPointer
         self.Data = None
 
     @staticmethod
@@ -1415,7 +1420,7 @@ class DfsFile:
         self.fpItemNumber = 1
         self.fpTimeStepIndex = 0
 
-    def __FpFindItemTimeStep(self, itemNumber: int, timestepIndex: int):
+    def __FpFindItemTimeStep(self, itemNumber: int, timestepIndex: int | np.integer):
         # If itemNumber is first item, search for time step instead
         if itemNumber == 1:
             self.__FpFindTimeStep(timestepIndex)
@@ -1431,9 +1436,9 @@ class DfsFile:
             )
             self.fpState = DfsFilePointerState.DynamicItem
             self.fpItemNumber = itemNumber
-            self.fpTimeStepIndex = timestepIndex
+            self.fpTimeStepIndex = int(timestepIndex)
 
-    def __FpFindTimeStep(self, timestepIndex: int):
+    def __FpFindTimeStep(self, timestepIndex: int | np.integer):
         # Position the file pointer at the dynamic item
         if (
             self.fpState != DfsFilePointerState.DynamicItem
@@ -1445,7 +1450,7 @@ class DfsFile:
             )
             self.fpState = DfsFilePointerState.DynamicItem
             self.fpItemNumber = 1
-            self.fpTimeStepIndex = timestepIndex
+            self.fpTimeStepIndex = int(timestepIndex)
 
     def __FpDynamicIncrement(self):
         self.fpItemNumber += 1
@@ -1484,7 +1489,6 @@ class DfsFile:
 
         staticItem = DfsStaticItem(self, staticVectorPointer, staticItemPointer, number)
         staticItem.DfsFile = self
-        staticItem.StaticVectorPointer = staticVectorPointer
 
         # The header pointer is not automatically set in the static item, so do that here.
         # Otherwise unit conversion of static item info (spatial axis) will fail (in ufs.dll
@@ -2037,7 +2041,7 @@ class DfsDLLUtil:
     def dfsSetTemporalAxis(headerPointer, temporalAxis: DfsTemporalAxis):
         if temporalAxis.TimeAxisType is TimeAxisType.Undefined:
             raise Exception("Temporal axis can not be undefined")
-        if temporalAxis.TimeAxisType is TimeAxisType.TimeEquidistant:
+        if isinstance(temporalAxis, DfsEqTimeAxis):
             rok = DfsDLL.Wrapper.dfsSetEqTimeAxis(
                 headerPointer,
                 ctypes.c_int32(temporalAxis.TimeUnit.value),
@@ -2046,7 +2050,7 @@ class DfsDLLUtil:
                 ctypes.c_int32(temporalAxis.FirstTimeStepIndex),
             )
             DfsDLL.CheckReturnCode(rok)
-        elif temporalAxis.TimeAxisType is TimeAxisType.TimeNonEquidistant:
+        elif isinstance(temporalAxis, DfsNonEqTimeAxis):
             rok = DfsDLL.Wrapper.dfsSetNeqTimeAxis(
                 headerPointer,
                 ctypes.c_int32(temporalAxis.TimeUnit.value),
@@ -2054,7 +2058,7 @@ class DfsDLLUtil:
                 ctypes.c_int32(temporalAxis.FirstTimeStepIndex),
             )
             DfsDLL.CheckReturnCode(rok)
-        elif temporalAxis.TimeAxisType is TimeAxisType.CalendarEquidistant:
+        elif isinstance(temporalAxis, DfsEqCalendarAxis):
             dateStr, timeStr = DfsDLLUtil.ToDfsDateStrings(temporalAxis.StartDateTime)
             rok = DfsDLL.Wrapper.dfsSetEqCalendarAxis(
                 headerPointer,
@@ -2066,7 +2070,7 @@ class DfsDLLUtil:
                 ctypes.c_int32(temporalAxis.FirstTimeStepIndex),
             )
             DfsDLL.CheckReturnCode(rok)
-        elif temporalAxis.TimeAxisType is TimeAxisType.CalendarNonEquidistant:
+        elif isinstance(temporalAxis, DfsNonEqCalendarAxis):
             dateStr, timeStr = DfsDLLUtil.ToDfsDateStrings(temporalAxis.StartDateTime)
             rok = DfsDLL.Wrapper.dfsSetNeqCalendarAxis(
                 headerPointer,
@@ -2077,6 +2081,8 @@ class DfsDLLUtil:
                 ctypes.c_int32(temporalAxis.FirstTimeStepIndex),
             )
             DfsDLL.CheckReturnCode(rok)
+        else:
+            raise Exception(f"Unsupported temporal axis: {type(temporalAxis).__name__}")
 
     @staticmethod
     def ToDfsDateStrings(datetime):

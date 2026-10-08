@@ -1331,6 +1331,9 @@ class eumQuantity:
         self.ItemInt = item
         self.Unit = unit
         self.UnitInt = unit
+        # Set on quantities read from a file
+        self.ItemDescription: str | None = None
+        self.UnitDescription: str | None = None
 
     def __repr__(self):
         return f"{self.Item}-{self.Unit}"
@@ -1428,7 +1431,8 @@ class eumDLL:
     # Leaving out extension should make it work for both Windows and Linux
     libfilename = "libeum.so"
     # libfilename = "eum";
-    libfilepath = None
+    # Directory of the native libraries; set before Init() or passed to it
+    libfilepath: str | None = None
 
     # def __init__(self):
     # init()
@@ -1444,15 +1448,18 @@ class eumDLL:
         # eum lib should be loaded only once
         if eumDLL._loaded:
             return
+        path = eumDLL.libfilepath
+        if path is None:
+            raise ValueError("eumDLL.Init needs the directory of the native libraries")
         # TODO: Is there a smarter way to have the eum library loaded (especially when xcopy-deployed)
         if os.name == "nt":
-            lib = ctypes.CDLL(os.path.join(eumDLL.libfilepath, "eum"))
+            lib = ctypes.CDLL(os.path.join(path, "eum"))
         else:
-            lib = ctypes.CDLL(os.path.join(eumDLL.libfilepath, "libeum.so"))
+            lib = ctypes.CDLL(os.path.join(path, "libeum.so"))
 
             lib.eumSetupLoadLinux.argtypes = [ctypes.c_char_p]
             # TODO: Should this not be simpler?
-            eumFilePath = eumDLL.libfilepath + "/EUM.xml"
+            eumFilePath = path + "/EUM.xml"
             eumFilePathP = ctypes.c_char_p(eumFilePath.encode("ascii"))
             res = lib.eumSetupLoadLinux(eumFilePathP)
 
@@ -1727,7 +1734,7 @@ class eumWrapper:
     # / the numeric input key <paramref name="unitKey"/>.
     # / </summary>
     @staticmethod
-    def eumGetUnitAbbreviation(unitKey: eumUnit) -> str:
+    def eumGetUnitAbbreviation(unitKey: eumUnit | int) -> str:
         lpUnitDesc = ctypes.c_char_p()
         if 1 == eumDLL.Wrapper.eumGetUnitAbbreviation(
             unitKey, ctypes.byref(lpUnitDesc)
@@ -1847,7 +1854,7 @@ class eumWrapper:
     # / </summary>
     @staticmethod
     def eumConvertUnit(
-        fromUnitKey: eumUnit, fromValue: float, toUnitKey: eumUnit
+        fromUnitKey: eumUnit | int, fromValue: float, toUnitKey: eumUnit | int
     ) -> tuple[bool, float]:
         toValue = ctypes.c_double()
         iok = eumDLL.Wrapper.eumConvertUnit(
@@ -1893,7 +1900,7 @@ class eumWrapper:
             ctypes.c_int32(toUnitKey),
             pData.ctypes.data,
             ctypes.c_int32(pData.size),
-            ctypes.c_float(fDeleteValue),
+            ctypes.c_float(float(fDeleteValue)),
         )
 
     # / <summary>
@@ -2010,7 +2017,7 @@ class eumWrapper:
             ctypes.c_int32(localunitKey),
             pData.ctypes.data,
             ctypes.c_int32(pData.size),
-            ctypes.c_float(fDeleteValue),
+            ctypes.c_float(float(fDeleteValue)),
         )
 
     # / <summary>
@@ -2058,7 +2065,7 @@ class eumWrapper:
             ctypes.c_int32(localunitKey),
             pData.ctypes.data,
             ctypes.c_int32(pData.size),
-            ctypes.c_float(fDeleteValue),
+            ctypes.c_float(float(fDeleteValue)),
         )
 
     #    #/ <summary>

@@ -58,11 +58,10 @@ python-version = "3.11"
 # later, so most accesses trip missing-attribute. Kept as warnings so real None
 # dereferences stay visible; make them errors once those attributes are typed.
 missing-attribute = "warn"
-# Existing violations need typing work (e.g. TimeAxis unions, List[int]
-# parameters that receive numpy arrays). Kept visible as warnings for now.
+# Existing violations need the same typing work (values from those attributes
+# passed on, indexed or sized). Kept visible as warnings for now.
 bad-argument-type = "warn"
 unsupported-operation = "warn"
-no-matching-overload = "warn"
 read-only = "warn"
 
 [tool.ruff.format]

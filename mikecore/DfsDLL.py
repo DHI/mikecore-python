@@ -43,18 +43,20 @@ class DfsDLL:
     # Static variables
     # Set by Init(), which mikecore/__init__.py calls on import
     Wrapper: ctypes.CDLL
+    # Directory of the native libraries
+    libfilepath: str
     _loaded = False
     MCCUWrapper = None
 
     @staticmethod
-    def Init(libfilepath=None):
+    def Init(libfilepath: str | None = None):
 
         # ufs lib should be loaded only once
         if DfsDLL._loaded:
             return
-        DfsDLL.libfilepath = None
-        if libfilepath is not None:
-            DfsDLL.libfilepath = libfilepath
+        if libfilepath is None:
+            raise ValueError("DfsDLL.Init needs the directory of the native libraries")
+        DfsDLL.libfilepath = libfilepath
 
         # TODO: On linux, this looks different!
         if os.name == "nt":
@@ -257,7 +259,7 @@ class DfsDLL:
     #            ]
 
     @staticmethod
-    def dfsErrorString(error: DfsError):
+    def dfsErrorString(error: DfsError | int):
         if error == DfsError.F_NO_ERROR:
             return ""
         if error == DfsError.F_END_OF_FILE:

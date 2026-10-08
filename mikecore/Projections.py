@@ -49,6 +49,8 @@ class MzCartDLL:
     _projDestroyCount = 0
     _converterCreateCount = 0
     _converterDestroyCount = 0
+    # Directory of the native libraries
+    libfilepath: str
 
     @staticmethod
     def Init(libfilepath: str | None = None):
@@ -56,9 +58,11 @@ class MzCartDLL:
         # ufs lib should be loaded only once
         if MzCartDLL._loaded:
             return
-        MzCartDLL.libfilepath = None
-        if libfilepath is not None:
-            MzCartDLL.libfilepath = libfilepath
+        if libfilepath is None:
+            raise ValueError(
+                "MzCartDLL.Init needs the directory of the native libraries"
+            )
+        MzCartDLL.libfilepath = libfilepath
 
         # TODO: On linux, this looks different!
         if os.name == "nt":
