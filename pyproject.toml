@@ -43,7 +43,9 @@ Homepage = "https://github.com/DHI/mikecore-python"
 
 [dependency-groups]
 dev = [
-    "pyrefly>=1.3.2",
+    # Pinned: new releases can add errors and warnings. Bump deliberately and
+    # update MAX_WARNINGS in .github/workflows/type_check.yml to match.
+    "pyrefly==1.3.2",
     "pytest>=6.1.2",
 ]
 
