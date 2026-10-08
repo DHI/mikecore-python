@@ -79,7 +79,7 @@ def test_Dfs0ToAscii_truncated_file(tmp_path):
         # Remove the end of the file, part-way into timestep index 8
         dfs0.truncate(dfs0.seek(0, 2) - 40)
 
-    with pytest.raises(AttributeError, match="'NoneType' object has no attribute"):
+    with pytest.raises(Exception, match="Could not read item 1 at timestep index 8"):
         Dfs0ToAscii(dfs0FileName, str(tmp_path / "truncated.txt"))
 
 

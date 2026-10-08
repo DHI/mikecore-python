@@ -1,6 +1,5 @@
 import unittest
 import numpy as np
-import pytest
 from tests.test_util import *
 from mikecore.Projections import *
 
@@ -516,8 +515,7 @@ def test_ProjectionShortName_longer_than_first_buffer():
     # than the 128 characters first asked for
     name = "X" * 300
 
-    with pytest.raises(ProjectionException, match="Could not get short name"):
-        MapProjection.ProjectionShortName(name)
+    assert name == MapProjection.ProjectionShortName(name)
 
 
 def test_Cartography_projection_string():

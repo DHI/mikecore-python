@@ -115,14 +115,17 @@ def test_validate_accepts_highest_node_number():
 def test_create_file_without_nodes_or_elements_fails(tmp_path):
     builder = _builder()
 
-    with pytest.raises(TypeError, match="'NoneType' object is not iterable"):
+    with pytest.raises(Exception) as error:
         builder.CreateFile(str(tmp_path / "empty.dfsu"))
+
+    assert "Nodes have not been set" in str(error.value)
+    assert "Elements have not been set" in str(error.value)
 
 
 def test_setup_before_nodes_and_elements_fails():
     builder = _builder()
 
-    with pytest.raises(AttributeError, match="'NoneType' object has no attribute"):
+    with pytest.raises(Exception, match="Nodes and elements must be set"):
         builder.SetupConnectivityArrays()
 
 
@@ -130,7 +133,7 @@ def test_node_ids_must_match_number_of_nodes():
     builder = _builder()
     builder.SetNodes(X, Y, Z, CODE)
 
-    with pytest.raises(ValueError, match="truth value of an array"):
+    with pytest.raises(Exception, match="does not match number of nodes"):
         builder.SetNodeIds(np.array([1, 2, 3], dtype=np.int32))
 
 
@@ -138,7 +141,7 @@ def test_nodes_must_match_number_of_node_ids():
     builder = _builder()
     builder.SetNodeIds(np.array([1, 2, 3], dtype=np.int32))
 
-    with pytest.raises(ValueError, match="truth value of an array"):
+    with pytest.raises(Exception, match="same length as the number of node ids"):
         builder.SetNodes(X, Y, Z, CODE)
 
 
@@ -146,7 +149,7 @@ def test_elements_must_match_element_ids_from_mesh_file():
     builder = _builder()
     builder.SetFromMeshFile(MeshFile.ReadMesh("testdata/Oresund.mesh"))
 
-    with pytest.raises(ValueError, match="truth value of an array"):
+    with pytest.raises(Exception, match="not the same as number of element ids"):
         builder.SetElements(ELEMENTS)
 
 
@@ -202,13 +205,19 @@ def test_spectral_file_with_frequencies_and_directions(tmp_path):
 
 
 def test_spectral_file_with_frequencies_only(tmp_path):
+    filename = str(tmp_path / "frequencies_only.dfsu")
     builder = _builder(DfsuFileType.DfsuSpectral2D)
     builder.SetNodes(X, Y, Z, CODE)
     builder.SetElements(ELEMENTS)
     builder.SetFrequencies(FREQUENCIES)
+    builder.CreateFile(filename).Close()
 
-    with pytest.raises(TypeError, match="object of type 'NoneType' has no len"):
-        builder.CreateFile(str(tmp_path / "frequencies_only.dfsu"))
+    dfsu = DfsuFile.Open(filename)
+    assert_array_equal(FREQUENCIES, dfsu.Frequencies)
+    assert 0 == dfsu.NumberOfDirections
+    # One value per element and frequency
+    assert 2 * 3 == dfsu.ItemInfo[0].ElementCount
+    dfsu.Close()
 
 
 def test_spectral_1d_file_has_values_per_node(tmp_path):

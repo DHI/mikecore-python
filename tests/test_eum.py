@@ -194,7 +194,7 @@ def test_eumGetNextEqvUnit_first_unit():
 
 def test_eumGetNextEqvUnit_after_last_unit():
     # The native call returns no unit, with a null description
-    with pytest.raises(AttributeError, match="'NoneType' object has no attribute"):
+    with pytest.raises(ValueError, match="Native library returned a null string"):
         eumWrapper.eumGetNextEqvUnit(eumUnit.eumUmeter, eumUnit.eumUmileUS)
 
 

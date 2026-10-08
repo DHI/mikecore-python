@@ -61,14 +61,17 @@ def test_error_reporting():
 def test_open_with_integer_mode():
     dfs = DfsFile()
 
-    with pytest.raises(UnboundLocalError):
-        dfs.Open("testdata/TemporalEqCal.dfs0", 0)
+    dfs.Open("testdata/TemporalEqCal.dfs0", 0)
+    names = [item.Name for item in dfs.ItemInfo]
+    dfs.Close()
+
+    assert ["WaterLevel item", "WaterDepth item"] == names
 
 
 def test_open_in_closed_mode_fails():
     dfs = DfsFile()
 
-    with pytest.raises(UnboundLocalError):
+    with pytest.raises(ValueError, match="Cannot open a file in mode"):
         dfs.Open("testdata/TemporalEqCal.dfs0", DfsFileMode.Closed)
 
 

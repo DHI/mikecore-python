@@ -81,5 +81,5 @@ class Test_dfs_custom_block(unittest.TestCase):
 
 
 def test_create_custom_block_with_unsupported_data_type():
-    with pytest.raises(UnboundLocalError):
+    with pytest.raises(ValueError, match="Unsupported custom block data type: int64"):
         DfsFactory().CreateCustomBlock("Block", np.array([1, 2], dtype=np.int64))
