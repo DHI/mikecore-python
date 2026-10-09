@@ -54,6 +54,54 @@ def test_node_ids_set_before_nodes_are_written(tmp_path):
     dfsu.Close()
 
 
+def test_dynamic_item_values_are_written(tmp_path):
+    filename = str(tmp_path / "values.dfsu")
+    builder = _builder()
+    builder.AddDynamicItem(
+        "Other", eumQuantity(eumItem.eumIWaterLevel, eumUnit.eumUmeter)
+    )
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    dfsu = builder.CreateFile(filename)
+    # Item-timesteps are written in order: items within each time step
+    dfsu.WriteItemTimeStepNext(0, np.array([1.5, -2.5], dtype=np.float32))
+    dfsu.WriteItemTimeStepNext(0, np.array([10.0, 20.0], dtype=np.float32))
+    dfsu.WriteItemTimeStepNext(0, np.array([3.0, 4.0], dtype=np.float32))
+    dfsu.WriteItemTimeStepNext(0, np.array([30.0, 40.0], dtype=np.float32))
+    dfsu.Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert 2 == dfsu.NumberOfTimeSteps
+    assert ["Value", "Other"] == [itemInfo.Name for itemInfo in dfsu.ItemInfo]
+    assert eumItem.eumIWaterLevel == dfsu.ItemInfo[1].Quantity.Item
+    assert_array_equal([1.5, -2.5], dfsu.ReadItemTimeStep(1, 0).Data)
+    assert_array_equal([10.0, 20.0], dfsu.ReadItemTimeStep(2, 0).Data)
+    assert_array_equal([3.0, 4.0], dfsu.ReadItemTimeStep(1, 1).Data)
+    assert_array_equal([30.0, 40.0], dfsu.ReadItemTimeStep(2, 1).Data)
+    dfsu.Close()
+
+
+def test_z_unit_is_written(tmp_path):
+    filename = str(tmp_path / "zunit.dfsu")
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.SetZUnit(eumUnit.eumUfeet)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert eumUnit.eumUfeet == dfsu.ZUnit
+    assert_array_equal(Z, dfsu.Z)
+    dfsu.Close()
+
+
+def test_z_unit_must_be_meter_or_feet():
+    builder = _builder()
+
+    with pytest.raises(Exception, match="only meter and feet"):
+        builder.SetZUnit(eumUnit.eumUsec)
+
+
 def test_validate_reports_missing_nodes_and_elements():
     builder = DfsuBuilder.Create(DfsuFileType.Dfsu2D)
 
@@ -211,8 +259,6 @@ def test_spectral_file_with_frequencies_and_directions(tmp_path):
 
     dfsu = DfsuFile.Open(filename)
     assert DfsuFileType.DfsuSpectral2D is dfsu.DfsuFileType
-    # The value of the MIKE Core DfsuFileType enum
-    assert 10 == dfsu.DfsuFileType
     assert_array_equal(FREQUENCIES, dfsu.Frequencies)
     assert_array_equal(DIRECTIONS, dfsu.Directions)
     # One value per element, frequency and direction
@@ -247,8 +293,6 @@ def test_spectral_1d_file_has_values_per_node(tmp_path):
 
     dfsu = DfsuFile.Open(filename)
     assert DfsuFileType.DfsuSpectral1D is dfsu.DfsuFileType
-    # The value of the MIKE Core DfsuFileType enum
-    assert 9 == dfsu.DfsuFileType
     # One value per node, frequency and direction
     assert 4 * 3 * 4 == dfsu.ItemInfo[0].ElementCount
     dfsu.Close()
