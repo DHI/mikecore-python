@@ -1080,6 +1080,8 @@ class MapProjection:
         self._mustFree = mustFree
 
         if self._mzMapProjPointer is None:
+            if projectionString is None:
+                raise ValueError("projectionString or mzMapProjPointer must be given")
             self._mzMapProjPointer = MzCartDLL.MzMapProjCreate(projectionString)
         if self.ProjectionString is None:
             self.ProjectionString = MzCartDLL.MzMapProjProjectionString(

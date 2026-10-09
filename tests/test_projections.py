@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import pytest
 from tests.test_util import *
 from mikecore.Projections import *
 
@@ -524,6 +525,11 @@ def test_Cartography_projection_string():
     assert projectionString is not None
     assert projectionString.startswith('PROJCS["UTM-33"')
     assert "UTM-33" == MapProjection.ProjectionShortName(projectionString)
+
+
+def test_MapProjection_without_projection_string_or_pointer_fails():
+    with pytest.raises(ValueError, match="projectionString or mzMapProjPointer"):
+        MapProjection(None)
 
 
 if __name__ == "__main__":
