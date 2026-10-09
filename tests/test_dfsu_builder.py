@@ -250,7 +250,9 @@ def test_set_from_mesh_file_writes_the_mesh(tmp_path):
     assert_array_equal(mesh.Code, dfsu.Code)
     assert_array_equal(mesh.ElementIds, dfsu.ElementIds)
     assert len(mesh.ElementTable) == len(dfsu.ElementTable)
-    for meshElement, dfsuElement in zip(mesh.ElementTable, dfsu.ElementTable):
+    for meshElement, dfsuElement in zip(
+        mesh.ElementTable, dfsu.ElementTable, strict=True
+    ):
         assert_array_equal(meshElement, dfsuElement)
     dfsu.Close()
 
