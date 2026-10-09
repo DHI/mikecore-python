@@ -280,7 +280,7 @@ class DfsBuilder:
                 zSize = axis.Shape[2]
                 ok = True
                 for j in range(encodeKeysize):
-                    if xKey[i] >= xSize or yKey[i] >= ySize or zKey[i] >= zSize:
+                    if xKey[j] >= xSize or yKey[j] >= ySize or zKey[j] >= zSize:
                         ok = False
                         break
 
