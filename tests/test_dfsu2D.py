@@ -319,6 +319,18 @@ class Dfsu2DTests(unittest.TestCase):
         Assert.AreEqual(len(model2.ElementTable), len(dfsu2.ElementTable))
         for elmt2, modelElmt2 in zip(dfsu2.ElementTable, model2.ElementTable):
             Assert.AreEqual(modelElmt2, elmt2)
+        # Each 2D element has the 2D type of the layered elements in its column
+        columns = ElementColumns(dfsu3)
+        elementType3 = dfsu3.ElementType
+        assert elementType3 is not None
+        Assert.AreEqual(
+            [
+                LAYERED_TO_2D[elementType3[columns[key][0]]]
+                for key in ElementPositionKeys(dfsu2)
+            ],
+            dfsu2.ElementType,
+        )
+        Assert.AreEqual(model2.ElementType, dfsu2.ElementType)
         Assert.AreEqual(model2.StartDateTime, dfsu2.StartDateTime)
         Assert.AreEqual(model2.TimeStepInSeconds, dfsu2.TimeStepInSeconds)
         Assert.AreEqual(dfsu3.NumberOfTimeSteps, dfsu2.NumberOfTimeSteps)
@@ -331,13 +343,27 @@ class Dfsu2DTests(unittest.TestCase):
         model2.Close()
         dfsu2.Close()
 
+        # The MIKE_FM custom block of a 2D horizontal file is
+        # [nodes, elements, dimension 2, 0 layers, 0 sigma layers]
+        dfs2 = DfsFileFactory.DfsGenericOpen(filename)
+        customBlock = dfs2.FileInfo.CustomBlocks[0]
+        Assert.AreEqual("MIKE_FM", customBlock.Name)
+        Assert.AreEqual(
+            [model2.NumberOfNodes, model2.NumberOfElements, 2, 0, 0],
+            [customBlock[i] for i in range(customBlock.Count)],
+        )
+        dfs2.Close()
+
     def test_ExtractDfsu2DLayerFrom3DSigma(self):
-        # In a sigma file every column has all layers, so the elements of a column
-        # are consecutive, from the bottom up, and the elements of one layer are
-        # every numberOfLayers'th element, starting layersBelow into the table.
-        # Positive layer numbers count from the bottom (1), negative from the top (-1).
+        # The elements of a column are consecutive, from the bottom up. With as many
+        # sigma layers as layers every column has all layers, so the elements of one
+        # layer are every numberOfLayers'th element, starting layersBelow into the
+        # table.
+        # A dfsu file has no layer numbers. ExtractDfsu2DLayerFrom3D counts positive
+        # layer numbers from the bottom (1) and negative from the top (-1).
         dfsu3 = DfsuFile.Open("testdata/OdenseHD3D.dfsu")
         numberOfLayers = dfsu3.NumberOfLayers
+        Assert.AreEqual(numberOfLayers, dfsu3.NumberOfSigmaLayers)
         numberOfColumns = dfsu3.NumberOfElements // numberOfLayers
         lastTimestep = dfsu3.NumberOfTimeSteps - 1
         bottom = 0
@@ -371,7 +397,11 @@ class Dfsu2DTests(unittest.TestCase):
 
     def test_ExtractDfsu2DLayerFrom3DSigmaZWritesDeleteValueBelowTheBottom(self):
         # Columns of Oresund3DSigmaZ.dfsu have from 3 to 33 layers, so the fifth
-        # layer from the top is below the bottom in the shallow columns
+        # layer from the top is below the bottom in the shallow columns.
+        # ExtractDfsu2DLayerFrom3D writes the delete value there. Its positive layer
+        # numbers count from the bottom of the maximum number of layers, which this
+        # file declares as 38 though its deepest column has 33, so they are not
+        # tested on it.
         layerFromTop = 5
         filename = f"testdata/testtmp/test_Oresund3DSigmaZ_layer-{layerFromTop}.dfsu"
         ExamplesDfsu.ExtractDfsu2DLayerFrom3D(
@@ -383,7 +413,7 @@ class Dfsu2DTests(unittest.TestCase):
         columns = ElementColumns(dfsu3)
         # The 2D elements are the columns of the 3D mesh
         Assert.AreEqual(len(columns), dfsu2.NumberOfElements)
-        column2 = [columns[key] for key in ElementCentreKeys(dfsu2)]
+        column2 = [columns[key] for key in ElementPositionKeys(dfsu2)]
         Assert.AreEqual(len(columns), len({tuple(column) for column in column2}))
         shallowColumns = sum(len(column) < layerFromTop for column in column2)
         # The file has both cases
@@ -432,23 +462,34 @@ class Dfsu2DTests(unittest.TestCase):
             )
 
 
-def ElementCentreKeys(dfsu):
-    """x,y of each element centre, the mean of its nodes, rounded to millimetres"""
+# Element types of a layered element and of the 2D element at the base of its
+# column: prism and triangle, hexahedron and quadrilateral
+LAYERED_TO_2D = {32: 21, 33: 25}
+
+
+def ElementPositionKeys(dfsu):
+    """The 2D positions (x,y) of the nodes of each element.
+
+    Nodes on top of each other have the same 2D position, so a 3D element has the
+    key of the 2D element below it.
+    """
     return [
-        (round(dfsu.X[elmt - 1].mean(), 3), round(dfsu.Y[elmt - 1].mean(), 3))
+        frozenset(zip(dfsu.X[elmt - 1].tolist(), dfsu.Y[elmt - 1].tolist()))
         for elmt in dfsu.ElementTable
     ]
 
 
 def ElementColumns(dfsu3):
-    """Element indices of each column of a 3D mesh, by x,y of the element centres,
-    from the top down"""
-    centreZ = [dfsu3.Z[elmt - 1].mean() for elmt in dfsu3.ElementTable]
+    """Element indices of each column of a 3D mesh, by 2D position, from the top
+    down.
+
+    The elements of a column have consecutive indices, from the bottom up.
+    """
     columns = {}
-    for i, key in enumerate(ElementCentreKeys(dfsu3)):
+    for i, key in enumerate(ElementPositionKeys(dfsu3)):
         columns.setdefault(key, []).append(i)
     for column in columns.values():
-        column.sort(key=lambda i: -centreZ[i])
+        column.reverse()
     return columns
 
 
