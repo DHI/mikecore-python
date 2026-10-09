@@ -91,6 +91,29 @@ def test_default_node_and_element_ids_count_from_one(tmp_path):
     dfsu.Close()
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "Suspected bug: SetElementIds checks the length of the ids but never "
+        "stores them, so the file gets the default ids 1, 2, ... without warning. "
+        "SetNodeIds stores its ids. Correct: the ids passed are written."
+    ),
+)
+def test_element_ids_are_written(tmp_path):
+    filename = str(tmp_path / "element_ids.dfsu")
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.SetElementIds(np.array([10, 20], dtype=np.int32))
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    elementIds = dfsu.ElementIds
+    dfsu.Close()
+
+    assert_array_equal([10, 20], elementIds)
+
+
 @pytest.mark.parametrize("nodeNumber", [0, 5])
 def test_validate_reports_node_number_outside_the_nodes(nodeNumber):
     builder = _builder()
@@ -257,4 +280,38 @@ def test_temporal_axis_is_written(tmp_path):
     dfsu = DfsuFile.Open(filename)
     assert datetime.datetime(2021, 2, 3, 4, 5, 6) == dfsu.StartDateTime
     assert 30 == dfsu.TimeStepInSeconds
+    dfsu.Close()
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "Suspected bug: Validate accepts DfsuSpectral0D, but SetupBuilder has no "
+        "branch for it and raises an Exception with no message. DfsuFile reads a "
+        "Spectral0D file as data type 2001 with a 6-value MIKE_FM block "
+        "[nodes, elements, 2, 0, frequencies, directions], over a mesh with one "
+        "element per frequency-direction pair. Correct: the builder writes that, "
+        "and the file reads back as DfsuSpectral0D with one value per frequency "
+        "and direction."
+    ),
+)
+def test_spectral_0d_file_has_one_spectrum(tmp_path):
+    filename = str(tmp_path / "spectral0d.dfsu")
+    frequencies = np.array([0.1, 0.2])
+    directions = np.array([0.0, np.pi])
+    # 2 x 2 quadrilaterals over a 3 x 3 grid of nodes, one per frequency and direction
+    x = np.tile([0.0, 1.0, 2.0], 3)
+    y = np.repeat([0.0, 1.0, 2.0], 3)
+    builder = _builder(DfsuFileType.DfsuSpectral0D)
+    builder.SetNodes(x, y, np.zeros(9), np.zeros(9, dtype=np.int32))
+    builder.SetElements([[1, 2, 5, 4], [2, 3, 6, 5], [4, 5, 8, 7], [5, 6, 9, 8]])
+    builder.SetFrequencies(frequencies)
+    builder.SetDirections(directions)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert DfsuFileType.DfsuSpectral0D is dfsu.DfsuFileType
+    assert_array_equal(frequencies, dfsu.Frequencies)
+    assert_array_equal(directions, dfsu.Directions)
+    assert 2 * 2 == dfsu.ItemInfo[0].ElementCount
     dfsu.Close()

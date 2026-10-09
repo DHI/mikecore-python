@@ -1,8 +1,14 @@
+import datetime
 import shutil
 import unittest
 
+import numpy as np
 import pytest
 
+from mikecore.DfsBuilder import DfsBuilder
+from mikecore.DfsFactory import DfsFactory
+from mikecore.DfsFile import DataValueType, DfsSimpleType
+from mikecore.eum import eumItem, eumQuantity, eumUnit
 from miketools.Dfs0ToAscii import *
 from miketools.DfsShowInfo import DfsShowInfo
 
@@ -58,6 +64,51 @@ def test_Dfs0ToAscii_writes_calendar_times(tmp_path):
     assert ["2010-01-04", "12:34:14.000", 1.0, 101.0] == [
         *lines[1].split()[:2],
         *map(float, lines[1].split()[2:]),
+    ]
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "Suspected bug: Dfs0ToAscii adds itemData.Time to the start as seconds "
+        "(its own TODO says the time unit is not always seconds), but "
+        "ReadItemTimeStepNext returns times in the time axis unit. With a "
+        "10 minute step the second row is stamped 00:00:10. Correct: convert "
+        "with the time axis's ToSeconds, giving 00:10:00."
+    ),
+)
+def test_Dfs0ToAscii_writes_calendar_times_in_minutes(tmp_path):
+    dfs0FileName = str(tmp_path / "minutes.dfs0")
+    factory = DfsFactory()
+    builder = DfsBuilder.Create("title", "application", 1)
+    builder.SetDataType(0)
+    builder.SetGeographicalProjection(factory.CreateProjectionUndefined())
+    builder.SetTemporalAxis(
+        factory.CreateTemporalEqCalendarAxis(
+            eumUnit.eumUminute, datetime.datetime(2020, 1, 1), 0, 10
+        )
+    )
+    item = builder.CreateDynamicItemBuilder()
+    item.Set(
+        "Value",
+        eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined),
+        DfsSimpleType.Float,
+    )
+    item.SetValueType(DataValueType.Instantaneous)
+    item.SetAxis(factory.CreateAxisEqD0())
+    builder.AddDynamicItem(item.GetDynamicItemInfo())
+    builder.CreateFile(dfs0FileName)
+    dfs0 = builder.GetFile()
+    for value in (1.0, 2.0):
+        dfs0.WriteItemTimeStepNext(0, np.array([value], dtype=np.float32))
+    dfs0.Close()
+    txtFileName = str(tmp_path / "minutes.txt")
+
+    Dfs0ToAscii(dfs0FileName, txtFileName)
+
+    lines = _data_lines(txtFileName)
+    assert [["2020-01-01", "00:00:00.000"], ["2020-01-01", "00:10:00.000"]] == [
+        line.split()[:2] for line in lines
     ]
 
 

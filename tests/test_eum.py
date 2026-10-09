@@ -184,18 +184,28 @@ class TestEUM(unittest.TestCase):
         Assert.AreEqual(np.array([0.5, 1, 2, 3.280839895]), array, 1e-6)
 
 
+EQV_UNIT_INVERTED = (
+    "Suspected bug: eumGetNextEqvUnit treats a non-zero return code as failure, "
+    "the opposite of every other eum wrapper (eumGetNextUnit, eumGetItemUnitSeq, "
+    "...). Called directly, the native function returns 1 with meter as the first "
+    "unit equivalent to meter, and 0 with a null description after the last one. "
+    "Correct: (True, eumUmeter, 'meter') for the first unit and "
+    "(False, eumUUnitUndefined, '') after the last."
+)
+
+
+@pytest.mark.xfail(strict=True, reason=EQV_UNIT_INVERTED)
 def test_eumGetNextEqvUnit_first_unit():
-    # The native call succeeds and returns meter, but the wrapper reads its
-    # success code (1) as failure
-    assert (False, eumUnit.eumUUnitUndefined, "") == eumWrapper.eumGetNextEqvUnit(
+    assert (True, eumUnit.eumUmeter, "meter") == eumWrapper.eumGetNextEqvUnit(
         eumUnit.eumUmeter, eumUnit.eumUUnitUndefined
     )
 
 
+@pytest.mark.xfail(strict=True, reason=EQV_UNIT_INVERTED)
 def test_eumGetNextEqvUnit_after_last_unit():
-    # The native call returns no unit, with a null description
-    with pytest.raises(ValueError, match="Native library returned a null string"):
-        eumWrapper.eumGetNextEqvUnit(eumUnit.eumUmeter, eumUnit.eumUmileUS)
+    assert (False, eumUnit.eumUUnitUndefined, "") == eumWrapper.eumGetNextEqvUnit(
+        eumUnit.eumUmeter, eumUnit.eumUmileUS
+    )
 
 
 def test_GetItemTypeTag_unknown_description():

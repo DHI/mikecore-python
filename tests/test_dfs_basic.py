@@ -110,6 +110,35 @@ def test_read_static_item_after_read_static_item_next():
     assert "Node id" == item.Name
 
 
+def test_read_static_item_past_the_last_item():
+    dfs = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfsu")
+
+    item = dfs.ReadStaticItem(10)
+    dfs.Close()
+
+    assert item is None
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "Suspected bug: ReadStaticItem does not check the item number and ignores "
+        "the return code of dfsFindItemStatic, so ReadStaticItem(0) returns the "
+        "first static item ('Node id') with ItemNumber 0. Static item numbers start "
+        "at 1. Correct: reject numbers below 1 with a ValueError, as "
+        "__DynamicItemInfoReadAndCreate does for dynamic items."
+    ),
+)
+def test_read_static_item_zero():
+    dfs = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfsu")
+
+    try:
+        with pytest.raises(ValueError):
+            dfs.ReadStaticItem(0)
+    finally:
+        dfs.Close()
+
+
 def test_item_quantity_descriptions():
     dfs = DfsFileFactory.DfsGenericOpen("testdata/TemporalEqCal.dfs0")
     quantities = [item.Quantity for item in dfs.ItemInfo]
