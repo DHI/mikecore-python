@@ -1005,5 +1005,23 @@ class FileTemporalNeqCalDfs0:
         assert_equal(102, itemData[2, 2])
 
 
+def test_reference_coordinates_are_read_from_file():
+    # Written by other software, with reference coordinates set
+    file = DfsFileFactory.DfsGenericOpen("testdata/Rain_instantaneous.dfs0")
+    itemInfo = file.ItemInfo[0]
+    file.Close()
+
+    assert (200, 200, 0) == (
+        itemInfo.ReferenceCoordinateX,
+        itemInfo.ReferenceCoordinateY,
+        itemInfo.ReferenceCoordinateZ,
+    )
+    assert (0, 0, 0) == (
+        itemInfo.OrientationAlpha,
+        itemInfo.OrientationPhi,
+        itemInfo.OrientationTheta,
+    )
+
+
 if __name__ == "__main__":
     unittest.main()
