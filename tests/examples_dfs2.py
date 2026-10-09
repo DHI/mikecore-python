@@ -2,7 +2,6 @@ from mikecore.DfsFileFactory import DfsFileFactory
 from mikecore.DfsFactory import *
 from mikecore.DfsBuilder import *
 from mikecore.DfsFile import *
-from numpy.testing import *
 
 
 class ExamplesDfs2:

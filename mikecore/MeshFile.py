@@ -1,4 +1,6 @@
 import os.path
+from collections.abc import Sequence
+
 import numpy as np
 import re
 from mikecore.eum import eumQuantity, eumItem, eumUnit
@@ -383,13 +385,13 @@ class MeshFile:
     def Create(
         eumQuantity: eumQuantity,
         wktString: str,
-        nodeIds: list[int],
-        x: list[float],
-        y: list[float],
-        z: list[float],
-        nodeCode: list[int],
-        elmtIds: list[int],
-        elmtTypes: list[int],
+        nodeIds: Sequence[int] | np.ndarray,
+        x: Sequence[float] | np.ndarray,
+        y: Sequence[float] | np.ndarray,
+        z: Sequence[float] | np.ndarray,
+        nodeCode: Sequence[int] | np.ndarray,
+        elmtIds: Sequence[int] | np.ndarray,
+        elmtTypes: Sequence[int] | np.ndarray,
         connectivity,
     ) -> "MeshFile":
 

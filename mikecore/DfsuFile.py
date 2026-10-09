@@ -11,25 +11,25 @@ def CheckForNull(obj):
 
 class DfsuFileType(IntEnum):
     # 1D series
-    Dfsu1D = (1,)
+    Dfsu1D = 1
 
     # 2D area series
-    Dfsu2D = (2,)
+    Dfsu2D = 2
 
     # 1D vertical column
-    DfsuVerticalColumn = (3,)
+    DfsuVerticalColumn = 3
 
     # 2D vertical slice through a Dfsu3DSigma
-    DfsuVerticalProfileSigma = (4,)
+    DfsuVerticalProfileSigma = 4
 
     # 2D vertical slice through a Dfsu3DSigmaZ
-    DfsuVerticalProfileSigmaZ = (5,)
+    DfsuVerticalProfileSigmaZ = 5
 
     # 3D file with sigma coordinates, i.e., a constant number of layers.
-    Dfsu3DSigma = (6,)
+    Dfsu3DSigma = 6
 
     # 3D file with sigma and Z coordinates, i.e. a varying number of layers.
-    Dfsu3DSigmaZ = (7,)
+    Dfsu3DSigmaZ = 7
 
     # 0D point series of spectral data (frequency, direction)
     DfsuSpectral0D = 8
@@ -85,7 +85,7 @@ class DfsuFile:
             None  # this can be null, then set default id's, starting from 1
         )
         self.ElementType = None
-        self.ElementTable = []
+        self.ElementTable: list | np.ndarray = []
 
         # Spectral definition
         self.Frequencies = None
@@ -570,7 +570,7 @@ class DfsuUtil:
             if elmt1.size % 2 != 0:
                 raise Exception(
                     "In a layered mesh, each element must have an even number of elements (element index "
-                    + i
+                    + str(i)
                     + ")"
                 )
 

@@ -41,192 +41,196 @@ class DfsDLL:
     """description of class"""
 
     # Static variables
-    Wrapper = None
+    # Set by Init(), which mikecore/__init__.py calls on import
+    Wrapper: ctypes.CDLL
+    # Directory of the native libraries
+    libfilepath: str
+    _loaded = False
     MCCUWrapper = None
 
     @staticmethod
-    def Init(libfilepath=None):
+    def Init(libfilepath: str | None = None):
 
         # ufs lib should be loaded only once
-        if DfsDLL.Wrapper is None:
-            DfsDLL.libfilepath = None
-            if libfilepath is not None:
-                DfsDLL.libfilepath = libfilepath
+        if DfsDLL._loaded:
+            return
+        if libfilepath is None:
+            raise ValueError("DfsDLL.Init needs the directory of the native libraries")
+        DfsDLL.libfilepath = libfilepath
 
-            # TODO: On linux, this looks different!
-            if os.name == "nt":
-                DfsDLL.Wrapper = ctypes.CDLL(
-                    os.path.join(DfsDLL.libfilepath, "ufs.dll")
-                )
-            else:
-                DfsDLL.Wrapper = ctypes.CDLL(
-                    os.path.join(DfsDLL.libfilepath, "libufs.so")
-                )
-            DfsDLL.Wrapper.dfsInitSystem()
+        # TODO: On linux, this looks different!
+        if os.name == "nt":
+            lib = ctypes.CDLL(os.path.join(DfsDLL.libfilepath, "ufs.dll"))
+        else:
+            lib = ctypes.CDLL(os.path.join(DfsDLL.libfilepath, "libufs.so"))
+        lib.dfsInitSystem()
 
-            DfsDLL.Wrapper.dfsGetAppTitle.argtypes = [ctypes.c_void_p]
-            DfsDLL.Wrapper.dfsGetAppTitle.restype = ctypes.c_char_p
-            DfsDLL.Wrapper.dfsGetDeleteValFloat.restype = ctypes.c_float
-            DfsDLL.Wrapper.dfsGetDeleteValByte.restype = ctypes.c_int8
-            DfsDLL.Wrapper.dfsGetDeleteValDouble.restype = ctypes.c_double
-            DfsDLL.Wrapper.dfsGetDeleteValInt.restype = ctypes.c_int32
-            DfsDLL.Wrapper.dfsGetDeleteValUnsignedInt.restype = ctypes.c_uint32
-            DfsDLL.Wrapper.dfsGetFileTitle.argtypes = [ctypes.c_void_p]
-            DfsDLL.Wrapper.dfsGetFileTitle.restype = ctypes.c_char_p
-            DfsDLL.Wrapper.dfsGetItemValueType.argtypes = [
-                ctypes.c_void_p,
-                ctypes.POINTER(ctypes.c_int),
-            ]
-            DfsDLL.Wrapper.dfsGetCustomBlockRef.argtypes = [
-                ctypes.c_void_p,
-                ctypes.POINTER(ctypes.c_void_p),
-            ]
+        lib.dfsGetAppTitle.argtypes = [ctypes.c_void_p]
+        lib.dfsGetAppTitle.restype = ctypes.c_char_p
+        lib.dfsGetDeleteValFloat.restype = ctypes.c_float
+        lib.dfsGetDeleteValByte.restype = ctypes.c_int8
+        lib.dfsGetDeleteValDouble.restype = ctypes.c_double
+        lib.dfsGetDeleteValInt.restype = ctypes.c_int32
+        lib.dfsGetDeleteValUnsignedInt.restype = ctypes.c_uint32
+        lib.dfsGetFileTitle.argtypes = [ctypes.c_void_p]
+        lib.dfsGetFileTitle.restype = ctypes.c_char_p
+        lib.dfsGetItemValueType.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_int),
+        ]
+        lib.dfsGetCustomBlockRef.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_void_p),
+        ]
 
-            DfsDLL.Wrapper.dfsItemD.argtypes = [ctypes.c_void_p, ctypes.c_int]
-            DfsDLL.Wrapper.dfsItemD.restype = ctypes.c_void_p
-            DfsDLL.Wrapper.dfsItemS.argtypes = [ctypes.c_void_p]
-            DfsDLL.Wrapper.dfsItemS.restype = ctypes.c_void_p
-            DfsDLL.Wrapper.dfsGetItemInfo.argtypes = [
-                ctypes.c_void_p,
-                ctypes.POINTER(ctypes.c_int),
-                ctypes.POINTER(ctypes.c_char_p),
-                ctypes.POINTER(ctypes.c_char_p),
-                ctypes.POINTER(ctypes.c_int),
-                ctypes.POINTER(ctypes.c_char_p),
-                ctypes.POINTER(ctypes.c_int),
-            ]
-            DfsDLL.Wrapper.dfsGetItemInfo_.argtypes = [
-                ctypes.c_void_p,
-                ctypes.POINTER(ctypes.c_int),
-                ctypes.POINTER(ctypes.c_char_p),
-                ctypes.POINTER(ctypes.c_char_p),
-                ctypes.POINTER(ctypes.c_int),
-            ]
-            DfsDLL.Wrapper.dfsGetItemElements.argtypes = [ctypes.c_void_p]
+        lib.dfsItemD.argtypes = [ctypes.c_void_p, ctypes.c_int]
+        lib.dfsItemD.restype = ctypes.c_void_p
+        lib.dfsItemS.argtypes = [ctypes.c_void_p]
+        lib.dfsItemS.restype = ctypes.c_void_p
+        lib.dfsGetItemInfo.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_int),
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_int),
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_int),
+        ]
+        lib.dfsGetItemInfo_.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_int),
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_int),
+        ]
+        lib.dfsGetItemElements.argtypes = [ctypes.c_void_p]
 
-            DfsDLL.Wrapper.dfsGetEqTimeAxis.argtypes = [
-                ctypes.c_void_p,
-                ctypes.POINTER(ctypes.c_int),
-                ctypes.POINTER(ctypes.c_char_p),
-                ctypes.POINTER(ctypes.c_double),
-                ctypes.POINTER(ctypes.c_double),
-                ctypes.POINTER(ctypes.c_int32),
-                ctypes.POINTER(ctypes.c_int32),
-            ]
-            DfsDLL.Wrapper.dfsGetNeqTimeAxis.argtypes = [
-                ctypes.c_void_p,
-                ctypes.POINTER(ctypes.c_int),
-                ctypes.POINTER(ctypes.c_char_p),
-                ctypes.POINTER(ctypes.c_double),
-                ctypes.POINTER(ctypes.c_double),
-                ctypes.POINTER(ctypes.c_int32),
-                ctypes.POINTER(ctypes.c_int32),
-            ]
-            DfsDLL.Wrapper.dfsGetEqCalendarAxis.argtypes = [
-                ctypes.c_void_p,
-                ctypes.POINTER(ctypes.c_char_p),
-                ctypes.POINTER(ctypes.c_char_p),
-                ctypes.POINTER(ctypes.c_int),
-                ctypes.POINTER(ctypes.c_char_p),
-                ctypes.POINTER(ctypes.c_double),
-                ctypes.POINTER(ctypes.c_double),
-                ctypes.POINTER(ctypes.c_int32),
-                ctypes.POINTER(ctypes.c_int32),
-            ]
-            DfsDLL.Wrapper.dfsGetNeqCalendarAxis.argtypes = [
-                ctypes.c_void_p,
-                ctypes.POINTER(ctypes.c_char_p),
-                ctypes.POINTER(ctypes.c_char_p),
-                ctypes.POINTER(ctypes.c_int),
-                ctypes.POINTER(ctypes.c_char_p),
-                ctypes.POINTER(ctypes.c_double),
-                ctypes.POINTER(ctypes.c_double),
-                ctypes.POINTER(ctypes.c_int32),
-                ctypes.POINTER(ctypes.c_int32),
-            ]
+        lib.dfsGetEqTimeAxis.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_int),
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.POINTER(ctypes.c_int32),
+            ctypes.POINTER(ctypes.c_int32),
+        ]
+        lib.dfsGetNeqTimeAxis.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_int),
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.POINTER(ctypes.c_int32),
+            ctypes.POINTER(ctypes.c_int32),
+        ]
+        lib.dfsGetEqCalendarAxis.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_int),
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.POINTER(ctypes.c_int32),
+            ctypes.POINTER(ctypes.c_int32),
+        ]
+        lib.dfsGetNeqCalendarAxis.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_int),
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.POINTER(ctypes.c_int32),
+            ctypes.POINTER(ctypes.c_int32),
+        ]
 
-            DfsDLL.Wrapper.dfsGetEncodeKey.argtypes = [
-                ctypes.c_void_p,
-                np.ctypeslib.ndpointer(dtype=np.int32, ndim=1),
-                np.ctypeslib.ndpointer(dtype=np.int32, ndim=1),
-                np.ctypeslib.ndpointer(dtype=np.int32, ndim=1),
-            ]
-            DfsDLL.Wrapper.dfsGetEncodeKey.restype = ctypes.c_int32
-            DfsDLL.Wrapper.dfsSetEncodeKey.argtypes = [
-                ctypes.c_void_p,
-                np.ctypeslib.ndpointer(dtype=np.int32, ndim=1),
-                np.ctypeslib.ndpointer(dtype=np.int32, ndim=1),
-                np.ctypeslib.ndpointer(dtype=np.int32, ndim=1),
-                ctypes.c_int32,
-            ]
-            DfsDLL.Wrapper.dfsSetEncodeKey.restype = ctypes.c_int32
+        lib.dfsGetEncodeKey.argtypes = [
+            ctypes.c_void_p,
+            np.ctypeslib.ndpointer(dtype=np.int32, ndim=1),
+            np.ctypeslib.ndpointer(dtype=np.int32, ndim=1),
+            np.ctypeslib.ndpointer(dtype=np.int32, ndim=1),
+        ]
+        lib.dfsGetEncodeKey.restype = ctypes.c_int32
+        lib.dfsSetEncodeKey.argtypes = [
+            ctypes.c_void_p,
+            np.ctypeslib.ndpointer(dtype=np.int32, ndim=1),
+            np.ctypeslib.ndpointer(dtype=np.int32, ndim=1),
+            np.ctypeslib.ndpointer(dtype=np.int32, ndim=1),
+            ctypes.c_int32,
+        ]
+        lib.dfsSetEncodeKey.restype = ctypes.c_int32
 
-            # Last argument is just a pointer to the memory that can be many different types, though mostly
-            DfsDLL.Wrapper.dfsReadItemTimeStep.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.POINTER(ctypes.c_double),
-                ctypes.c_void_p,
-            ]
-            DfsDLL.Wrapper.dfsReadItemTimeStep.restype = ctypes.c_int32
-            DfsDLL.Wrapper.dfsWriteItemTimeStep.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_double,
-                ctypes.c_void_p,
-            ]
-            DfsDLL.Wrapper.dfsWriteItemTimeStep.restype = ctypes.c_int32
+        # Last argument is just a pointer to the memory that can be many different types, though mostly
+        lib.dfsReadItemTimeStep.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.c_void_p,
+        ]
+        lib.dfsReadItemTimeStep.restype = ctypes.c_int32
+        lib.dfsWriteItemTimeStep.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_double,
+            ctypes.c_void_p,
+        ]
+        lib.dfsWriteItemTimeStep.restype = ctypes.c_int32
 
-            DfsDLL.Wrapper.dfsStaticRead.argtypes = [
-                ctypes.c_void_p,
-                ctypes.POINTER(ctypes.c_int),
-            ]
-            DfsDLL.Wrapper.dfsStaticRead.restype = ctypes.c_void_p
-            DfsDLL.Wrapper.dfsStaticSetHeader.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-            ]
-            DfsDLL.Wrapper.dfsStaticSetHeader.restype = ctypes.c_int32
-            DfsDLL.Wrapper.dfsStaticGetData.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-            ]
-            DfsDLL.Wrapper.dfsStaticGetData.restype = ctypes.c_int32
-            DfsDLL.Wrapper.dfsStaticWrite.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-            ]
+        lib.dfsStaticRead.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_int),
+        ]
+        lib.dfsStaticRead.restype = ctypes.c_void_p
+        lib.dfsStaticSetHeader.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+        ]
+        lib.dfsStaticSetHeader.restype = ctypes.c_int32
+        lib.dfsStaticGetData.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+        ]
+        lib.dfsStaticGetData.restype = ctypes.c_int32
+        lib.dfsStaticWrite.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+        ]
 
-            DfsDLL.Wrapper.dfsAddCustomBlock.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_char_p,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-            ]
+        lib.dfsAddCustomBlock.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_char_p,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+        ]
 
-            DfsDLL.Wrapper.dfsReadDfs0DataDouble.restype = ctypes.c_int32
-            DfsDLL.Wrapper.dfsReadDfs0DataDouble.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-            ]
-            DfsDLL.Wrapper.dfsReadDfs0ItemsDouble.restype = ctypes.c_int32
-            DfsDLL.Wrapper.dfsReadDfs0ItemsDouble.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-            ]
-            DfsDLL.Wrapper.dfsWriteDfs0DataDouble.restype = ctypes.c_int32
-            DfsDLL.Wrapper.dfsWriteDfs0DataDouble.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-            ]
+        lib.dfsReadDfs0DataDouble.restype = ctypes.c_int32
+        lib.dfsReadDfs0DataDouble.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+        ]
+        lib.dfsReadDfs0ItemsDouble.restype = ctypes.c_int32
+        lib.dfsReadDfs0ItemsDouble.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+        ]
+        lib.dfsWriteDfs0DataDouble.restype = ctypes.c_int32
+        lib.dfsWriteDfs0DataDouble.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+        ]
+
+        DfsDLL.Wrapper = lib
+        DfsDLL._loaded = True
 
     #        # MIKE Core C Util should be loaded only once and only on Windows
     #        if DfsDLL.MCCUWrapper is None and os.name == "nt":
@@ -255,7 +259,7 @@ class DfsDLL:
     #            ]
 
     @staticmethod
-    def dfsErrorString(error: DfsError):
+    def dfsErrorString(error: DfsError | int):
         if error == DfsError.F_NO_ERROR:
             return ""
         if error == DfsError.F_END_OF_FILE:

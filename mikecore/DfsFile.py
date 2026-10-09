@@ -199,7 +199,7 @@ class DfsTemporalAxis:
 
     # Method that is invoked when ever the temporal axis is updated.
     def _InvokeOnUpdate(self):
-        if self._OnUpdate != None:
+        if self._OnUpdate is not None:
             self._OnUpdate()
 
     def __getTimeUnit(self):
@@ -523,8 +523,11 @@ class DfsDynamicItemInfo:
         self.ConversionUnit = 0
         self.AxisConversionType = UnitConversionType.NoConversion
         self.AxisConversionUnit = 0
-        self.AssociatedStaticItemNumbers = []
+        self.AssociatedStaticItemNumbers: list[int] | None = []
         self.SpatialAxis = None
+        # Set on dynamic items read from a file, and by
+        # DfsDynamicItemBuilder.SetValueType before an item is built
+        self.ValueType: DataValueType | None = None
 
     def __repr__(self):
         return (
@@ -579,7 +582,7 @@ class DfsDynamicItemInfo:
         elif self.DataType == DfsSimpleType.UShort:
             values = np.zeros(self.ElementCount, dtype=np.uint16)
         else:
-            print(f"Ahhrrggg!!!!: {self.DataType}-{self.ElementCount}")
+            raise ValueError(f"Unsupported item data type: {self.DataType}")
         if reshape:
             values = values.reshape(self.SpatialAxis.Shape, order="F")
         return values
@@ -592,6 +595,7 @@ class DfsStaticItem(DfsDynamicItemInfo):
         super().__init__(itemPointer, itemNumber)
         self.DfsFile = dfsFile
         self.VectorPointer = vectorPointer
+        self.StaticVectorPointer = vectorPointer
         self.Data = None
 
     @staticmethod
@@ -788,7 +792,7 @@ class DfsFile:
         """
 
         # Close file, if already open
-        if self.filePointer.value != None:
+        if self.filePointer.value is not None:
             self.Close()
 
         if not os.path.isfile(filename):
@@ -813,25 +817,27 @@ class DfsFile:
         fnp = ctypes.c_char_p()
         fnp.value = filename.encode("cp1252")
 
-        if mode is DfsFileMode.Read:
+        if mode == DfsFileMode.Read:
             # Open file for reading
             rok = DfsDLL.Wrapper.dfsFileRead(
                 fnp.value,
                 ctypes.byref(self.headPointer),
                 ctypes.byref(self.filePointer),
             )
-        if mode is DfsFileMode.Edit:
+        elif mode == DfsFileMode.Edit:
             rok = DfsDLL.Wrapper.dfsFileEdit(
                 fnp.value,
                 ctypes.byref(self.headPointer),
                 ctypes.byref(self.filePointer),
             )
-        if mode is DfsFileMode.Append:
+        elif mode == DfsFileMode.Append:
             rok = DfsDLL.Wrapper.dfsFileAppend(
                 fnp.value,
                 ctypes.byref(self.headPointer),
                 ctypes.byref(self.filePointer),
             )
+        else:
+            raise ValueError(f"Cannot open a file in mode {mode!r}")
 
         if rok != 0:
             raise Exception(f"Could not load file {filename} (Error code {rok})")
@@ -845,17 +851,17 @@ class DfsFile:
         for i in range(noOfItems):
             self.ItemInfo.append(self.__DynamicItemInfoReadAndCreate(i + 1, noOfItems))
 
-        if mode is DfsFileMode.Read:
+        if mode == DfsFileMode.Read:
             # file pointer is after header part
             self.fpState = DfsFilePointerState.StaticItem
             self.fpItemNumber = 1
             self.fpTimeStepIndex = 0
-        if mode is DfsFileMode.Edit:
+        if mode == DfsFileMode.Edit:
             # file pointer is after header part
             self.fpState = DfsFilePointerState.StaticItem
             self.fpItemNumber = 1
             self.fpTimeStepIndex = 0
-        if mode is DfsFileMode.Append:
+        if mode == DfsFileMode.Append:
             # file pointer is after last time step
             self.fpState = DfsFilePointerState.DynamicItem
             self.fpItemNumber = 1
@@ -884,11 +890,11 @@ class DfsFile:
         Close the file and release all ressources associated with it. The header information
         is still valid (for reading) even though the file has been closed.
         """
-        if self.filePointer.value != None:
+        if self.filePointer.value is not None:
             DfsDLL.Wrapper.dfsFileClose(
                 self.headPointer, ctypes.byref(self.filePointer)
             )
-        if self.headPointer.value != None:
+        if self.headPointer.value is not None:
             DfsDLL.Wrapper.dfsHeaderDestroy(ctypes.byref(self.headPointer))
 
     def GetNextItemNumber(self):
@@ -924,7 +930,7 @@ class DfsFile:
 
         staticItem = self.__StaticItemReadAndCreate(self.fpItemNumber, False)
 
-        if staticItem != None:
+        if staticItem is not None:
             self.fpItemNumber += 1
         return staticItem
 
@@ -995,8 +1001,8 @@ class DfsFile:
         self.fpItemNumber += 1
 
     def ReadItemTimeStepNext(
-        self, itemData: DfsItemData = None, reshape: bool = False
-    ) -> DfsItemData:
+        self, itemData: DfsItemData | None = None, reshape: bool = False
+    ) -> DfsItemData | None:
         """
         Reads the next dynamic item-timestep. First time called it returns the first
         timestep of the first item. It cycles through each timestep, and each
@@ -1061,7 +1067,7 @@ class DfsFile:
         itemNumber: int | DfsItemData,
         timestepIndex: int,
         reshape: bool = False,
-    ) -> DfsItemData:
+    ) -> DfsItemData | None:
         """
         Reads the dynamic item-timestep as specified from the file. It throws an
         exception if itemNumber or timestepIndex
@@ -1098,7 +1104,7 @@ class DfsFile:
             raise Exception(
                 "timestepIndex",
                 "Must be within [0,"
-                + (self.FileInfo.TimeAxis.NumberOfTimeSteps - 1)
+                + str(self.FileInfo.TimeAxis.NumberOfTimeSteps - 1)
                 + "].",
             )
 
@@ -1134,10 +1140,8 @@ class DfsFile:
         :param data numpy.ndarray: Data to write to file
         """
         self.__CheckIfOpen()
-        if (
-            self.fpState == DfsFilePointerState.CreatingItems
-            and itemNumber != 1
-            and timestepIndex != 0
+        if self.fpState == DfsFilePointerState.CreatingItems and (
+            itemNumber != 1 or timestepIndex != 0
         ):
             raise Exception(
                 "No dynamic items have been written to the file yet (file is being created)."
@@ -1157,8 +1161,8 @@ class DfsFile:
         ):
             raise Exception(
                 "timestepIndex must be within [0,"
-                + (self.FileInfo.TimeAxis.NumberOfTimeSteps - 1)
-                + "]."
+                + str(self.FileInfo.TimeAxis.NumberOfTimeSteps)
+                + "], where the upper bound appends a new timestep."
             )
 
         # More elaborate action is required, when appending to file. If appending then
@@ -1412,7 +1416,7 @@ class DfsFile:
         self.fpItemNumber = 1
         self.fpTimeStepIndex = 0
 
-    def __FpFindItemTimeStep(self, itemNumber: int, timestepIndex: int):
+    def __FpFindItemTimeStep(self, itemNumber: int, timestepIndex: int | np.integer):
         # If itemNumber is first item, search for time step instead
         if itemNumber == 1:
             self.__FpFindTimeStep(timestepIndex)
@@ -1428,9 +1432,9 @@ class DfsFile:
             )
             self.fpState = DfsFilePointerState.DynamicItem
             self.fpItemNumber = itemNumber
-            self.fpTimeStepIndex = timestepIndex
+            self.fpTimeStepIndex = int(timestepIndex)
 
-    def __FpFindTimeStep(self, timestepIndex: int):
+    def __FpFindTimeStep(self, timestepIndex: int | np.integer):
         # Position the file pointer at the dynamic item
         if (
             self.fpState != DfsFilePointerState.DynamicItem
@@ -1442,7 +1446,7 @@ class DfsFile:
             )
             self.fpState = DfsFilePointerState.DynamicItem
             self.fpItemNumber = 1
-            self.fpTimeStepIndex = timestepIndex
+            self.fpTimeStepIndex = int(timestepIndex)
 
     def __FpDynamicIncrement(self):
         self.fpItemNumber += 1
@@ -1481,7 +1485,6 @@ class DfsFile:
 
         staticItem = DfsStaticItem(self, staticVectorPointer, staticItemPointer, number)
         staticItem.DfsFile = self
-        staticItem.StaticVectorPointer = staticVectorPointer
 
         # The header pointer is not automatically set in the static item, so do that here.
         # Otherwise unit conversion of static item info (spatial axis) will fail (in ufs.dll
@@ -1515,9 +1518,9 @@ class DfsFile:
             ctypes.byref(eumUnitDescP),
             ctypes.byref(itemDataTypeP),
         )
-        eumItemDesc = eumItemDescP.value.decode("ascii")
-        eumUnitDesc = eumUnitDescP.value.decode("ascii")
-        itemName = itemNameP.value.decode("cp1252", "replace")
+        eumItemDesc = eumWrapper.DecodeString(eumItemDescP)
+        eumUnitDesc = eumWrapper.DecodeString(eumUnitDescP)
+        itemName = eumWrapper.DecodeString(itemNameP, "cp1252", "replace")
         itemDataType = DfsSimpleType(itemDataTypeP.value)
 
         quantity = eumQuantity(eumItem(eumItemIntP.value), eumUnit(eumUnitIntP.value))
@@ -1585,7 +1588,7 @@ class DfsDLLUtil:
             )
             projection = DfsProjection(
                 type,
-                wktString.value.decode("ascii"),
+                eumWrapper.DecodeString(wktString),
                 lon0.value,
                 lat0.value,
                 orientation.value,
@@ -1672,8 +1675,8 @@ class DfsDLLUtil:
                 ctypes.byref(numTimeSteps),
                 ctypes.byref(firstIndex),
             )
-            dateStr = startDateStr.value.decode("ascii")
-            timeStr = startTimeStr.value.decode("ascii")
+            dateStr = eumWrapper.DecodeString(startDateStr)
+            timeStr = eumWrapper.DecodeString(startTimeStr)
             # startDateTime = datetime.fromisoformat("{dateStr}T{timeStr}".format(dateStr,timeStr));
             startDateTime = datetime.datetime.strptime(
                 f"{dateStr} {timeStr}", "%Y-%m-%d %H:%M:%S"
@@ -1709,8 +1712,8 @@ class DfsDLLUtil:
                 ctypes.byref(firstIndex),
             )
 
-            dateStr = startDateStr.value.decode("ascii")
-            timeStr = startTimeStr.value.decode("ascii")
+            dateStr = eumWrapper.DecodeString(startDateStr)
+            timeStr = eumWrapper.DecodeString(startTimeStr)
             # startDateTime = datetime.fromisoformat("{}T{}".format(dateStr,timeStr));
             startDateTime = datetime.datetime.strptime(
                 f"{dateStr} {timeStr}", "%Y-%m-%d %H:%M:%S"
@@ -1953,7 +1956,7 @@ class DfsDLLUtil:
         )
         DfsDLL.CheckReturnCode(rok)
         customBlocks = []
-        while customBlockP.value != None:
+        while customBlockP.value is not None:
             customBlockP, dfsCustomBlock = DfsDLLUtil.__CustomBlockRead(customBlockP)
             customBlocks.append(dfsCustomBlock)
         return customBlocks
@@ -2025,7 +2028,7 @@ class DfsDLLUtil:
             data = np.ctypeslib.as_array(datap, shape=(size,))
 
         customBlock = DfsCustomBlock(
-            name.value.decode("ascii"), DfsSimpleType(dataType.value), data
+            eumWrapper.DecodeString(name), DfsSimpleType(dataType.value), data
         )
 
         return customBlockPointer, customBlock
@@ -2034,7 +2037,7 @@ class DfsDLLUtil:
     def dfsSetTemporalAxis(headerPointer, temporalAxis: DfsTemporalAxis):
         if temporalAxis.TimeAxisType is TimeAxisType.Undefined:
             raise Exception("Temporal axis can not be undefined")
-        if temporalAxis.TimeAxisType is TimeAxisType.TimeEquidistant:
+        if isinstance(temporalAxis, DfsEqTimeAxis):
             rok = DfsDLL.Wrapper.dfsSetEqTimeAxis(
                 headerPointer,
                 ctypes.c_int32(temporalAxis.TimeUnit.value),
@@ -2043,7 +2046,7 @@ class DfsDLLUtil:
                 ctypes.c_int32(temporalAxis.FirstTimeStepIndex),
             )
             DfsDLL.CheckReturnCode(rok)
-        elif temporalAxis.TimeAxisType is TimeAxisType.TimeNonEquidistant:
+        elif isinstance(temporalAxis, DfsNonEqTimeAxis):
             rok = DfsDLL.Wrapper.dfsSetNeqTimeAxis(
                 headerPointer,
                 ctypes.c_int32(temporalAxis.TimeUnit.value),
@@ -2051,7 +2054,7 @@ class DfsDLLUtil:
                 ctypes.c_int32(temporalAxis.FirstTimeStepIndex),
             )
             DfsDLL.CheckReturnCode(rok)
-        elif temporalAxis.TimeAxisType is TimeAxisType.CalendarEquidistant:
+        elif isinstance(temporalAxis, DfsEqCalendarAxis):
             dateStr, timeStr = DfsDLLUtil.ToDfsDateStrings(temporalAxis.StartDateTime)
             rok = DfsDLL.Wrapper.dfsSetEqCalendarAxis(
                 headerPointer,
@@ -2063,7 +2066,7 @@ class DfsDLLUtil:
                 ctypes.c_int32(temporalAxis.FirstTimeStepIndex),
             )
             DfsDLL.CheckReturnCode(rok)
-        elif temporalAxis.TimeAxisType is TimeAxisType.CalendarNonEquidistant:
+        elif isinstance(temporalAxis, DfsNonEqCalendarAxis):
             dateStr, timeStr = DfsDLLUtil.ToDfsDateStrings(temporalAxis.StartDateTime)
             rok = DfsDLL.Wrapper.dfsSetNeqCalendarAxis(
                 headerPointer,
@@ -2074,6 +2077,8 @@ class DfsDLLUtil:
                 ctypes.c_int32(temporalAxis.FirstTimeStepIndex),
             )
             DfsDLL.CheckReturnCode(rok)
+        else:
+            raise Exception(f"Unsupported temporal axis: {type(temporalAxis).__name__}")
 
     @staticmethod
     def ToDfsDateStrings(datetime):

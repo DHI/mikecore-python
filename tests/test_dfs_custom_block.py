@@ -1,7 +1,12 @@
 import unittest
+
+import numpy as np
+import pytest
+
+from mikecore.DfsFactory import DfsFactory
 from mikecore.DfsFileFactory import DfsFileFactory
 from mikecore.DfsFile import *
-from numpy.testing import *
+from numpy.testing import assert_allclose, assert_equal
 from tests.test_util import *
 
 
@@ -73,3 +78,8 @@ class Test_dfs_custom_block(unittest.TestCase):
         customBlock = fileInfo.CustomBlocks[0]
         assert_equal(25, customBlock.Values[3])
         dfsFile.Close()
+
+
+def test_create_custom_block_with_unsupported_data_type():
+    with pytest.raises(ValueError, match="Unsupported custom block data type: int64"):
+        DfsFactory().CreateCustomBlock("Block", np.array([1, 2], dtype=np.int64))

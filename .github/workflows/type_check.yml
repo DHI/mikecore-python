@@ -1,0 +1,47 @@
+name: Type check
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  pyrefly:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.7.21"
+          python-version: "3.11"
+
+      - name: Install the project
+        run: uv sync
+
+      - name: Run pyrefly
+        run: uv run pyrefly check
+
+      # Several error kinds are warnings until existing violations are fixed
+      # (see [tool.pyrefly.errors] in pyproject.toml), and pyrefly does not fail
+      # on warnings. Fail if the count rises; lower the ceiling as warnings are fixed.
+      - name: Check pyrefly warning count
+        # Explicit bash adds -o pipefail, so a failed count fails the step.
+        # pyrefly exits 1 when it shows warnings, so its status is ignored here
+        # (the step above checks it); if it crashes, the JSON parse fails.
+        shell: bash
+        env:
+          MAX_WARNINGS: 330
+        run: |
+          warnings=$( (uv run pyrefly check --output-format=json --min-severity=warn --summary=none || true) | uv run python -c "import json, sys; print(sum(e['severity'] == 'warn' for e in json.load(sys.stdin)['errors']))")
+          echo "pyrefly warnings: $warnings (ceiling $MAX_WARNINGS)"
+          if [ "$warnings" -gt "$MAX_WARNINGS" ]; then
+            echo "::error::pyrefly reported $warnings warnings, more than the ceiling of $MAX_WARNINGS. Fix the new warnings."
+            exit 1
+          fi

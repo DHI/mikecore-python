@@ -1,7 +1,31 @@
 import os
 import ctypes
+from collections.abc import Callable
 import numpy as np
 from enum import IntEnum
+
+
+def _ReadString(
+    dllFunction: Callable[..., object],
+    args: tuple[object, ...],
+    size: int,
+    errorMessage: str,
+) -> str:
+    """
+    Calls a DLL function that writes a string into a buffer, with signature
+    dllFunction(*args, buffer, bufferSize, &rc). On rc > 0 the buffer was too
+    short and rc is the required length, so the call is retried once.
+    """
+    rc = ctypes.c_int32()
+    buffer = ctypes.create_string_buffer(size)
+    dllFunction(*args, buffer, ctypes.c_int32(size), ctypes.byref(rc))
+    if rc.value > 0:
+        size = rc.value + 1
+        buffer = ctypes.create_string_buffer(size)
+        dllFunction(*args, buffer, ctypes.c_int32(size), ctypes.byref(rc))
+    if rc.value != 0:
+        raise ProjectionException(errorMessage)
+    return buffer.value.decode("ascii")
 
 
 class ProjectionException(Exception):
@@ -21,7 +45,9 @@ class ProjectionException(Exception):
 
 class MzCartDLL:
     # Static variables
-    Wrapper = None
+    # Set by Init(), which mikecore/__init__.py calls on import
+    Wrapper: ctypes.CDLL
+    _loaded = False
 
     _cartCreateCount = 0
     _cartDestroyCount = 0
@@ -29,77 +55,81 @@ class MzCartDLL:
     _projDestroyCount = 0
     _converterCreateCount = 0
     _converterDestroyCount = 0
+    # Directory of the native libraries
+    libfilepath: str
 
     @staticmethod
-    def Init(libfilepath: str = None):
+    def Init(libfilepath: str | None = None):
 
         # ufs lib should be loaded only once
-        if MzCartDLL.Wrapper is None:
-            MzCartDLL.libfilepath = None
-            if libfilepath is not None:
-                MzCartDLL.libfilepath = libfilepath
+        if MzCartDLL._loaded:
+            return
+        if libfilepath is None:
+            raise ValueError(
+                "MzCartDLL.Init needs the directory of the native libraries"
+            )
+        MzCartDLL.libfilepath = libfilepath
 
-            # TODO: On linux, this looks different!
-            if os.name == "nt":
-                MzCartDLL.Wrapper = ctypes.CDLL(
-                    os.path.join(MzCartDLL.libfilepath, "MzCart.dll")
-                )
-            else:
-                MzCartDLL.Wrapper = ctypes.CDLL(
-                    os.path.join(MzCartDLL.libfilepath, "libMzCart.so")
-                )
-                libfilepathe = MzCartDLL.libfilepath + "/"
-                libfilepatheP = ctypes.c_char_p(libfilepathe.encode("ascii"))
-                MzCartDLL.Wrapper.CARTSETUPLINUX(libfilepatheP, libfilepatheP)
+        # TODO: On linux, this looks different!
+        if os.name == "nt":
+            lib = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, "MzCart.dll"))
+        else:
+            lib = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, "libMzCart.so"))
+            libfilepathe = MzCartDLL.libfilepath + "/"
+            libfilepatheP = ctypes.c_char_p(libfilepathe.encode("ascii"))
+            lib.CARTSETUPLINUX(libfilepatheP, libfilepatheP)
 
-            MzCartDLL.Wrapper.C_MZC_GETPROJECTION.restype = ctypes.c_void_p
-            MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING.restype = None
-            MzCartDLL.Wrapper.S_GETGOOGLEMAPPROJECTIONSTRING.restype = None
+        lib.C_MZC_GETPROJECTION.restype = ctypes.c_void_p
+        lib.C_MZC_GETPROJECTIONSTRING.restype = None
+        lib.S_GETGOOGLEMAPPROJECTIONSTRING.restype = None
 
-            MzCartDLL.Wrapper.C_MZC_CREATE.restype = None
-            MzCartDLL.Wrapper.C_MZC_DESTROY.restype = None
-            MzCartDLL.Wrapper.C_MZC_GETPROJNORTH.restype = ctypes.c_double
-            MzCartDLL.Wrapper.C_MZC_GETTRUENORTH.restype = ctypes.c_double
-            MzCartDLL.Wrapper.C_MZC_GEO2PROJ.restype = None
-            MzCartDLL.Wrapper.C_MZC_PROJ2GEO.restype = None
-            MzCartDLL.Wrapper.C_MZC_GEO2XY.restype = None
-            MzCartDLL.Wrapper.C_MZC_XY2GEO.restype = None
-            MzCartDLL.Wrapper.C_MZC_PROJ2XY.restype = None
-            MzCartDLL.Wrapper.C_MZC_XY2PROJ.restype = None
+        lib.C_MZC_CREATE.restype = None
+        lib.C_MZC_DESTROY.restype = None
+        lib.C_MZC_GETPROJNORTH.restype = ctypes.c_double
+        lib.C_MZC_GETTRUENORTH.restype = ctypes.c_double
+        lib.C_MZC_GEO2PROJ.restype = None
+        lib.C_MZC_PROJ2GEO.restype = None
+        lib.C_MZC_GEO2XY.restype = None
+        lib.C_MZC_XY2GEO.restype = None
+        lib.C_MZC_PROJ2XY.restype = None
+        lib.C_MZC_XY2PROJ.restype = None
 
-            MzCartDLL.Wrapper.C_MZMP_CREATE.restype = None
-            MzCartDLL.Wrapper.C_MZMP_DESTROY.restype = None
-            MzCartDLL.Wrapper.C_MZMP_GETNAME.restype = None
-            MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING.restype = None
-            MzCartDLL.Wrapper.C_MZMP_GEO2PROJ.restype = None
-            MzCartDLL.Wrapper.C_MZMP_PROJ2GEO.restype = None
-            MzCartDLL.Wrapper.C_MZMP_GETORIGIN.restype = None
-            MzCartDLL.Wrapper.C_MZMP_GETCONVERGENCE.restype = ctypes.c_double
-            MzCartDLL.Wrapper.C_MZMP_GETDEFAULTAREA.restype = None
-            MzCartDLL.Wrapper.C_MZMP_GEO2XYZ.restype = None
-            MzCartDLL.Wrapper.C_MZMP_XYZ2GEO.restype = None
+        lib.C_MZMP_CREATE.restype = None
+        lib.C_MZMP_DESTROY.restype = None
+        lib.C_MZMP_GETNAME.restype = None
+        lib.C_MZMP_GETPROJECTIONSTRING.restype = None
+        lib.C_MZMP_GEO2PROJ.restype = None
+        lib.C_MZMP_PROJ2GEO.restype = None
+        lib.C_MZMP_GETORIGIN.restype = None
+        lib.C_MZMP_GETCONVERGENCE.restype = ctypes.c_double
+        lib.C_MZMP_GETDEFAULTAREA.restype = None
+        lib.C_MZMP_GEO2XYZ.restype = None
+        lib.C_MZMP_XYZ2GEO.restype = None
 
-            MzCartDLL.Wrapper.C_MZDC_CREATE.restype = None
-            MzCartDLL.Wrapper.C_MZDC_DESTROY.restype = None
-            MzCartDLL.Wrapper.C_MZDC_CONVERTXY.restype = None
-            MzCartDLL.Wrapper.C_MZDC_INVCONVERTXY.restype = None
-            MzCartDLL.Wrapper.C_MZDC_CONVERTXYH.restype = None
-            MzCartDLL.Wrapper.C_MZDC_INVCONVERTXYH.restype = None
-            MzCartDLL.Wrapper.C_MZDC_DATUMSHIFT.restype = None
-            MzCartDLL.Wrapper.C_MZDC_BYPASSXYZ.restype = None
-            MzCartDLL.Wrapper.C_MZDC_RESETBYPASSXYZ.restype = None
-            MzCartDLL.Wrapper.C_MZDC_SETDATUMSHIFT.argtypes = [
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-            ]
-            MzCartDLL.Wrapper.C_MZDC_SETDATUMSHIFT.restype = None
-            MzCartDLL.Wrapper.C_MZDC_INVERTORDER.restype = None
+        lib.C_MZDC_CREATE.restype = None
+        lib.C_MZDC_DESTROY.restype = None
+        lib.C_MZDC_CONVERTXY.restype = None
+        lib.C_MZDC_INVCONVERTXY.restype = None
+        lib.C_MZDC_CONVERTXYH.restype = None
+        lib.C_MZDC_INVCONVERTXYH.restype = None
+        lib.C_MZDC_DATUMSHIFT.restype = None
+        lib.C_MZDC_BYPASSXYZ.restype = None
+        lib.C_MZDC_RESETBYPASSXYZ.restype = None
+        lib.C_MZDC_SETDATUMSHIFT.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+        ]
+        lib.C_MZDC_SETDATUMSHIFT.restype = None
+        lib.C_MZDC_INVERTORDER.restype = None
 
-            MzCartDLL.Wrapper.S_LONGITUDETOUTMZONE.restype = None
-            MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME.restype = None
-            MzCartDLL.Wrapper.S_PROJECTIONORIGIN.restype = None
+        lib.S_LONGITUDETOUTMZONE.restype = None
+        lib.S_PROJECTIONSHORTNAME.restype = None
+        lib.S_PROJECTIONORIGIN.restype = None
+
+        MzCartDLL.Wrapper = lib
+        MzCartDLL._loaded = True
 
     ################################/
     # region MzCartography methods
@@ -190,22 +220,12 @@ class MzCartDLL:
     def MzCartProjectionName(mzCartPointer: ctypes.c_void_p) -> str:
         if mzCartPointer.value is None:
             raise ValueError("Pointer is null", "mzCartPointer")
-        rc = ctypes.c_int32()
-        projName = ctypes.c_char_p((" " * 1024).encode("ascii"))
-        MzCartDLL.Wrapper.C_MZC_GETPROJECTIONNAME(
-            mzCartPointer, projName, ctypes.c_int32(1024), ctypes.byref(rc)
+        return _ReadString(
+            MzCartDLL.Wrapper.C_MZC_GETPROJECTIONNAME,
+            (mzCartPointer,),
+            1024,
+            "Could not get projection name from cartography object",
         )
-        if rc.value > 0:
-            # String was too short (length returned as rc), create one with the required length
-            projName = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"))
-            MzCartDLL.Wrapper.C_MZC_GETPROJECTIONNAME(
-                mzCartPointer, projName, rc.value + 1, ctypes.byref(rc)
-            )
-        if rc.value != 0:
-            raise ProjectionException(
-                "Could not get projection name from cartography object"
-            )
-        return projName.value.decode("ascii")
 
     # / <summary>
     # / Returns the WKT projection string, or one of the projection abbreviation strings
@@ -215,46 +235,24 @@ class MzCartDLL:
     def MzCartProjectionString(mzCartPointer: ctypes.c_void_p) -> str:
         if mzCartPointer.value is None:
             raise ValueError("Pointer is null", "mzCartPointer")
-        rc = ctypes.c_int32()
-        projName = ctypes.c_char_p((" " * 2048).encode("ascii"))
-        MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING(
-            mzCartPointer, projName, ctypes.c_int32(2048), ctypes.byref(rc)
+        return _ReadString(
+            MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING,
+            (mzCartPointer,),
+            2048,
+            "Could not get projection string from cartography object",
         )
-        if rc.value > 0:
-            # String was too short (length returned as rc), create one with the required length
-            projName = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"))
-            MzCartDLL.Wrapper.C_MZC_GETPROJECTIONSTRING(
-                mzCartPointer, projName, ctypes.c_int32(rc.value + 1), ctypes.byref(rc)
-            )
-        if rc.value != 0:
-            raise ProjectionException(
-                "Could not get projection string from cartography object"
-            )
-        return projName.value.decode("ascii")
 
     # / <summary>
     # / Returns the google map projection string
     # / </summary>
     @staticmethod
     def GoogleMapProjectionString() -> str:
-        rc = ctypes.c_int32()
-        googleMapProjection = ctypes.c_char_p((" " * 2048).encode("ascii"))
-        MzCartDLL.Wrapper.S_GETGOOGLEMAPPROJECTIONSTRING(
-            googleMapProjection, ctypes.c_int(2048), ctypes.byref(rc)
+        return _ReadString(
+            MzCartDLL.Wrapper.S_GETGOOGLEMAPPROJECTIONSTRING,
+            (),
+            2048,
+            "Could not get google map projection string from cartography object",
         )
-        if rc.value > 0:
-            # String was too short (length returned as rc), create one with the required length
-            googleMapProjection = ctypes.c_char_p(
-                (" " * (rc.value + 1)).encode("ascii")
-            )
-            MzCartDLL.Wrapper.S_GETGOOGLEMAPPROJECTIONSTRING(
-                googleMapProjection, ctypes.c_int32(rc.value + 1), ctypes.byref(rc)
-            )
-        if rc.value != 0:
-            raise ProjectionException(
-                "Could not get google map projection string from cartography object"
-            )
-        return googleMapProjection.value.decode("ascii")
 
     # / <summary>
     # / Return the angle between true north and a line parallel to the
@@ -448,25 +446,12 @@ class MzCartDLL:
     def MzMapProjName(mzMapProjPointer: ctypes.c_void_p) -> str:
         if mzMapProjPointer is None:
             raise Exception("Pointer is null", "mzMapProjPointer")
-        rc = ctypes.c_int32()
-        projName = ctypes.c_char_p((" " * 128).encode("ascii"))
-        MzCartDLL.Wrapper.C_MZMP_GETNAME(
-            mzMapProjPointer, projName, ctypes.c_int32(128), ctypes.byref(rc)
+        return _ReadString(
+            MzCartDLL.Wrapper.C_MZMP_GETNAME,
+            (mzMapProjPointer,),
+            128,
+            "Could not get projection name from cartography object",
         )
-        if rc.value > 0:
-            # String was too short (length returned as rc), create one with the required length
-            projName = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"))
-            MzCartDLL.Wrapper.C_MZMP_GETNAME(
-                mzMapProjPointer,
-                projName,
-                ctypes.c_int32(rc.value + 1),
-                ctypes.byref(rc),
-            )
-        if rc.value != 0:
-            raise ProjectionException(
-                "Could not get projection name from cartography object"
-            )
-        return projName.value.decode("ascii")
 
     # / <summary>
     # / Returns the WKT projection string, or one of the projection abbreviation strings
@@ -476,25 +461,12 @@ class MzCartDLL:
     def MzMapProjProjectionString(mzMapProjPointer: ctypes.c_void_p) -> str:
         if mzMapProjPointer.value is None:
             raise Exception("Pointer is null", "mzMapProjPointer")
-        rc = ctypes.c_int32()
-        projName = ctypes.c_char_p((" " * 2048).encode("ascii"))
-        MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING(
-            mzMapProjPointer, projName, ctypes.c_int32(2048), ctypes.byref(rc)
+        return _ReadString(
+            MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING,
+            (mzMapProjPointer,),
+            2048,
+            "Could not get projection string from cartography object",
         )
-        if rc.value > 0:
-            # String was too short (length returned as rc), create one with the required length
-            projName = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"))
-            MzCartDLL.Wrapper.C_MZMP_GETPROJECTIONSTRING(
-                mzMapProjPointer,
-                projName,
-                ctypes.c_int32(rc.value + 1),
-                ctypes.byref(rc),
-            )
-        if rc.value != 0:
-            raise ProjectionException(
-                "Could not get projection string from cartography object"
-            )
-        return projName.value.decode("ascii")
 
     # / <summary>
     # / Convert coordinates from geographical coordinates to projection coordinates
@@ -573,6 +545,7 @@ class MzCartDLL:
             ctypes.byref(x1),
             ctypes.byref(y1),
         )
+        return (x0.value, y0.value, x1.value, y1.value)
 
     # / <summary>
     # / Convert coordinates from geographical coordinates to 3D coordinates
@@ -784,7 +757,8 @@ class MzCartDLL:
     # / </summary>
     @staticmethod
     def MzConverterSetConversionType(
-        mzConverterPointer: ctypes.c_void_p, typeOfConversion: int
+        mzConverterPointer: ctypes.c_void_p,
+        typeOfConversion: "ReprojectorConversionType",
     ):
         MzCartDLL.Wrapper.C_MZDC_SETCONVERSIONTYPE(
             mzConverterPointer, ctypes.c_int32(typeOfConversion.value)
@@ -917,25 +891,12 @@ class MzCartDLL:
     # / </summary>
     @staticmethod
     def Longitude2UtmZone(longitude: float) -> str:
-        res = ctypes.c_char_p((" " * 128).encode("ascii"))
-        rc = ctypes.c_int32()
-        MzCartDLL.Wrapper.S_LONGITUDETOUTMZONE(
-            ctypes.c_double(longitude), res, ctypes.c_int32(128), ctypes.byref(rc)
+        return _ReadString(
+            MzCartDLL.Wrapper.S_LONGITUDETOUTMZONE,
+            (ctypes.c_double(longitude),),
+            128,
+            "Could not get UTM zone from longitude",
         )
-        if rc.value > 0:
-            # String was too short (length returned as rc), create one with the required length
-            res = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"))
-            MzCartDLL.Wrapper.S_LONGITUDETOUTMZONE(
-                ctypes.c_double(longitude),
-                res,
-                ctypes.c_int32(rc.value + 1),
-                ctypes.byref(rc),
-            )
-        if rc.value != 0:
-            raise ProjectionException(
-                "Could not get short name out of projection string"
-            )
-        return res.value.decode("ascii")
 
     # / <summary>
     # / Get the short name out of a WKT projetion string.
@@ -950,28 +911,12 @@ class MzCartDLL:
     # / <param name="projString">A WKT projection string</param>
     @staticmethod
     def ProjectionShortName(projString: str) -> str:
-        shortNameBuffer = ctypes.c_char_p((" " * 128).encode("ascii"))
-        rc = ctypes.c_int32()
-        MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME(
-            ctypes.c_char_p(projString.encode("ascii")),
-            shortNameBuffer,
-            ctypes.c_int32(128),
-            ctypes.byref(rc),
+        return _ReadString(
+            MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME,
+            (ctypes.c_char_p(projString.encode("ascii")),),
+            128,
+            "Could not get short name out of projection string",
         )
-        if rc.value > 0:
-            # String was too short (length returned as rc), create one with the required length
-            shortNameBuffer = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"))
-            MzCartDLL.Wrapper.S_PROJECTIONSHORTNAME(
-                ctypes.c_char_p(projString.encode("ascii")),
-                shortNameBuffer,
-                ctypes.c_int32(128),
-                ctypes.byref(rc),
-            )
-        if rc.value != 0:
-            raise ProjectionException(
-                "Could not get short name ctypes.byref(of projection string)"
-            )
-        return shortNameBuffer.value.decode("ascii")
 
     # / <summary>
     # / If the projection string is not a valid WKT string, an exception is thrown.
@@ -1025,11 +970,16 @@ class MzCartDLL:
     # / <param name="datumShiftParameters">Optional array of datum shift parameters, null if not applicable.</param>
     @staticmethod
     def ConvertWkt2Proj4(
-        wktProjectionString: str, datumShiftParameters: np.ndarray
+        wktProjectionString: str, datumShiftParameters: np.ndarray | None
     ) -> str:
         noOfParams = 0
+        datumShiftPointer = None
         if datumShiftParameters is not None:
+            datumShiftParameters = np.ascontiguousarray(
+                datumShiftParameters, dtype=np.float64
+            )
             noOfParams = datumShiftParameters.size
+            datumShiftPointer = ctypes.c_void_p(datumShiftParameters.ctypes.data)
 
         if not (noOfParams == 0 or noOfParams == 3 or noOfParams == 7):
             raise Exception(
@@ -1037,32 +987,16 @@ class MzCartDLL:
                 "datumShiftParameters",
             )
 
-        rc = ctypes.c_int32()
-        proj4 = ctypes.c_char_p((" " * 1024).encode("ascii"))
-
-        MzCartDLL.Wrapper.C_MZC_CONVERT2PROJ4(
-            ctypes.c_char_p(wktProjectionString.encode("ascii")),
-            datumShiftParameters.ctypes.data,
-            ctypes.c_int32(noOfParams),
-            proj4,
-            ctypes.c_int32(rc.value + 1),
-            ctypes.byref(rc),
-        )
-        if rc.value > 0:
-            # String was too short (length returned as rc), create one with the required length
-            proj4 = ctypes.c_char_p((" " * (rc.value + 1)).encode("ascii"))
-            MzCartDLL.Wrapper.C_MZC_CONVERT2PROJ4(
+        return _ReadString(
+            MzCartDLL.Wrapper.C_MZC_CONVERT2PROJ4,
+            (
                 ctypes.c_char_p(wktProjectionString.encode("ascii")),
-                datumShiftParameters.ctypes.data,
+                datumShiftPointer,
                 ctypes.c_int32(noOfParams),
-                proj4,
-                ctypes.c_int32(rc.value + 1),
-                ctypes.byref(rc),
-            )
-        if rc != 0:
-            raise ProjectionException("Could not convert Prj string to Proj.4 string")
-
-        return proj4.value.decode("ascii")
+            ),
+            1024,
+            "Could not convert Prj string to Proj.4 string",
+        )
 
     # endregion
 
@@ -1134,8 +1068,8 @@ class CoordSysType(IntEnum):
 class MapProjection:
     def __init__(
         self,
-        projectionString: str,
-        mzMapProjPointer: ctypes.c_void_p = None,
+        projectionString: str | None,
+        mzMapProjPointer: ctypes.c_void_p | None = None,
         mustFree: bool = False,
         objectHolder: object = None,
     ):
@@ -1152,6 +1086,8 @@ class MapProjection:
         self._mustFree = mustFree
 
         if self._mzMapProjPointer is None:
+            if projectionString is None:
+                raise ValueError("projectionString or mzMapProjPointer must be given")
             self._mzMapProjPointer = MzCartDLL.MzMapProjCreate(projectionString)
         if self.ProjectionString is None:
             self.ProjectionString = MzCartDLL.MzMapProjProjectionString(
@@ -1202,7 +1138,7 @@ class MapProjection:
     def __del__(self):
         # Release ressources on the unmanaged side when garbage collected
         if self._mustFree:
-            if self._mzMapProjPointer.value != None:
+            if self._mzMapProjPointer.value is not None:
                 MzCartDLL.MzMapProjDestroy(self._mzMapProjPointer)
         _mzMapProjPointer = ctypes.c_void_p()
 
@@ -1576,11 +1512,11 @@ class Cartography:
     def __init__(
         self,
         projectionString: str,
-        lonOrigin: float = None,
-        latOrigin: float = None,
+        lonOrigin: float | None = None,
+        latOrigin: float | None = None,
         orientation: float = 0.0,
-        eastOrigin: float = None,
-        northOrigin: float = None,
+        eastOrigin: float | None = None,
+        northOrigin: float | None = None,
         orientationProj: float = 0.0,
         validateProjectionString: bool = True,
     ):
@@ -1644,7 +1580,7 @@ class Cartography:
     # / </remarks>
     def Dispose(self):
         # Release ressources on the unmanaged side
-        if self._mzCartPointer.value != None:
+        if self._mzCartPointer.value is not None:
             MzCartDLL.MzCartDestroy(self._mzCartPointer)
             # Prevent subsequent finalization of this object. This is not needed
             # because managed and unmanaged resources have been explicitly released

@@ -1,5 +1,8 @@
 import ctypes
 import unittest
+
+import pytest
+
 from tests.test_util import *
 from mikecore.eum import *
 
@@ -148,7 +151,7 @@ class TestEUM(unittest.TestCase):
                 ctypes.c_int32(i), ctypes.byref(key), ctypes.byref(desc)
             )
             if key.value not in known:
-                missing.append((key.value, desc.value.decode("ascii")))
+                missing.append((key.value, desc.value))
         Assert.AreEqual([], missing)
 
     def test_unit_enum_covers_native_table(self):
@@ -179,3 +182,31 @@ class TestEUM(unittest.TestCase):
         array = np.array([0.1524, 0.3048, 0.6096, 1])
         uc.InvConvertArray(array)
         Assert.AreEqual(np.array([0.5, 1, 2, 3.280839895]), array, 1e-6)
+
+
+EQV_UNIT_INVERTED = (
+    "Suspected bug: eumGetNextEqvUnit treats a non-zero return code as failure, "
+    "the opposite of every other eum wrapper (eumGetNextUnit, eumGetItemUnitSeq, "
+    "...). Called directly, the native function returns 1 with meter as the first "
+    "unit equivalent to meter, and 0 with a null description after the last one. "
+    "Correct: (True, eumUmeter, 'meter') for the first unit and "
+    "(False, eumUUnitUndefined, '') after the last."
+)
+
+
+@pytest.mark.xfail(strict=True, reason=EQV_UNIT_INVERTED)
+def test_eumGetNextEqvUnit_first_unit():
+    assert (True, eumUnit.eumUmeter, "meter") == eumWrapper.eumGetNextEqvUnit(
+        eumUnit.eumUmeter, eumUnit.eumUUnitUndefined
+    )
+
+
+@pytest.mark.xfail(strict=True, reason=EQV_UNIT_INVERTED)
+def test_eumGetNextEqvUnit_after_last_unit():
+    assert (False, eumUnit.eumUUnitUndefined, "") == eumWrapper.eumGetNextEqvUnit(
+        eumUnit.eumUmeter, eumUnit.eumUmileUS
+    )
+
+
+def test_GetItemTypeTag_unknown_description():
+    assert eumWrapper.GetItemTypeTag("No such item type") is None

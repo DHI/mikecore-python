@@ -1,0 +1,372 @@
+import datetime
+
+import numpy as np
+import pytest
+from numpy.testing import assert_array_equal
+
+from mikecore.DfsFactory import DfsFactory
+from mikecore.DfsuBuilder import DfsuBuilder
+from mikecore.DfsuFile import DfsuFile, DfsuFileType
+from mikecore.eum import eumItem, eumQuantity, eumUnit
+from mikecore.MeshFile import MeshFile
+
+# Two triangles over four nodes
+X = np.array([0.0, 1.0, 1.0, 0.0])
+Y = np.array([0.0, 0.0, 1.0, 1.0])
+Z = np.array([-1.0, -2.0, -3.0, -4.0])
+CODE = np.array([1, 1, 1, 1])
+ELEMENTS = [[1, 2, 3], [1, 3, 4]]
+
+
+def _builder(fileType=DfsuFileType.Dfsu2D):
+    builder = DfsuBuilder.Create(fileType)
+    builder.SetProjection(DfsFactory().CreateProjection("NON-UTM"))
+    builder.SetTimeInfo(datetime.datetime(2020, 1, 1), 60)
+    builder.AddDynamicItem(
+        "Value", eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined)
+    )
+    return builder
+
+
+def test_node_ids_set_after_nodes_are_written(tmp_path):
+    filename = str(tmp_path / "nodeids_after.dfsu")
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetNodeIds(np.array([11, 12, 13, 14], dtype=np.int32))
+    builder.SetElements(ELEMENTS)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert_array_equal([11, 12, 13, 14], dfsu.NodeIds)
+    dfsu.Close()
+
+
+def test_node_ids_set_before_nodes_are_written(tmp_path):
+    filename = str(tmp_path / "nodeids_before.dfsu")
+    builder = _builder()
+    builder.SetNodeIds(np.array([11, 12, 13, 14], dtype=np.int32))
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert_array_equal([11, 12, 13, 14], dfsu.NodeIds)
+    dfsu.Close()
+
+
+def test_dynamic_item_values_are_written(tmp_path):
+    filename = str(tmp_path / "values.dfsu")
+    builder = _builder()
+    builder.AddDynamicItem(
+        "Other", eumQuantity(eumItem.eumIWaterLevel, eumUnit.eumUmeter)
+    )
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    # One value per element, for each time step
+    values = {
+        "Value": [[1.5, -2.5], [3.0, 4.0]],
+        "Other": [[10.0, 20.0], [30.0, 40.0]],
+    }
+    numberOfTimeSteps = len(values["Value"])
+    dfsu = builder.CreateFile(filename)
+    # Item-timesteps are written in order: items within each time step
+    for timestepIndex in range(numberOfTimeSteps):
+        for itemValues in values.values():
+            data = np.array(itemValues[timestepIndex], dtype=np.float32)
+            dfsu.WriteItemTimeStepNext(0, data)
+    dfsu.Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert numberOfTimeSteps == dfsu.NumberOfTimeSteps
+    assert list(values) == [itemInfo.Name for itemInfo in dfsu.ItemInfo]
+    other = next(info for info in dfsu.ItemInfo if info.Name == "Other")
+    assert eumItem.eumIWaterLevel == other.Quantity.Item
+    for itemNumber, itemValues in enumerate(values.values(), start=1):
+        for timestepIndex in range(numberOfTimeSteps):
+            data = dfsu.ReadItemTimeStep(itemNumber, timestepIndex).Data
+            assert_array_equal(itemValues[timestepIndex], data)
+    dfsu.Close()
+
+
+def test_z_unit_is_written(tmp_path):
+    filename = str(tmp_path / "zunit.dfsu")
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.SetZUnit(eumUnit.eumUfeet)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert eumUnit.eumUfeet == dfsu.ZUnit
+    assert_array_equal(Z, dfsu.Z)
+    dfsu.Close()
+
+
+def test_z_unit_must_be_meter_or_feet():
+    builder = _builder()
+
+    with pytest.raises(Exception, match="only meter and feet"):
+        builder.SetZUnit(eumUnit.eumUsec)
+
+
+def test_validate_reports_missing_nodes_and_elements():
+    builder = DfsuBuilder.Create(DfsuFileType.Dfsu2D)
+
+    errors = builder.Validate()
+
+    assert "Nodes have not been set" in errors
+    assert "Elements have not been set" in errors
+
+
+def test_spectral_file_with_directions_only(tmp_path):
+    filename = str(tmp_path / "directions_only.dfsu")
+    directions = np.array([0.0, np.pi / 2, np.pi, 3 * np.pi / 2])
+    builder = _builder(DfsuFileType.DfsuSpectral2D)
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.SetDirections(directions)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert 0 == dfsu.NumberOfFrequencies
+    assert_array_equal(directions, dfsu.Directions)
+    dfsu.Close()
+
+
+def test_default_node_and_element_ids_count_from_one(tmp_path):
+    filename = str(tmp_path / "default_ids.dfsu")
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert_array_equal(np.arange(1, len(X) + 1), dfsu.NodeIds)
+    assert_array_equal(np.arange(1, len(ELEMENTS) + 1), dfsu.ElementIds)
+    dfsu.Close()
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "Suspected bug: SetElementIds checks the length of the ids but never "
+        "stores them, so the file gets the default ids 1, 2, ... without warning. "
+        "SetNodeIds stores its ids. Correct: the ids passed are written."
+    ),
+)
+def test_element_ids_are_written(tmp_path):
+    filename = str(tmp_path / "element_ids.dfsu")
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.SetElementIds(np.array([10, 20], dtype=np.int32))
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    elementIds = dfsu.ElementIds
+    dfsu.Close()
+
+    assert_array_equal([10, 20], elementIds)
+
+
+# Node numbers start at 1, so 0 is below the first node
+@pytest.mark.parametrize("nodeNumber", [0, len(X) + 1])
+def test_validate_reports_node_number_outside_the_nodes(nodeNumber):
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements([[1, 2, 3], [1, 3, nodeNumber]])
+
+    errors = builder.Validate()
+
+    assert [
+        "At least one element has an invalid node number. Node numbers must be within [1,numberOfNodes]"
+    ] == errors
+
+
+def test_validate_accepts_highest_node_number():
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+
+    assert [] == builder.Validate()
+
+
+def test_create_file_without_nodes_or_elements_fails(tmp_path):
+    builder = _builder()
+
+    with pytest.raises(Exception) as error:
+        builder.CreateFile(str(tmp_path / "empty.dfsu"))
+
+    assert "Nodes have not been set" in str(error.value)
+    assert "Elements have not been set" in str(error.value)
+
+
+def test_node_ids_must_match_number_of_nodes():
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+
+    oneIdShort = np.arange(1, len(X), dtype=np.int32)
+
+    with pytest.raises(Exception, match="does not match number of nodes"):
+        builder.SetNodeIds(oneIdShort)
+
+
+def test_nodes_must_match_number_of_node_ids():
+    builder = _builder()
+    oneIdShort = np.arange(1, len(X), dtype=np.int32)
+    builder.SetNodeIds(oneIdShort)
+
+    with pytest.raises(Exception, match="same length as the number of node ids"):
+        builder.SetNodes(X, Y, Z, CODE)
+
+
+def test_elements_must_match_element_ids_from_mesh_file():
+    builder = _builder()
+    builder.SetFromMeshFile(MeshFile.ReadMesh("testdata/Oresund.mesh"))
+
+    with pytest.raises(Exception, match="not the same as number of element ids"):
+        builder.SetElements(ELEMENTS)
+
+
+def test_set_from_mesh_file_writes_the_mesh(tmp_path):
+    filename = str(tmp_path / "from_mesh.dfsu")
+    mesh = MeshFile.ReadMesh("testdata/Oresund.mesh")
+    builder = DfsuBuilder.Create(DfsuFileType.Dfsu2D)
+    builder.SetFromMeshFile(mesh)
+    builder.SetTimeInfo(datetime.datetime(2020, 1, 1), 60)
+    builder.AddDynamicItem(
+        "Value", eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined)
+    )
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert "UTM-33" == dfsu.Projection.WKTString
+    assert_array_equal(mesh.NodeIds, dfsu.NodeIds)
+    assert_array_equal(mesh.X, dfsu.X)
+    assert_array_equal(mesh.Y, dfsu.Y)
+    z = mesh.Z
+    assert z is not None
+    assert_array_equal(z.astype(np.float32), dfsu.Z)
+    assert_array_equal(mesh.Code, dfsu.Code)
+    assert_array_equal(mesh.ElementIds, dfsu.ElementIds)
+    assert len(mesh.ElementTable) == len(dfsu.ElementTable)
+    for meshElement, dfsuElement in zip(mesh.ElementTable, dfsu.ElementTable):
+        assert_array_equal(meshElement, dfsuElement)
+    dfsu.Close()
+
+
+FREQUENCIES = np.array([0.1, 0.2, 0.3])
+DIRECTIONS = np.array([0.0, np.pi / 2, np.pi, 3 * np.pi / 2])
+
+
+def test_spectral_file_with_frequencies_and_directions(tmp_path):
+    filename = str(tmp_path / "spectral2d.dfsu")
+    builder = _builder(DfsuFileType.DfsuSpectral2D)
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.SetFrequencies(FREQUENCIES)
+    builder.SetDirections(DIRECTIONS)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert DfsuFileType.DfsuSpectral2D is dfsu.DfsuFileType
+    assert_array_equal(FREQUENCIES, dfsu.Frequencies)
+    assert_array_equal(DIRECTIONS, dfsu.Directions)
+    # One value per element, frequency and direction
+    assert len(ELEMENTS) * len(FREQUENCIES) * len(DIRECTIONS) == (
+        dfsu.ItemInfo[0].ElementCount
+    )
+    dfsu.Close()
+
+
+def test_spectral_file_with_frequencies_only(tmp_path):
+    filename = str(tmp_path / "frequencies_only.dfsu")
+    builder = _builder(DfsuFileType.DfsuSpectral2D)
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.SetFrequencies(FREQUENCIES)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert_array_equal(FREQUENCIES, dfsu.Frequencies)
+    assert 0 == dfsu.NumberOfDirections
+    # One value per element and frequency
+    assert len(ELEMENTS) * len(FREQUENCIES) == dfsu.ItemInfo[0].ElementCount
+    dfsu.Close()
+
+
+def test_spectral_1d_file_has_values_per_node(tmp_path):
+    filename = str(tmp_path / "spectral1d.dfsu")
+    builder = _builder(DfsuFileType.DfsuSpectral1D)
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements([[1, 2], [2, 3], [3, 4]])
+    builder.SetFrequencies(FREQUENCIES)
+    builder.SetDirections(DIRECTIONS)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert DfsuFileType.DfsuSpectral1D is dfsu.DfsuFileType
+    # One value per node, frequency and direction
+    assert len(X) * len(FREQUENCIES) * len(DIRECTIONS) == (
+        dfsu.ItemInfo[0].ElementCount
+    )
+    dfsu.Close()
+
+
+def test_temporal_axis_is_written(tmp_path):
+    filename = str(tmp_path / "temporal_axis.dfsu")
+    start = datetime.datetime(2021, 2, 3, 4, 5, 6)
+    timeStepInSeconds = 30
+    startTimeOffset = 0
+    builder = DfsuBuilder.Create(DfsuFileType.Dfsu2D)
+    builder.SetProjection(DfsFactory().CreateProjection("NON-UTM"))
+    builder.SetTemporalAxis(
+        DfsFactory().CreateTemporalEqCalendarAxis(
+            eumUnit.eumUsec, start, startTimeOffset, timeStepInSeconds
+        )
+    )
+    builder.AddDynamicItem(
+        "Value", eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined)
+    )
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert start == dfsu.StartDateTime
+    assert timeStepInSeconds == dfsu.TimeStepInSeconds
+    dfsu.Close()
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "Suspected bug: Validate accepts DfsuSpectral0D, but SetupBuilder has no "
+        "branch for it and raises an Exception with no message. DfsuFile reads a "
+        "Spectral0D file as data type 2001 with a 6-value MIKE_FM block "
+        "[nodes, elements, 2, 0, frequencies, directions], over a mesh with one "
+        "element per frequency-direction pair. Correct: the builder writes that, "
+        "and the file reads back as DfsuSpectral0D with one value per frequency "
+        "and direction."
+    ),
+)
+def test_spectral_0d_file_has_one_spectrum(tmp_path):
+    filename = str(tmp_path / "spectral0d.dfsu")
+    frequencies = np.array([0.1, 0.2])
+    directions = np.array([0.0, np.pi])
+    # 2 x 2 quadrilaterals over a 3 x 3 grid of nodes, one per frequency and direction
+    x = np.tile([0.0, 1.0, 2.0], 3)
+    y = np.repeat([0.0, 1.0, 2.0], 3)
+    builder = _builder(DfsuFileType.DfsuSpectral0D)
+    builder.SetNodes(x, y, np.zeros(len(x)), np.zeros(len(x), dtype=np.int32))
+    builder.SetElements([[1, 2, 5, 4], [2, 3, 6, 5], [4, 5, 8, 7], [5, 6, 9, 8]])
+    builder.SetFrequencies(frequencies)
+    builder.SetDirections(directions)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert DfsuFileType.DfsuSpectral0D is dfsu.DfsuFileType
+    assert_array_equal(frequencies, dfsu.Frequencies)
+    assert_array_equal(directions, dfsu.Directions)
+    assert len(frequencies) * len(directions) == dfsu.ItemInfo[0].ElementCount
+    dfsu.Close()

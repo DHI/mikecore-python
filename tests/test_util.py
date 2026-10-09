@@ -1,7 +1,7 @@
 import shutil
 import os
 import stat
-from numpy.testing import *
+from numpy.testing import assert_allclose, assert_equal
 
 
 class testUtil:
@@ -16,24 +16,32 @@ class testUtil:
 
 class Assert:
     @staticmethod
-    def AreEqual(expected, actual, tol=0):
+    def AreEqual(expected, actual, tol: float = 0):
         if tol == 0:
             assert_equal(actual, expected)
         else:
-            assert_allclose(actual, expected, tol)
+            assert_allclose(actual, expected, rtol=tol)
 
+    @staticmethod
     def IsNotNull(obj):
         if obj is None:
             raise Exception("Object is null")
 
+    @staticmethod
     def IsNull(obj):
         if obj is not None:
             raise Exception("Object is not null")
 
+    @staticmethod
     def IsTrue(obj):
         if not obj:
             raise Exception("Is not True")
 
+    @staticmethod
     def IsFalse(obj):
         if obj:
             raise Exception("Is not False")
+
+    @staticmethod
+    def Fail(message):
+        raise Exception(message)

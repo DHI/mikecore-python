@@ -1,12 +1,14 @@
 import unittest
-from datetime import datetime
+import datetime
+
+import pytest
+
 from mikecore.DfsFileFactory import *
 from mikecore.DfsuBuilder import *
 from mikecore.DfsBuilder import *
 from mikecore.DfsFactory import *
 from mikecore.DfsFile import *
 from mikecore.eum import *
-from numpy.testing import *
 from tests.examples_dfsu import *
 from tests.test_util import *
 
@@ -1454,3 +1456,32 @@ class FileVerticalColumnDfsu:
         # Now we are at end of file, check what happens then:
         Assert.IsNull(dfsFile.ReadItemTimeStepNext())
         Assert.IsNull(dfsFile.ReadItemTimeStepNext())
+
+
+@pytest.mark.parametrize(
+    "filename, fileType, value",
+    [
+        ("testdata/OresundHD.dfsu", DfsuFileType.Dfsu2D, 2),
+        ("testdata/VerticalColumn.dfsu", DfsuFileType.DfsuVerticalColumn, 3),
+        (
+            "testdata/VerticalProfileSigma.dfsu",
+            DfsuFileType.DfsuVerticalProfileSigma,
+            4,
+        ),
+        (
+            "testdata/VerticalProfileSigmaZ.dfsu",
+            DfsuFileType.DfsuVerticalProfileSigmaZ,
+            5,
+        ),
+        ("testdata/OdenseHD3D.dfsu", DfsuFileType.Dfsu3DSigma, 6),
+        ("testdata/Oresund3DSigmaZ.dfsu", DfsuFileType.Dfsu3DSigmaZ, 7),
+    ],
+)
+def test_DfsuFileType_of_file(filename, fileType, value):
+    dfsu = DfsuFile.Open(filename)
+    dfsuFileType = dfsu.DfsuFileType
+    dfsu.Close()
+
+    assert fileType is dfsuFileType
+    # The value of the MIKE Core DfsuFileType enum
+    assert value == dfsuFileType

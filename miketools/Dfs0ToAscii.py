@@ -35,19 +35,23 @@ def Dfs0ToAscii(dfs0FileName, txtFileName):
         )
     txt.write("\n")
 
-    isCalendarTime = False
+    # Only set for calendar time axes; otherwise times are written as offsets.
+    startDateTime = None
     if (
         dfs.FileInfo.TimeAxis.TimeAxisType == TimeAxisType.CalendarEquidistant
         or dfs.FileInfo.TimeAxis.TimeAxisType == TimeAxisType.CalendarNonEquidistant
     ):
-        isCalendarTime = True
         startDateTime = dfs.FileInfo.TimeAxis.StartDateTime
 
     for i in range(dfs.FileInfo.TimeAxis.NumberOfTimeSteps):
         for j in range(len(dfs.ItemInfo)):
             itemData = dfs.ReadItemTimeStepNext()
+            if itemData is None:
+                raise Exception(
+                    f"Could not read item {j + 1} at timestep index {i} from {dfs0FileName}"
+                )
             if j == 0:
-                if isCalendarTime:
+                if startDateTime is not None:
                     # TODO: Time unit is not always seconds
                     itemTime = startDateTime + timedelta(seconds=itemData.Time)
                     # Depending on the format to write to the file:

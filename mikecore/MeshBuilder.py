@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+from typing import NamedTuple
+
 import numpy as np
 from mikecore.DfsuFile import DfsuFile
 from mikecore.eum import eumQuantity, eumItem, eumUnit
@@ -6,23 +9,25 @@ from mikecore.DfsBuilder import DfsBuilder
 from mikecore.DfsFile import DfsProjection
 
 
+class MeshNodes(NamedTuple):
+    """Node coordinates and codes, one entry per node."""
+
+    x: np.ndarray
+    y: np.ndarray
+    z: np.ndarray
+    code: np.ndarray
+
+
 class MeshBuilder:
     def __init__(self):
-        self.__projectionString = None
-        self.__eumQuantity = None
+        self.__projectionString: str | None = None
+        self.__eumQuantity: eumQuantity | None = None
 
-        self.__isSetProjection = False
-        self.__isSetNodes = False
-        self.__isSetConnectivity = False
+        self.__nodeIds: np.ndarray | None = None
+        self.__nodes: MeshNodes | None = None
 
-        self.__nodeIds = None
-        self.__x = None
-        self.__y = None
-        self.__z = None
-        self.__code = None
-
-        self.__elementIds = None
-        self.__connectivity = None
+        self.__elementIds: Sequence[int] | np.ndarray | None = None
+        self.__connectivity: Sequence | np.ndarray | None = None
 
     def SetProjection(self, projection):
         """Set the geographical projection"""
@@ -32,7 +37,6 @@ class MeshBuilder:
             self.__projectionString = projection.WKTString
         else:
             raise TypeError("projection must be str or DfsProjection")
-        self.__isSetProjection = True
 
     def SetEumQuantity(self, eumQuantity):
         self.__eumQuantity = eumQuantity
@@ -69,16 +73,12 @@ class MeshBuilder:
                 f"All arguments must have same length. Lengths are: x={x.size}, y={y.size}, z={z.size}, code={code.size}"
             )
 
-        if self.__nodeIds != None and numberOfNodes != len(self.__nodeIds):
+        if self.__nodeIds is not None and numberOfNodes != len(self.__nodeIds):
             raise Exception(
                 "Arguments does not have same length as the number of node ids. These must match"
             )
 
-        self.__x = x
-        self.__y = y
-        self.__z = z
-        self.__code = code
-        self.__isSetNodes = True
+        self.__nodes = MeshNodes(x, y, z, code)
 
     def SetElements(self, connectivity):
         if connectivity is None:
@@ -97,7 +97,6 @@ class MeshBuilder:
                 )
 
         self.__connectivity = connectivity
-        self.__isSetConnectivity = True
 
     def SetElementIds(self, elementIds):
         """Set the element id's. Optional. If not set, default values are used (1,2,3,...)"""
@@ -112,18 +111,19 @@ class MeshBuilder:
         When this returns an empty list, the mesh has been properly build.
         """
         errors = []
-        if not self.__isSetProjection:
+        if self.__projectionString is None:
             errors.append("Projection has not been set")
-        if not self.__isSetNodes:
+        if self.__nodes is None:
             errors.append("Nodes have not been set")
-        if not self.__isSetConnectivity:
+        if self.__connectivity is None:
             errors.append("Elements have not been set")
 
         # Check that all nodenumbers are within the range of number of nodes.
-        if (self.__isSetNodes) and (self.__isSetConnectivity):
+        if (self.__nodes is not None) and (self.__connectivity is not None):
+            numberOfNodes = len(self.__nodes.x)
             for elmt in self.__connectivity:
                 elmt = np.array(elmt)
-                if np.any(elmt <= 0) or np.any(elmt > len(self.__x)):
+                if np.any(elmt <= 0) or np.any(elmt > numberOfNodes):
                     errors.append(
                         "At least one element has an invalid node number. Node numbers must be within [1,numberOfNodes]"
                     )
@@ -137,7 +137,13 @@ class MeshBuilder:
 
     def CreateMesh(self) -> MeshFile:
         """Create and return a new MeshFile object"""
-        self.Validate(dieOnError=True)
+        errors = self.Validate()
+        projectionString = self.__projectionString
+        nodes = self.__nodes
+        connectivity = self.__connectivity
+        # Validate reports each of these as an error when it is None
+        if errors or projectionString is None or nodes is None or connectivity is None:
+            raise Exception(DfsBuilder.ErrorMessage(errors))
 
         # Creating default eumQuantity in meters
         if self.__eumQuantity is None:
@@ -145,19 +151,19 @@ class MeshBuilder:
 
         # Creating default node id's, if empty
         if self.__nodeIds is None:
-            self.__nodeIds = np.arange(len(self.__x)) + 1
+            self.__nodeIds = np.arange(len(nodes.x)) + 1
 
         # Creating default element id's, if empty
         if self.__elementIds is None:
-            self.__elementIds = np.arange(len(self.__connectivity)) + 1
+            self.__elementIds = np.arange(len(connectivity)) + 1
 
         # Creating additional element information
-        elementType = np.zeros(len(self.__connectivity), dtype=np.int32)
-        nodesPerElmt = np.zeros(len(self.__connectivity), dtype=np.int32)
+        elementType = np.zeros(len(connectivity), dtype=np.int32)
+        nodesPerElmt = np.zeros(len(connectivity), dtype=np.int32)
         nodeElmtCount = 0  # total number of nodes listed in the connectivity table
         for i in range(len(elementType)):
             elmtTypeNumber = 0
-            elmt = self.__connectivity[i]
+            elmt = connectivity[i]
             if len(elmt) == 3:
                 elmtTypeNumber = 21
             elif len(elmt) == 4:
@@ -184,15 +190,15 @@ class MeshBuilder:
 
         res = MeshFile.Create(
             self.__eumQuantity,
-            self.__projectionString,
+            projectionString,
             self.__nodeIds,
-            self.__x,
-            self.__y,
-            self.__z,
-            self.__code,
+            nodes.x,
+            nodes.y,
+            nodes.z,
+            nodes.code,
             self.__elementIds,
             elementType,
-            self.__connectivity,
+            connectivity,
         )
 
         return res

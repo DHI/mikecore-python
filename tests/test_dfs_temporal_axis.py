@@ -1,7 +1,7 @@
 import unittest
 from mikecore.DfsFileFactory import DfsFileFactory
 from mikecore.DfsFile import *
-from numpy.testing import *
+from numpy.testing import assert_equal
 from tests.test_util import *
 
 

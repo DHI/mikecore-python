@@ -1,11 +1,11 @@
 import unittest
-from datetime import datetime
+import datetime
 from mikecore.DfsFileFactory import *
 from mikecore.DfsBuilder import *
 from mikecore.DfsFactory import *
 from mikecore.DfsFile import *
 from mikecore.eum import *
-from numpy.testing import *
+from numpy.testing import assert_allclose, assert_equal
 from tests.examples_dfs2 import *
 from tests.test_util import *
 
@@ -276,6 +276,20 @@ class Dfs2Tests(unittest.TestCase):
     #        assert_equal(eumUnit.eumUPerCent, itemInfo.Quantity.Unit);
     #
     #        file.Close();
+
+    def test_ReadReshapedPastEndReturnsNone(self):
+        dfsFile = DfsFileFactory.Dfs2FileOpen("testdata/OresundHD.dfs2")
+        dfsFile.Reshape(True)
+        count = 0
+        itemData = dfsFile.ReadItemTimeStepNext()
+        while itemData is not None:
+            Assert.AreEqual((71, 91), itemData.Data.shape)
+            count += 1
+            itemData = dfsFile.ReadItemTimeStepNext()
+        Assert.AreEqual(
+            len(dfsFile.ItemInfo) * dfsFile.FileInfo.TimeAxis.NumberOfTimeSteps, count
+        )
+        dfsFile.Close()
 
     def test_ModifyLanduseDataTest(self):
 

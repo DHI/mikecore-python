@@ -43,8 +43,26 @@ Homepage = "https://github.com/DHI/mikecore-python"
 
 [dependency-groups]
 dev = [
+    # Pinned: new releases can add errors and warnings. Bump deliberately and
+    # update MAX_WARNINGS in .github/workflows/type_check.yml to match.
+    "pyrefly==1.3.2",
     "pytest>=6.1.2",
 ]
+
+[tool.pyrefly]
+project-includes = ["mikecore", "miketools", "tests"]
+python-version = "3.11"
+
+[tool.pyrefly.errors]
+# Many attributes (e.g. FileInfo, TimeAxis, X/Y/Z) start as None and are set
+# later, so most accesses trip missing-attribute. Kept as warnings so real None
+# dereferences stay visible; make them errors once those attributes are typed.
+missing-attribute = "warn"
+# Existing violations need the same typing work (values from those attributes
+# passed on, indexed or sized). Kept visible as warnings for now.
+bad-argument-type = "warn"
+unsupported-operation = "warn"
+read-only = "warn"
 
 [tool.ruff.format]
 line-ending = "lf"

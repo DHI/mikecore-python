@@ -1322,6 +1322,9 @@ class eumQuantity:
         self.ItemInt = item
         self.Unit = unit
         self.UnitInt = unit
+        # Set on quantities read from a file
+        self.ItemDescription: str | None = None
+        self.UnitDescription: str | None = None
 
     def __repr__(self):
         return f"{self.Item}-{self.Unit}"
@@ -1377,7 +1380,7 @@ class UnitConverter:
     # / </summary>
     # / <param name="pData"></param>
     # / <param name="dDeleteValue"></param>
-    def ConvertArray(self, pData: np.ndarray, dDeleteValue: float = None):
+    def ConvertArray(self, pData: np.ndarray, dDeleteValue: float | None = None):
         if dDeleteValue is None:
             for i in range(pData.size):
                 pData[i] = self.Convert(pData[i])
@@ -1399,7 +1402,7 @@ class UnitConverter:
     # / </summary>
     # / <param name="pData"></param>
     # / <param name="dDeleteValue"></param>
-    def InvConvertArray(self, pData: np.ndarray, dDeleteValue: float = None):
+    def InvConvertArray(self, pData: np.ndarray, dDeleteValue: float | None = None):
         if dDeleteValue is None:
             for i in range(pData.size):
                 pData[i] = self.InvConvert(pData[i])
@@ -1413,11 +1416,14 @@ class eumDLL:
     """description of class"""
 
     # Static variables
-    Wrapper = None
+    # Set by Init(), which mikecore/__init__.py calls on import
+    Wrapper: ctypes.CDLL
+    _loaded = False
     # Leaving out extension should make it work for both Windows and Linux
     libfilename = "libeum.so"
     # libfilename = "eum";
-    libfilepath = None
+    # Directory of the native libraries; set before Init() or passed to it
+    libfilepath: str | None = None
 
     # def __init__(self):
     # init()
@@ -1431,70 +1437,75 @@ class eumDLL:
             eumDLL.libfilename = libfilename
 
         # eum lib should be loaded only once
-        if eumDLL.Wrapper is None:
-            # TODO: Is there a smarter way to have the eum library loaded (especially when xcopy-deployed)
-            if os.name == "nt":
-                eumDLL.Wrapper = ctypes.CDLL(os.path.join(eumDLL.libfilepath, "eum"))
-            else:
-                eumDLL.Wrapper = ctypes.CDLL(
-                    os.path.join(eumDLL.libfilepath, "libeum.so")
-                )
+        if eumDLL._loaded:
+            return
+        path = eumDLL.libfilepath
+        if path is None:
+            raise ValueError("eumDLL.Init needs the directory of the native libraries")
+        # TODO: Is there a smarter way to have the eum library loaded (especially when xcopy-deployed)
+        if os.name == "nt":
+            lib = ctypes.CDLL(os.path.join(path, "eum"))
+        else:
+            lib = ctypes.CDLL(os.path.join(path, "libeum.so"))
 
-                eumDLL.Wrapper.eumSetupLoadLinux.argtypes = [ctypes.c_char_p]
-                # TODO: Should this not be simpler?
-                eumFilePath = eumDLL.libfilepath + "/EUM.xml"
-                eumFilePathP = ctypes.c_char_p(eumFilePath.encode("ascii"))
-                res = eumDLL.Wrapper.eumSetupLoadLinux(eumFilePathP)
+            lib.eumSetupLoadLinux.argtypes = [ctypes.c_char_p]
+            # TODO: Should this not be simpler?
+            eumFilePath = path + "/EUM.xml"
+            eumFilePathP = ctypes.c_char_p(eumFilePath.encode("ascii"))
+            res = lib.eumSetupLoadLinux(eumFilePathP)
 
-            eumDLL.Wrapper.eumUnitGetParameters.argtypes = [
-                ctypes.c_int32,
-                ctypes.POINTER(ctypes.c_double),
-                ctypes.POINTER(ctypes.c_double),
-                ctypes.c_void_p,
-                ctypes.c_void_p,
-            ]
-            eumDLL.Wrapper.eumConvertItemArrayD.argtypes = [
-                ctypes.c_int32,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_double,
-            ]
-            eumDLL.Wrapper.eumConvertItemArrayF.argtypes = [
-                ctypes.c_int32,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_float,
-            ]
-            eumDLL.Wrapper.eumConvertItemArrayToUserUnitD.argtypes = [
-                ctypes.c_int32,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_double,
-            ]
-            eumDLL.Wrapper.eumConvertItemArrayToUserUnitF.argtypes = [
-                ctypes.c_int32,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_float,
-            ]
-            eumDLL.Wrapper.eumConvertItemArrayFromUserUnitD.argtypes = [
-                ctypes.c_int32,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_double,
-            ]
-            eumDLL.Wrapper.eumConvertItemArrayFromUserUnitF.argtypes = [
-                ctypes.c_int32,
-                ctypes.c_int32,
-                ctypes.c_void_p,
-                ctypes.c_int32,
-                ctypes.c_float,
-            ]
+        lib.eumUnitGetParameters.argtypes = [
+            ctypes.c_int32,
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+        ]
+        lib.eumConvertItemArrayD.argtypes = [
+            ctypes.c_int32,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_double,
+        ]
+        lib.eumConvertItemArrayF.argtypes = [
+            ctypes.c_int32,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_float,
+        ]
+        lib.eumConvertItemArrayToUserUnitD.argtypes = [
+            ctypes.c_int32,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_double,
+        ]
+        lib.eumConvertItemArrayToUserUnitF.argtypes = [
+            ctypes.c_int32,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_float,
+        ]
+        lib.eumConvertItemArrayFromUserUnitD.argtypes = [
+            ctypes.c_int32,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_double,
+        ]
+        lib.eumConvertItemArrayFromUserUnitF.argtypes = [
+            ctypes.c_int32,
+            ctypes.c_int32,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_float,
+        ]
+
+        eumDLL.Wrapper = lib
+        eumDLL._loaded = True
 
 
 # / <summary>
@@ -1507,6 +1518,15 @@ class eumDLL:
 # / </para>
 # / </summary>
 class eumWrapper:
+    @staticmethod
+    def DecodeString(
+        charP: ctypes.c_char_p, encoding: str = "ascii", errors: str = "strict"
+    ) -> str:
+        """Decode a string returned by a native library, which must not be null."""
+        if charP.value is None:
+            raise ValueError("Native library returned a null string")
+        return charP.value.decode(encoding, errors)
+
     # region Additional Methods
     # / <summary>
     # / Returns a hashtable using the textual description of each item type as key, and
@@ -1564,19 +1584,12 @@ class eumWrapper:
     # / <returns>returns a boolean variable which is TRUE if an item type with a
     # / matching textual description is found, and FALSE otherwise</returns>
     @staticmethod
-    def GetItemTypeTag(itemDesc: str) -> eumItem:
-        found = False
-        itemKey = None
+    def GetItemTypeTag(itemDesc: str) -> eumItem | None:
         for i in range(1, eumWrapper.eumGetItemTypeCount() + 1):
             ok, key, desc = eumWrapper.eumGetItemTypeSeq(i)
             if ok and desc == itemDesc:
-                found = True
-                itemKey = key
-                break
-        if found:
-            return itemKey
-        else:
-            return None
+                return key
+        return None
 
     # / <summary>
     # / returns array containing the EUM units that are allowed for an EUM data type
@@ -1622,7 +1635,7 @@ class eumWrapper:
             ctypes.c_int32(seqNo), ctypes.byref(itemKey), ctypes.byref(lpItemDesc)
         )
         if 0 != iok:
-            return True, eumItem(itemKey.value), lpItemDesc.value.decode("ascii")
+            return True, eumItem(itemKey.value), eumWrapper.DecodeString(lpItemDesc)
         return False, eumItem.eumIItemUndefined, ""
 
     # / <summary>
@@ -1632,7 +1645,7 @@ class eumWrapper:
     def eumGetItemTypeKey(itemKey: eumItem) -> str | None:
         lpItDesc = ctypes.c_char_p()
         if 0 != eumDLL.Wrapper.eumGetItemTypeKey(itemKey, ctypes.byref(lpItDesc)):
-            return lpItDesc.value.decode("ascii")
+            return eumWrapper.DecodeString(lpItDesc)
         return None
 
     # / <summary>
@@ -1675,7 +1688,7 @@ class eumWrapper:
         if 0 != eumDLL.Wrapper.eumGetItemUnitSeq(
             itemKey, UniSeq, ctypes.byref(unitKey), ctypes.byref(lpUniDesc)
         ):
-            return True, eumUnit(unitKey.value), lpUniDesc.value.decode("ascii")
+            return True, eumUnit(unitKey.value), eumWrapper.DecodeString(lpUniDesc)
         return False, eumUnit.eumUUnitUndefined, ""
 
     # / <summary>
@@ -1713,7 +1726,7 @@ class eumWrapper:
         if 0 != eumDLL.Wrapper.eumGetUnitKey(
             ctypes.c_int32(unitKey), ctypes.byref(lpUniDesc)
         ):
-            return lpUniDesc.value.decode("ascii")
+            return eumWrapper.DecodeString(lpUniDesc)
         raise Exception("Unit not defined")
 
     # / <summary>
@@ -1721,12 +1734,12 @@ class eumWrapper:
     # / the numeric input key <paramref name="unitKey"/>.
     # / </summary>
     @staticmethod
-    def eumGetUnitAbbreviation(unitKey: eumUnit) -> str:
+    def eumGetUnitAbbreviation(unitKey: eumUnit | int) -> str:
         lpUnitDesc = ctypes.c_char_p()
         if 1 == eumDLL.Wrapper.eumGetUnitAbbreviation(
             unitKey, ctypes.byref(lpUnitDesc)
         ):
-            return lpUnitDesc.value.decode("ascii")
+            return eumWrapper.DecodeString(lpUnitDesc)
         raise Exception("Unit not defined")
 
     # / <summary>
@@ -1739,7 +1752,7 @@ class eumWrapper:
     # / s-endings, e.g. "hour" and "hours".
     # / </remarks>
     @staticmethod
-    def eumGetUnitTag(unitDesc: str) -> eumUnit:
+    def eumGetUnitTag(unitDesc: str) -> eumUnit | None:
         unitKey = ctypes.c_int32()
         if 0 != eumDLL.Wrapper.eumGetUnitTag(
             ctypes.c_char_p(unitDesc.encode("ascii")), ctypes.byref(unitKey)
@@ -1752,7 +1765,7 @@ class eumWrapper:
     # / the unit if any unit attached to an item with this text description exists.
     # / </summary>
     @staticmethod
-    def eumGetItemUnitTag(itemKey: eumItem, unitDesc: str) -> tuple[bool, eumUnit]:
+    def eumGetItemUnitTag(itemKey: eumItem, unitDesc: str) -> eumUnit | None:
         unitKey = ctypes.c_int32()
         if 0 != eumDLL.Wrapper.eumGetItemUnitTag(
             ctypes.c_int32(itemKey),
@@ -1808,7 +1821,7 @@ class eumWrapper:
         if 0 != eumDLL.Wrapper.eumGetNextUnit(
             prevUnitKey, ctypes.byref(unitKey), ctypes.byref(lpUnitDesc)
         ):
-            return True, unitKey.value, lpUnitDesc.value.decode("ascii")
+            return True, unitKey.value, eumWrapper.DecodeString(lpUnitDesc)
         return False, eumUnit.eumUUnitUndefined.value, ""
 
     # / <summary>
@@ -1832,7 +1845,7 @@ class eumWrapper:
         )
         if rc != 0:
             return False, eumUnit.eumUUnitUndefined, ""
-        return True, eumUnit(unitKey.value), lpUnitDesc.value.decode("ascii")
+        return True, eumUnit(unitKey.value), eumWrapper.DecodeString(lpUnitDesc)
 
     # / <summary>
     # / Converts a floating point value from <paramref name="fromUnitKey"/>-units to
@@ -1841,7 +1854,7 @@ class eumWrapper:
     # / </summary>
     @staticmethod
     def eumConvertUnit(
-        fromUnitKey: eumUnit, fromValue: float, toUnitKey: eumUnit
+        fromUnitKey: eumUnit | int, fromValue: float, toUnitKey: eumUnit | int
     ) -> tuple[bool, float]:
         toValue = ctypes.c_double()
         iok = eumDLL.Wrapper.eumConvertUnit(
@@ -1887,7 +1900,7 @@ class eumWrapper:
             ctypes.c_int32(toUnitKey),
             pData.ctypes.data,
             ctypes.c_int32(pData.size),
-            ctypes.c_float(fDeleteValue),
+            ctypes.c_float(float(fDeleteValue)),
         )
 
     # / <summary>
@@ -1996,7 +2009,7 @@ class eumWrapper:
     def eumConvertItemArrayToUserUnitF(
         UBGitemKey: eumItem,
         localunitKey: eumUnit,
-        pData: float,
+        pData: np.ndarray,
         fDeleteValue: np.float32 = np.float32(0.0),
     ) -> bool:
         return 0 != eumDLL.Wrapper.eumConvertItemArrayToUserUnitF(
@@ -2004,7 +2017,7 @@ class eumWrapper:
             ctypes.c_int32(localunitKey),
             pData.ctypes.data,
             ctypes.c_int32(pData.size),
-            ctypes.c_float(fDeleteValue),
+            ctypes.c_float(float(fDeleteValue)),
         )
 
     # / <summary>
@@ -2020,7 +2033,7 @@ class eumWrapper:
     def eumConvertItemArrayFromUserUnitD(
         UBGitemKey: eumItem,
         localunitKey: eumUnit,
-        pData: float,
+        pData: np.ndarray,
         dDeleteValue: float = 0.0,
     ) -> bool:
         return 0 != eumDLL.Wrapper.eumConvertItemArrayFromUserUnitD(
@@ -2044,7 +2057,7 @@ class eumWrapper:
     def eumConvertItemArrayFromUserUnitF(
         UBGitemKey: eumItem,
         localunitKey: eumUnit,
-        pData: float,
+        pData: np.ndarray,
         fDeleteValue: np.float32 = np.float32(0.0),
     ) -> bool:
         return 0 != eumDLL.Wrapper.eumConvertItemArrayFromUserUnitF(
@@ -2052,7 +2065,7 @@ class eumWrapper:
             ctypes.c_int32(localunitKey),
             pData.ctypes.data,
             ctypes.c_int32(pData.size),
-            ctypes.c_float(fDeleteValue),
+            ctypes.c_float(float(fDeleteValue)),
         )
 
     #    #/ <summary>

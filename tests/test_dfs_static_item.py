@@ -1,7 +1,7 @@
 import unittest
 from mikecore.DfsFileFactory import DfsFileFactory
 from mikecore.DfsFile import *
-from numpy.testing import *
+from numpy.testing import assert_allclose
 
 
 class Test_dfs_static_item(unittest.TestCase):
@@ -79,7 +79,7 @@ class Test_dfs_static_item(unittest.TestCase):
         # Check dummy spatial axis
         axis = staticItem.SpatialAxis
         assert SpaceAxisType.EqD1 == axis.AxisType
-        assert 3636, axis.XCount
+        assert 3636 == axis.XCount
 
         # Check data - first and last elements
         assert 21 == staticItem.Data[0]

@@ -1,3 +1,5 @@
+from typing import Generic, TypeVar
+
 from mikecore.DfsDLL import DfsDLL
 from mikecore.DfsFile import *
 
@@ -48,7 +50,7 @@ class DfsBuilder:
         self.isSetTemporalAxis = False
 
         self.isFileCreated = False
-        self.DfsFile = None
+        self.DfsFile: DfsFile | None = None
 
         self.DynamicItems = []
 
@@ -68,12 +70,14 @@ class DfsBuilder:
                 raise Exception("File has been returned, action is not allowed")
             raise Exception("CreateFile has been called, action is not allowed")
 
-    def __CheckBuildStage2(self):
-        """Check whether the builder is in stage 2, and throws an exception if not."""
+    def __CheckBuildStage2(self) -> DfsFile:
+        """Check whether the builder is in stage 2, and throws an exception if not.
+        Returns the file being built."""
         if self.DfsFile is None:
             if self.isFileCreated:
                 raise Exception("File has been returned, action is not allowed")
             raise Exception("CreateFile has not yet been called, action is not allowed")
+        return self.DfsFile
 
     def SetFileTitle(self, fileTitle):
         self.__CheckBuildStage1()
@@ -133,7 +137,9 @@ class DfsBuilder:
         self.__CheckBuildStage1
         self.FileInfo.DeleteValueDouble = value
 
-    DeleteValuedouble = property(GetDeleteValueDouble, SetDeleteValueDouble)
+    DeleteValueDouble = property(GetDeleteValueDouble, SetDeleteValueDouble)
+    # Misspelled name, kept for existing callers
+    DeleteValuedouble = DeleteValueDouble
 
     def GetDeleteValueByte(self):
         return self.FileInfo.DeleteValueByte
@@ -323,7 +329,7 @@ class DfsBuilder:
 
         except Exception as e:
             # In case of any exception, destroy the header.
-            if headerPointer.value != None:
+            if headerPointer.value is not None:
                 DfsDLL.Wrapper.dfsHeaderDestroy(ctypes.byref(headerPointer))
             raise e
 
@@ -437,7 +443,7 @@ class DfsBuilder:
         This can be used at a later point if the static data needs to
         be updated, using the WriteStaticItemData
         """
-        self.__CheckBuildStage2()
+        dfsFile = self.__CheckBuildStage2()
 
         if staticItem is None:
             raise Exception("staticItem")
@@ -457,25 +463,23 @@ class DfsBuilder:
 
             # Copy values to the new static item
             itemPointer = ctypes.c_void_p(DfsDLL.Wrapper.dfsItemS(staticVectorPointer))
-            DfsBuilder.__SetValuesToItem(
-                self.DfsFile.headPointer, itemPointer, staticItem
-            )
+            DfsBuilder.__SetValuesToItem(dfsFile.headPointer, itemPointer, staticItem)
 
             # From now on the responsibility of the staticVectorPointer is taken over bye the DfsStaticItem (ending the try-catch)
         except Exception as e:
             # As long as the static vector pointer is not null, the
             # responsibility for destroying the header structure is here.
-            if staticVectorPointer.value != None:
+            if staticVectorPointer.value is not None:
                 DfsDLL.Wrapper.dfsStaticDestroy(ctypes.byref(staticVectorPointer))
             raise e
 
         # Create a DfsStaticItem that belongs to the current dfs file
-        myStaticItem = DfsStaticItem(self.DfsFile, staticVectorPointer, itemPointer)
+        myStaticItem = DfsStaticItem(dfsFile, staticVectorPointer, itemPointer)
         myStaticItem.DataType = staticItem.DataType
         myStaticItem.ElementCount = staticItem.ElementCount
 
         # Write the definition and the data
-        self.DfsFile.WriteStaticItemData(myStaticItem, staticItem.Data)
+        dfsFile.WriteStaticItemData(myStaticItem, staticItem.Data)
 
         return myStaticItem
 
@@ -567,14 +571,15 @@ class DfsBuilder:
 
     @staticmethod
     def __SetValuesToDynamicItem(headerPointer, itemPointer, itemNumber, itemInfo):
-
+        if itemInfo.ValueType is None:
+            raise ValueError("Data valueType has not been set.")
         rok = DfsDLL.Wrapper.dfsSetItemValueType(
             itemPointer, ctypes.c_int32(itemInfo.ValueType.value)
         )
         DfsDLL.CheckReturnCode(rok)
 
         if (
-            itemInfo.AssociatedStaticItemNumbers != None
+            itemInfo.AssociatedStaticItemNumbers is not None
             and len(itemInfo.AssociatedStaticItemNumbers) > 0
         ):
             for staticItemNumber in itemInfo.AssociatedStaticItemNumbers:
@@ -586,7 +591,10 @@ class DfsBuilder:
                 DfsDLL.CheckReturnCode(rok)
 
 
-class DfsAbstractItemBuilder:
+ItemInfoT = TypeVar("ItemInfoT", bound=DfsDynamicItemInfo)
+
+
+class DfsAbstractItemBuilder(Generic[ItemInfoT]):
     """
     Item builder that handles common functionality for
     the static and the dynamic items.
@@ -596,8 +604,10 @@ class DfsAbstractItemBuilder:
     SetAxis.
     """
 
+    # Set by each subclass
+    ItemInfo: ItemInfoT
+
     def __init__(self):
-        self.ItemInfo = None
         self.isSetNameQuantityDataType = False
         self.isSetSpatialAxis = False
 
@@ -638,7 +648,7 @@ class DfsAbstractItemBuilder:
         return errors
 
 
-class DfsDynamicItemBuilder(DfsAbstractItemBuilder):
+class DfsDynamicItemBuilder(DfsAbstractItemBuilder[DfsDynamicItemInfo]):
     """
     Builder to configure an existing dynamic item structure.
 
@@ -685,7 +695,7 @@ class DfsDynamicItemBuilder(DfsAbstractItemBuilder):
         return res
 
 
-class DfsStaticItemBuilder(DfsAbstractItemBuilder):
+class DfsStaticItemBuilder(DfsAbstractItemBuilder[DfsStaticItem]):
     """
     Builder to configure an existing dynamic item structure.
 
@@ -715,9 +725,15 @@ class DfsStaticItemBuilder(DfsAbstractItemBuilder):
         errors = super().Validate()
         if not self.isSetData:
             errors.append("Data has not been set.")
-        if self.ItemInfo.Data.size != self.ItemInfo.SpatialAxis.SizeOfData:
+        data = self.ItemInfo.Data
+        spatialAxis = self.ItemInfo.SpatialAxis
+        if (
+            data is not None
+            and spatialAxis is not None
+            and data.size != spatialAxis.SizeOfData
+        ):
             errors.append(
-                f"Size of data ({self.ItemInfo.Data.size}) does not match spatial axis size ({self.ItemInfo.SpatialAxis.SizeOfData})."
+                f"Size of data ({data.size}) does not match spatial axis size ({spatialAxis.SizeOfData})."
             )
 
         return errors

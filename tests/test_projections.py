@@ -1,4 +1,6 @@
 import unittest
+import numpy as np
+import pytest
 from tests.test_util import *
 from mikecore.Projections import *
 
@@ -125,6 +127,27 @@ class CartographyTests(unittest.TestCase):
         cart = Cartography("UTM-33")
         Assert.AreEqual("UTM-33", cart.ProjectionName)
         Assert.AreEqual(ProjectionStrings.Utm33Dhi, cart.ProjectionString)
+
+    def test_GoogleMapProjectionString(self):
+        googleMapProjection = MapProjection.GoogleMapProjectionString()
+        Assert.IsTrue(googleMapProjection.startswith('PROJCS["Google Maps - Mercator"'))
+        Assert.IsTrue(MapProjection.IsValid(googleMapProjection))
+
+    def test_GetDefaultArea(self):
+        x0, y0, x1, y1 = MapProjection("UTM-33").GetDefaultArea()
+        Assert.AreEqual(166476.932992403, x0, 1e-6)
+        Assert.AreEqual(-332050.474747851, y0, 1e-6)
+        Assert.AreEqual(833523.067007597, x1, 1e-6)
+        Assert.AreEqual(332050.474747851, y1, 1e-6)
+
+    def test_ConvertWkt2Proj4(self):
+        proj4 = MzCartDLL.ConvertWkt2Proj4(ProjectionStrings.Utm33N, None)
+        Assert.IsTrue(proj4.startswith("+proj=tmerc +lat_0=0 +lon_0=15 "))
+        Assert.IsFalse("+towgs84" in proj4)
+        proj4 = MzCartDLL.ConvertWkt2Proj4(
+            ProjectionStrings.Utm33N, np.array([1.0, 2.0, 3.0])
+        )
+        Assert.IsTrue("+towgs84=1,2,3,0,0,0,0" in proj4)
 
     def test_CartographyTest(self):
         self._CheckUTM33Zone(ProjectionStrings.Utm33N)
@@ -486,6 +509,26 @@ class ProjectionStrings:
     GeoWatch14Km = 'PROJCS["watch14km",GEOGCS["Unused",DATUM["User defined",SPHEROID["Sphere (Radius = 6371000)",6371000,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Rotated_Longitude_Latitude"],PARAMETER["Longitude_Of_South_Pole",80],PARAMETER["Latitude_Of_South_Pole",-10],PARAMETER["Angle_Of_Rotation",0],UNIT["Degree",1]]'
     EastRef = 627928.19137650891
     NorthRef = 6096620.7064931244
+
+
+def test_ProjectionShortName_of_long_non_wkt_string():
+    # A string that is not WKT is returned as its own short name
+    name = "X" * 300
+
+    assert name == MapProjection.ProjectionShortName(name)
+
+
+def test_Cartography_projection_string():
+    projectionString = Cartography("UTM-33").Projection().ProjectionString
+
+    assert projectionString is not None
+    assert projectionString.startswith('PROJCS["UTM-33"')
+    assert "UTM-33" == MapProjection.ProjectionShortName(projectionString)
+
+
+def test_MapProjection_without_projection_string_or_pointer_fails():
+    with pytest.raises(ValueError, match="projectionString or mzMapProjPointer"):
+        MapProjection(None)
 
 
 if __name__ == "__main__":
