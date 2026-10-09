@@ -172,20 +172,20 @@ class DfsuBuilder:
         """
         try:
             x = np.array(x, dtype=np.float64)
-        except:
-            raise TypeError("x must be array of float")
+        except Exception as err:
+            raise TypeError("x must be array of float") from err
         try:
             y = np.array(y, dtype=np.float64)
-        except:
-            raise TypeError("y must be array of float")
+        except Exception as err:
+            raise TypeError("y must be array of float") from err
         try:
             z = np.array(z, dtype=np.float32)
-        except:
-            raise TypeError("z must be array of float")
+        except Exception as err:
+            raise TypeError("z must be array of float") from err
         try:
             code = np.array(code, dtype=np.int32)
-        except:
-            raise TypeError("code must be array of int")
+        except Exception as err:
+            raise TypeError("code must be array of int") from err
 
         numberOfNodes = len(x)
 
