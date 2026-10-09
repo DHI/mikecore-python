@@ -511,9 +511,8 @@ class ProjectionStrings:
     NorthRef = 6096620.7064931244
 
 
-def test_ProjectionShortName_longer_than_first_buffer():
-    # A string that is not WKT is returned as its own short name, here longer
-    # than the 128 characters first asked for
+def test_ProjectionShortName_of_long_non_wkt_string():
+    # A string that is not WKT is returned as its own short name
     name = "X" * 300
 
     assert name == MapProjection.ProjectionShortName(name)
