@@ -125,7 +125,7 @@ class DfsBuilder:
         return self.FileInfo.DeleteValueFloat
 
     def SetDeleteValueFloat(self, value):
-        self.__CheckBuildStage1
+        self.__CheckBuildStage1()
         self.FileInfo.DeleteValueFloat = value
 
     DeleteValueFloat = property(GetDeleteValueFloat, SetDeleteValueFloat)
@@ -134,7 +134,7 @@ class DfsBuilder:
         return self.FileInfo.DeleteValueDouble
 
     def SetDeleteValueDouble(self, value):
-        self.__CheckBuildStage1
+        self.__CheckBuildStage1()
         self.FileInfo.DeleteValueDouble = value
 
     DeleteValueDouble = property(GetDeleteValueDouble, SetDeleteValueDouble)
@@ -145,7 +145,7 @@ class DfsBuilder:
         return self.FileInfo.DeleteValueByte
 
     def SetDeleteValueByte(self, value):
-        self.__CheckBuildStage1
+        self.__CheckBuildStage1()
         self.FileInfo.DeleteValueByte = value
 
     DeleteValueByte = property(GetDeleteValueByte, SetDeleteValueByte)
@@ -154,7 +154,7 @@ class DfsBuilder:
         return self.FileInfo.DeleteValueInt
 
     def SetDeleteValueInt(self, value):
-        self.__CheckBuildStage1
+        self.__CheckBuildStage1()
         self.FileInfo.DeleteValueInt = value
 
     DeleteValueInt = property(GetDeleteValueInt, SetDeleteValueInt)
@@ -163,7 +163,7 @@ class DfsBuilder:
         return self.FileInfo.DeleteValueUnsignedInt
 
     def SetDeleteValueUnsignedInt(self, value):
-        self.__CheckBuildStage1
+        self.__CheckBuildStage1()
         self.FileInfo.DeleteValueUnsignedInt = value
 
     DeleteValueUnsignedInt = property(
