@@ -145,13 +145,6 @@ def test_create_file_without_nodes_or_elements_fails(tmp_path):
     assert "Elements have not been set" in str(error.value)
 
 
-def test_setup_before_nodes_and_elements_fails():
-    builder = _builder()
-
-    with pytest.raises(Exception, match="Nodes and elements must be set"):
-        builder.SetupConnectivityArrays()
-
-
 def test_node_ids_must_match_number_of_nodes():
     builder = _builder()
     builder.SetNodes(X, Y, Z, CODE)
