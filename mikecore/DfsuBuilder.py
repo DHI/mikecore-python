@@ -3,6 +3,7 @@ from collections.abc import Sequence
 import numpy as np
 from mikecore.DfsFile import DfsProjection, DfsTemporalAxis
 from mikecore.MeshFile import MeshFile
+from mikecore.MeshBuilder import MeshNodes
 from mikecore.DfsFactory import DfsFactory
 from mikecore.DfsBuilder import DfsBuilder
 from mikecore.DfsuFile import (
@@ -59,10 +60,7 @@ class DfsuBuilder:
         # Node variables
         # this can be null, then set default id's, starting from 1
         self.__nodeIds: np.ndarray | None = None
-        # x, y, z and code, always set together
-        self.__nodes: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray] | None = (
-            None
-        )
+        self.__nodes: MeshNodes | None = None
         self.__zUnit = eumUnit.eumUmeter
         self.__zQuantity: eumQuantity | None = None
 
@@ -205,7 +203,7 @@ class DfsuBuilder:
                 "Arguments does not have same length as the number of node ids. These must match"
             )
 
-        self.__nodes = (x, y, z, code)
+        self.__nodes = MeshNodes(x, y, z, code)
 
     # / <inheritdoc/>
     def SetZUnit(self, zUnit: eumUnit):
@@ -227,7 +225,7 @@ class DfsuBuilder:
         if nodeIds is None:
             self.__nodeIds = None
             return
-        if self.__nodes is not None and self.__nodes[0].size != nodeIds.size:
+        if self.__nodes is not None and self.__nodes.x.size != nodeIds.size:
             raise Exception(
                 "Number of node id's does not match number of nodes", "nodeIds"
             )
@@ -297,7 +295,7 @@ class DfsuBuilder:
         self.__dfsProjection = DfsProjection.Create(wktString)
 
         self.__nodeIds = meshFile.NodeIds
-        self.__nodes = (x, y, z.astype(dtype=np.float32), code)
+        self.__nodes = MeshNodes(x, y, z.astype(dtype=np.float32), code)
         self.__zUnit = quantity.Unit
 
         self.__elementIds = meshFile.ElementIds
@@ -335,7 +333,7 @@ class DfsuBuilder:
             if dieOnError:
                 raise Exception(DfsBuilder.ErrorMessage(errors))
             return errors
-        numberOfNodes = self.__nodes[0].size
+        numberOfNodes = self.__nodes.x.size
         connectivity = self.__connectivity
 
         # Check that all nodenumbers are within the range of
@@ -418,17 +416,16 @@ class DfsuBuilder:
         return errors
 
     def __NodesAndElements(self):
-        """The nodes (x, y, z, code) and the element connectivity, which
-        must have been set."""
+        """The nodes and the element connectivity, which must have been set."""
         if self.__nodes is None or self.__connectivity is None:
             raise Exception("Nodes and elements must be set")
         return self.__nodes, self.__connectivity
 
     def SetupConnectivityArrays(self):
-        (x, _, _, _), connectivity = self.__NodesAndElements()
+        nodes, connectivity = self.__NodesAndElements()
         # Creating default node id's, if empty, node ids 1,2,3,...
         if self.__nodeIds is None:
-            self.__nodeIds = np.arange(x.size, dtype=np.int32) + 1
+            self.__nodeIds = np.arange(nodes.x.size, dtype=np.int32) + 1
         # Creating default element id's, if empty, element ids 1,2,3,...
         if self.__elementIds is None:
             self.__elementIds = np.arange(len(connectivity), dtype=np.int32) + 1
@@ -468,7 +465,7 @@ class DfsuBuilder:
         return elementType, nodesPerElmt, connectivityArray
 
     def SetupBuilder(self):
-        (x, _, _, _), connectivity = self.__NodesAndElements()
+        nodes, connectivity = self.__NodesAndElements()
         # Unset frequencies or directions are written as a count of 0
         numberOfFrequencies = (
             0 if self.__frequencies is None else len(self.__frequencies)
@@ -503,7 +500,7 @@ class DfsuBuilder:
         if self.__dfsuFileType == DfsuFileType.Dfsu2D:
             dfsBuilder.AddCreateCustomBlock(
                 "MIKE_FM",
-                np.array([x.size, len(connectivity), 2, 0, 0], np.int32),
+                np.array([nodes.x.size, len(connectivity), 2, 0, 0], np.int32),
             )
         elif self.__dfsuFileType == DfsuFileType.DfsuVerticalColumn:
             maxNumberOfLayers = len(connectivity)
@@ -511,7 +508,7 @@ class DfsuBuilder:
                 "MIKE_FM",
                 np.array(
                     [
-                        x.size,
+                        nodes.x.size,
                         len(connectivity),
                         1,
                         maxNumberOfLayers,
@@ -526,7 +523,7 @@ class DfsuBuilder:
                 "MIKE_FM",
                 np.array(
                     [
-                        x.size,
+                        nodes.x.size,
                         len(connectivity),
                         2,
                         maxNumberOfLayers,
@@ -543,7 +540,7 @@ class DfsuBuilder:
                 "MIKE_FM",
                 np.array(
                     [
-                        x.size,
+                        nodes.x.size,
                         len(connectivity),
                         2,
                         maxNumberOfLayers,
@@ -558,7 +555,7 @@ class DfsuBuilder:
                 "MIKE_FM",
                 np.array(
                     [
-                        x.size,
+                        nodes.x.size,
                         len(connectivity),
                         3,
                         maxNumberOfLayers,
@@ -575,7 +572,7 @@ class DfsuBuilder:
                 "MIKE_FM",
                 np.array(
                     [
-                        x.size,
+                        nodes.x.size,
                         len(connectivity),
                         3,
                         maxNumberOfLayers,
@@ -589,7 +586,7 @@ class DfsuBuilder:
                 "MIKE_FM",
                 np.array(
                     [
-                        x.size,
+                        nodes.x.size,
                         len(connectivity),
                         1,
                         0,
@@ -604,7 +601,7 @@ class DfsuBuilder:
                 "MIKE_FM",
                 np.array(
                     [
-                        x.size,
+                        nodes.x.size,
                         len(connectivity),
                         2,
                         0,
@@ -634,7 +631,9 @@ class DfsuBuilder:
             #  dfsItem.SetAxis(factory.CreateAxisDummy(len(connectivity)))
             # else
             # Set axis to have meter unit (not necessary, just to make file exactly equal)
-            dfsItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, x.size, 0, 1))
+            dfsItem.SetAxis(
+                factory.CreateAxisEqD1(eumUnit.eumUmeter, nodes.x.size, 0, 1)
+            )
             # Set to default ufs delete values (not used anyway, just to make file exactly equal)
             dfsItem.SetReferenceCoordinates(-1e-35, -1e-35, -1e-35)
             dfsItem.SetOrientation(-1e-35, -1e-35, -1e-35)
@@ -658,7 +657,7 @@ class DfsuBuilder:
                 DfsuFileType.DfsuSpectral2D,
             ):
                 if self.__dfsuFileType == DfsuFileType.DfsuSpectral1D:
-                    size = x.size
+                    size = nodes.x.size
                 else:
                     size = len(connectivity)
 
@@ -701,7 +700,7 @@ class DfsuBuilder:
         # "No of nodes"   , int
         # "Connectivity"  , int
 
-        (x, y, z, code), connectivity = self.__NodesAndElements()
+        nodes, connectivity = self.__NodesAndElements()
         intCode = eumQuantity(eumItem.eumIIntegerCode, eumUnit.eumUintCode)
         xyQuantity = eumQuantity(eumItem.eumIGeographicalCoordinate, eumUnit.eumUmeter)
 
@@ -714,16 +713,16 @@ class DfsuBuilder:
         nodeIdItem = dfsBuilder.AddCreateStaticItem("Node id", intCode, self.__nodeIds)
 
         # X-coord
-        xItem = dfsBuilder.AddCreateStaticItem("X-coord", xyQuantity, x)
+        xItem = dfsBuilder.AddCreateStaticItem("X-coord", xyQuantity, nodes.x)
 
         # Y-coord
-        yItem = dfsBuilder.AddCreateStaticItem("Y-coord", xyQuantity, y)
+        yItem = dfsBuilder.AddCreateStaticItem("Y-coord", xyQuantity, nodes.y)
 
         # Z-coord
-        zItem = dfsBuilder.AddCreateStaticItem("Z-coord", self.__zQuantity, z)
+        zItem = dfsBuilder.AddCreateStaticItem("Z-coord", self.__zQuantity, nodes.z)
 
         # Code
-        codeItem = dfsBuilder.AddCreateStaticItem("Code", intCode, code)
+        codeItem = dfsBuilder.AddCreateStaticItem("Code", intCode, nodes.code)
 
         # Element id
         elmtIdItem = dfsBuilder.AddCreateStaticItem(
@@ -779,10 +778,10 @@ class DfsuBuilder:
             codeItem,
             elmtIdItem,
             self.__nodeIds,
-            x,
-            y,
-            z,
-            code,
+            nodes.x,
+            nodes.y,
+            nodes.z,
+            nodes.code,
             self.__elementIds,
             elementType,
             connectivity,

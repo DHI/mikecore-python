@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from typing import NamedTuple
 
 import numpy as np
 from mikecore.DfsuFile import DfsuFile
@@ -8,16 +9,22 @@ from mikecore.DfsBuilder import DfsBuilder
 from mikecore.DfsFile import DfsProjection
 
 
+class MeshNodes(NamedTuple):
+    """Node coordinates and codes, one entry per node."""
+
+    x: np.ndarray
+    y: np.ndarray
+    z: np.ndarray
+    code: np.ndarray
+
+
 class MeshBuilder:
     def __init__(self):
         self.__projectionString: str | None = None
         self.__eumQuantity: eumQuantity | None = None
 
         self.__nodeIds: np.ndarray | None = None
-        # x, y, z and code, always set together
-        self.__nodes: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray] | None = (
-            None
-        )
+        self.__nodes: MeshNodes | None = None
 
         self.__elementIds: Sequence[int] | np.ndarray | None = None
         self.__connectivity: Sequence | np.ndarray | None = None
@@ -71,7 +78,7 @@ class MeshBuilder:
                 "Arguments does not have same length as the number of node ids. These must match"
             )
 
-        self.__nodes = (x, y, z, code)
+        self.__nodes = MeshNodes(x, y, z, code)
 
     def SetElements(self, connectivity):
         if connectivity is None:
@@ -113,7 +120,7 @@ class MeshBuilder:
 
         # Check that all nodenumbers are within the range of number of nodes.
         if (self.__nodes is not None) and (self.__connectivity is not None):
-            numberOfNodes = len(self.__nodes[0])
+            numberOfNodes = len(self.__nodes.x)
             for elmt in self.__connectivity:
                 elmt = np.array(elmt)
                 if np.any(elmt <= 0) or np.any(elmt > numberOfNodes):
@@ -137,7 +144,6 @@ class MeshBuilder:
         # Validate reports each of these as an error when it is None
         if errors or projectionString is None or nodes is None or connectivity is None:
             raise Exception(DfsBuilder.ErrorMessage(errors))
-        x, y, z, code = nodes
 
         # Creating default eumQuantity in meters
         if self.__eumQuantity is None:
@@ -145,7 +151,7 @@ class MeshBuilder:
 
         # Creating default node id's, if empty
         if self.__nodeIds is None:
-            self.__nodeIds = np.arange(len(x)) + 1
+            self.__nodeIds = np.arange(len(nodes.x)) + 1
 
         # Creating default element id's, if empty
         if self.__elementIds is None:
@@ -186,10 +192,10 @@ class MeshBuilder:
             self.__eumQuantity,
             projectionString,
             self.__nodeIds,
-            x,
-            y,
-            z,
-            code,
+            nodes.x,
+            nodes.y,
+            nodes.z,
+            nodes.code,
             self.__elementIds,
             elementType,
             connectivity,
