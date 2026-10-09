@@ -1,10 +1,16 @@
 import os
 import ctypes
+from collections.abc import Callable
 import numpy as np
 from enum import IntEnum
 
 
-def _ReadString(dllFunction, args: tuple, size: int, errorMessage: str) -> str:
+def _ReadString(
+    dllFunction: Callable[..., object],
+    args: tuple[object, ...],
+    size: int,
+    errorMessage: str,
+) -> str:
     """
     Calls a DLL function that writes a string into a buffer, with signature
     dllFunction(*args, buffer, bufferSize, &rc). On rc > 0 the buffer was too
