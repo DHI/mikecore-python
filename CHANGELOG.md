@@ -48,5 +48,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `AttributeError`.
 - `DfsStaticItemBuilder.Validate` reports missing data or axis instead of
   raising `AttributeError`.
+- Setting a `DfsBuilder` delete value (`DeleteValueFloat`, `DeleteValueDouble`,
+  `DeleteValueByte`, `DeleteValueInt`, `DeleteValueUnsignedInt`) after
+  `CreateFile` raises, as the other header setters do. It used to change the
+  value after the header had been written.
+- `DfsBuilder.Validate` checks every entry of a compressed file's encode key
+  against the item's axis. It checked one entry per dynamic item.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD
