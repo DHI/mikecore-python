@@ -62,22 +62,29 @@ def test_dynamic_item_values_are_written(tmp_path):
     )
     builder.SetNodes(X, Y, Z, CODE)
     builder.SetElements(ELEMENTS)
+    # One value per element, for each time step
+    values = {
+        "Value": [[1.5, -2.5], [3.0, 4.0]],
+        "Other": [[10.0, 20.0], [30.0, 40.0]],
+    }
+    numberOfTimeSteps = len(values["Value"])
     dfsu = builder.CreateFile(filename)
     # Item-timesteps are written in order: items within each time step
-    dfsu.WriteItemTimeStepNext(0, np.array([1.5, -2.5], dtype=np.float32))
-    dfsu.WriteItemTimeStepNext(0, np.array([10.0, 20.0], dtype=np.float32))
-    dfsu.WriteItemTimeStepNext(0, np.array([3.0, 4.0], dtype=np.float32))
-    dfsu.WriteItemTimeStepNext(0, np.array([30.0, 40.0], dtype=np.float32))
+    for timestepIndex in range(numberOfTimeSteps):
+        for itemValues in values.values():
+            data = np.array(itemValues[timestepIndex], dtype=np.float32)
+            dfsu.WriteItemTimeStepNext(0, data)
     dfsu.Close()
 
     dfsu = DfsuFile.Open(filename)
-    assert 2 == dfsu.NumberOfTimeSteps
-    assert ["Value", "Other"] == [itemInfo.Name for itemInfo in dfsu.ItemInfo]
-    assert eumItem.eumIWaterLevel == dfsu.ItemInfo[1].Quantity.Item
-    assert_array_equal([1.5, -2.5], dfsu.ReadItemTimeStep(1, 0).Data)
-    assert_array_equal([10.0, 20.0], dfsu.ReadItemTimeStep(2, 0).Data)
-    assert_array_equal([3.0, 4.0], dfsu.ReadItemTimeStep(1, 1).Data)
-    assert_array_equal([30.0, 40.0], dfsu.ReadItemTimeStep(2, 1).Data)
+    assert numberOfTimeSteps == dfsu.NumberOfTimeSteps
+    assert list(values) == [itemInfo.Name for itemInfo in dfsu.ItemInfo]
+    other = next(info for info in dfsu.ItemInfo if info.Name == "Other")
+    assert eumItem.eumIWaterLevel == other.Quantity.Item
+    for itemNumber, itemValues in enumerate(values.values(), start=1):
+        for timestepIndex in range(numberOfTimeSteps):
+            data = dfsu.ReadItemTimeStep(itemNumber, timestepIndex).Data
+            assert_array_equal(itemValues[timestepIndex], data)
     dfsu.Close()
 
 
@@ -134,8 +141,8 @@ def test_default_node_and_element_ids_count_from_one(tmp_path):
     builder.CreateFile(filename).Close()
 
     dfsu = DfsuFile.Open(filename)
-    assert_array_equal([1, 2, 3, 4], dfsu.NodeIds)
-    assert_array_equal([1, 2], dfsu.ElementIds)
+    assert_array_equal(np.arange(1, len(X) + 1), dfsu.NodeIds)
+    assert_array_equal(np.arange(1, len(ELEMENTS) + 1), dfsu.ElementIds)
     dfsu.Close()
 
 
@@ -162,7 +169,8 @@ def test_element_ids_are_written(tmp_path):
     assert_array_equal([10, 20], elementIds)
 
 
-@pytest.mark.parametrize("nodeNumber", [0, 5])
+# Node numbers start at 1, so 0 is below the first node
+@pytest.mark.parametrize("nodeNumber", [0, len(X) + 1])
 def test_validate_reports_node_number_outside_the_nodes(nodeNumber):
     builder = _builder()
     builder.SetNodes(X, Y, Z, CODE)
@@ -197,13 +205,16 @@ def test_node_ids_must_match_number_of_nodes():
     builder = _builder()
     builder.SetNodes(X, Y, Z, CODE)
 
+    oneIdShort = np.arange(1, len(X), dtype=np.int32)
+
     with pytest.raises(Exception, match="does not match number of nodes"):
-        builder.SetNodeIds(np.array([1, 2, 3], dtype=np.int32))
+        builder.SetNodeIds(oneIdShort)
 
 
 def test_nodes_must_match_number_of_node_ids():
     builder = _builder()
-    builder.SetNodeIds(np.array([1, 2, 3], dtype=np.int32))
+    oneIdShort = np.arange(1, len(X), dtype=np.int32)
+    builder.SetNodeIds(oneIdShort)
 
     with pytest.raises(Exception, match="same length as the number of node ids"):
         builder.SetNodes(X, Y, Z, CODE)
@@ -262,7 +273,9 @@ def test_spectral_file_with_frequencies_and_directions(tmp_path):
     assert_array_equal(FREQUENCIES, dfsu.Frequencies)
     assert_array_equal(DIRECTIONS, dfsu.Directions)
     # One value per element, frequency and direction
-    assert 2 * 3 * 4 == dfsu.ItemInfo[0].ElementCount
+    assert len(ELEMENTS) * len(FREQUENCIES) * len(DIRECTIONS) == (
+        dfsu.ItemInfo[0].ElementCount
+    )
     dfsu.Close()
 
 
@@ -278,7 +291,7 @@ def test_spectral_file_with_frequencies_only(tmp_path):
     assert_array_equal(FREQUENCIES, dfsu.Frequencies)
     assert 0 == dfsu.NumberOfDirections
     # One value per element and frequency
-    assert 2 * 3 == dfsu.ItemInfo[0].ElementCount
+    assert len(ELEMENTS) * len(FREQUENCIES) == dfsu.ItemInfo[0].ElementCount
     dfsu.Close()
 
 
@@ -294,17 +307,22 @@ def test_spectral_1d_file_has_values_per_node(tmp_path):
     dfsu = DfsuFile.Open(filename)
     assert DfsuFileType.DfsuSpectral1D is dfsu.DfsuFileType
     # One value per node, frequency and direction
-    assert 4 * 3 * 4 == dfsu.ItemInfo[0].ElementCount
+    assert len(X) * len(FREQUENCIES) * len(DIRECTIONS) == (
+        dfsu.ItemInfo[0].ElementCount
+    )
     dfsu.Close()
 
 
 def test_temporal_axis_is_written(tmp_path):
     filename = str(tmp_path / "temporal_axis.dfsu")
+    start = datetime.datetime(2021, 2, 3, 4, 5, 6)
+    timeStepInSeconds = 30
+    startTimeOffset = 0
     builder = DfsuBuilder.Create(DfsuFileType.Dfsu2D)
     builder.SetProjection(DfsFactory().CreateProjection("NON-UTM"))
     builder.SetTemporalAxis(
         DfsFactory().CreateTemporalEqCalendarAxis(
-            eumUnit.eumUsec, datetime.datetime(2021, 2, 3, 4, 5, 6), 0, 30
+            eumUnit.eumUsec, start, startTimeOffset, timeStepInSeconds
         )
     )
     builder.AddDynamicItem(
@@ -315,8 +333,8 @@ def test_temporal_axis_is_written(tmp_path):
     builder.CreateFile(filename).Close()
 
     dfsu = DfsuFile.Open(filename)
-    assert datetime.datetime(2021, 2, 3, 4, 5, 6) == dfsu.StartDateTime
-    assert 30 == dfsu.TimeStepInSeconds
+    assert start == dfsu.StartDateTime
+    assert timeStepInSeconds == dfsu.TimeStepInSeconds
     dfsu.Close()
 
 
@@ -340,7 +358,7 @@ def test_spectral_0d_file_has_one_spectrum(tmp_path):
     x = np.tile([0.0, 1.0, 2.0], 3)
     y = np.repeat([0.0, 1.0, 2.0], 3)
     builder = _builder(DfsuFileType.DfsuSpectral0D)
-    builder.SetNodes(x, y, np.zeros(9), np.zeros(9, dtype=np.int32))
+    builder.SetNodes(x, y, np.zeros(len(x)), np.zeros(len(x), dtype=np.int32))
     builder.SetElements([[1, 2, 5, 4], [2, 3, 6, 5], [4, 5, 8, 7], [5, 6, 9, 8]])
     builder.SetFrequencies(frequencies)
     builder.SetDirections(directions)
@@ -350,5 +368,5 @@ def test_spectral_0d_file_has_one_spectrum(tmp_path):
     assert DfsuFileType.DfsuSpectral0D is dfsu.DfsuFileType
     assert_array_equal(frequencies, dfsu.Frequencies)
     assert_array_equal(directions, dfsu.Directions)
-    assert 2 * 2 == dfsu.ItemInfo[0].ElementCount
+    assert len(frequencies) * len(directions) == dfsu.ItemInfo[0].ElementCount
     dfsu.Close()
