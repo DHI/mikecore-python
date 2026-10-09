@@ -123,6 +123,37 @@ def test_delete_value_after_create_not_possible(
         setattr(builder, delete_value, 0)
 
 
+def test_validate_reports_encode_key_outside_axis():
+    builder = DfsBuilder.Create("title", "app", 1)
+    factory = DfsFactory()
+    builder.SetDataType(0)
+    builder.SetGeographicalProjection(
+        factory.CreateProjectionGeoOrigin("NON-UTM", 0, 0, 0)
+    )
+    builder.SetTemporalAxis(
+        factory.CreateTemporalEqCalendarAxis(
+            eumUnit.eumUsec, datetime(2000, 1, 1), 0, 1
+        )
+    )
+    builder.SetSpatialAxis(
+        factory.CreateAxisEqD3(eumUnit.eumUmeter, 4, 0, 1, 3, 0, 1, 2, 0, 1)
+    )
+    builder.AddCreateDynamicItem(
+        "Item",
+        eumQuantity.Create(eumItem.eumIIntegerCode, eumUnit.eumUintCode),
+        DfsSimpleType.Float,
+        DataValueType.Instantaneous,
+    )
+    # The second x key is past the 4 cells along x
+    builder.SetEncodingKey([0, 4], [0, 0], [0, 0])
+
+    errors = builder.Validate(dieOnError=False)
+
+    assert errors == [
+        "Encode key values are not valid for axis of dynamic item number 1"
+    ]
+
+
 def test_static_item_builder_reports_missing_data_and_axis():
     errors = DfsStaticItemBuilder().Validate()
 
