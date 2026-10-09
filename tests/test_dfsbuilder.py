@@ -102,6 +102,27 @@ def test_apptitle_after_create_not_possible(landuse: DfsBuilder, tmp_path):
         builder.SetApplicationTitle("too late")
 
 
+@pytest.mark.parametrize(
+    "delete_value",
+    [
+        "DeleteValueFloat",
+        "DeleteValueDouble",
+        "DeleteValueByte",
+        "DeleteValueInt",
+        "DeleteValueUnsignedInt",
+    ],
+)
+def test_delete_value_after_create_not_possible(
+    landuse: DfsBuilder, tmp_path, delete_value
+):
+    builder = landuse
+
+    builder.CreateFile(str(tmp_path / "notused.dfs2"))
+
+    with pytest.raises(Exception, match="CreateFile has been called"):
+        setattr(builder, delete_value, 0)
+
+
 def test_static_item_builder_reports_missing_data_and_axis():
     errors = DfsStaticItemBuilder().Validate()
 
