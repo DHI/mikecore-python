@@ -8,6 +8,7 @@ New code reads like the module it lands in: same decomposition, naming and idiom
 
 - Extend an existing class or pattern before adding a module. A new module earns its place with a responsibility no existing module holds, not as a home for a few helper lines. Example: the native wrapper classes name their library in a `libfilename` static variable (`eumDLL` in `mikecore/eum.py`); a change to how libraries load extends that pattern in each wrapper.
 - Prefer the smallest diff that fits the existing structure over a cleaner structure of the agent's own.
+- A type or bug fix that forces a restructure is done when its checks pass and the code names every value it introduces, down to each field, in idiomatic Python (`nodes.x` from a `NamedTuple`).
 
 ## Types state what the code really does
 
