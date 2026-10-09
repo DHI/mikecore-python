@@ -48,10 +48,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `AttributeError`.
 - `DfsStaticItemBuilder.Validate` reports missing data or axis instead of
   raising `AttributeError`.
-- A null string from the native library raises `ValueError` instead of
-  `AttributeError` in `eum` and `DfsFile`.
-- `DfsDLL.Init` and `MzCartDLL.Init` without a library path raise `ValueError`
-  instead of `TypeError`.
-- `DfsuBuilder` no longer raises `UnboundLocalError` on unexpected input.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD
