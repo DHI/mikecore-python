@@ -1142,10 +1142,8 @@ class DfsFile:
         :param data numpy.ndarray: Data to write to file
         """
         self.__CheckIfOpen()
-        if (
-            self.fpState == DfsFilePointerState.CreatingItems
-            and itemNumber != 1
-            and timestepIndex != 0
+        if self.fpState == DfsFilePointerState.CreatingItems and (
+            itemNumber != 1 or timestepIndex != 0
         ):
             raise Exception(
                 "No dynamic items have been written to the file yet (file is being created)."

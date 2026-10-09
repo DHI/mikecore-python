@@ -118,6 +118,25 @@ def test_delete_value_double_is_written(landuse: DfsBuilder, tmp_path):
     file.Close()
 
 
+@pytest.mark.parametrize("itemNumber, timestepIndex", [(2, 0), (1, 1)])
+def test_first_write_to_created_file_must_be_first_item_timestep(
+    landuse: DfsBuilder, tmp_path, itemNumber, timestepIndex
+):
+    landuse.AddCreateDynamicItem(
+        "Second",
+        eumQuantity.Create(eumItem.eumIIntegerCode, eumUnit.eumUintCode),
+        DfsSimpleType.Float,
+        DataValueType.Instantaneous,
+    )
+    landuse.CreateFile(str(tmp_path / "firstwrite.dfs2"))
+    file = landuse.GetFile()
+    data = np.zeros(62 * 70, dtype=np.float32)
+
+    with pytest.raises(Exception, match="No dynamic items have been written"):
+        file.WriteItemTimeStep(itemNumber, timestepIndex, 0, data)
+    file.Close()
+
+
 def test_static_item_builder_reports_data_not_matching_axis():
     builder = DfsStaticItemBuilder()
     builder.Set(
