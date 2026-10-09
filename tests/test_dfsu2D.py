@@ -1,5 +1,7 @@
 import unittest
 import datetime
+
+import numpy as np
 from mikecore.DfsFileFactory import *
 from mikecore.DfsuBuilder import *
 from mikecore.DfsBuilder import *
@@ -297,35 +299,125 @@ class Dfsu2DTests(unittest.TestCase):
         FileOresundHDDfsu.StaticItemTester(dfsFile)
         FileOresundHDDfsu.ReadTester(dfsFile)
 
-    def test_ExtractDfsu2DLayerFrom3D(self):
-        filenameDfsu3 = "testdata/OdenseHD3D.dfsu"
-        filenameDfsu2 = "testdata/testtmp/test_OdenseHD3D_toplayer.dfsu"
-        ExamplesDfsu.ExtractDfsu2DLayerFrom3D(filenameDfsu3, filenameDfsu2, -1)
+    def test_ExtractDfsu2DTopLayerFrom3DIsThe2DModel(self):
+        # OdenseHD2D.dfsu is the 2D model of the same area, on the same mesh as the
+        # 3D model, so the top layer extracted from OdenseHD3D.dfsu has its geometry
+        filename = "testdata/testtmp/test_OdenseHD3D_toplayer.dfsu"
+        ExamplesDfsu.ExtractDfsu2DLayerFrom3D("testdata/OdenseHD3D.dfsu", filename, -1)
 
-        dfsu3 = DfsFileFactory.DfsuFileOpen(filenameDfsu3)
-        dfsu2 = DfsFileFactory.DfsuFileOpen(filenameDfsu2)
-        topLayer = dfsu3.FindTopLayerElements()
-
+        dfsu2 = DfsuFile.Open(filename)
+        model2 = DfsuFile.Open("testdata/OdenseHD2D.dfsu")
         Assert.AreEqual(DfsuFileType.Dfsu2D, dfsu2.DfsuFileType)
-        Assert.AreEqual(len(topLayer), dfsu2.NumberOfElements)
-        # Z coordinate item is on the nodes, so it is skipped
-        Assert.AreEqual(len(dfsu3.ItemInfo) - 1, len(dfsu2.ItemInfo))
-        Assert.AreEqual(dfsu3.NumberOfTimeSteps, dfsu2.NumberOfTimeSteps)
+        Assert.AreEqual(model2.X, dfsu2.X)
+        Assert.AreEqual(model2.Y, dfsu2.Y)
+        Assert.AreEqual(model2.Z, dfsu2.Z)
+        Assert.AreEqual(model2.Code, dfsu2.Code)
+        Assert.AreEqual(len(model2.ElementTable), len(dfsu2.ElementTable))
+        for elmt2, modelElmt2 in zip(dfsu2.ElementTable, model2.ElementTable):
+            Assert.AreEqual(modelElmt2, elmt2)
+        Assert.AreEqual(model2.StartDateTime, dfsu2.StartDateTime)
+        Assert.AreEqual(model2.TimeStepInSeconds, dfsu2.TimeStepInSeconds)
+        Assert.AreEqual(13, dfsu2.NumberOfTimeSteps)
+        # The Z coordinate item of the 3D file is on the nodes, so it is not extracted
+        Assert.AreEqual(
+            ["Current speed", "Temperature", "Salinity"],
+            [itemInfo.Name for itemInfo in dfsu2.ItemInfo],
+        )
+        model2.Close()
+        dfsu2.Close()
 
-        # Element nodes of the 2D mesh lie at the x,y of the 3D top layer element nodes
-        for i in [0, len(topLayer) // 2, len(topLayer) - 1]:
-            elmt3 = dfsu3.ElementTable[topLayer[i]]
-            elmt2 = dfsu2.ElementTable[i]
-            Assert.AreEqual(dfsu3.X[elmt3[: elmt2.size] - 1], dfsu2.X[elmt2 - 1])
-            Assert.AreEqual(dfsu3.Y[elmt3[: elmt2.size] - 1], dfsu2.Y[elmt2 - 1])
+    def test_ExtractDfsu2DLayerFrom3DSigma(self):
+        # OdenseHD3D.dfsu has 7 sigma layers, so each column is 7 consecutive
+        # elements, from the bottom up
+        dfsu3 = DfsuFile.Open("testdata/OdenseHD3D.dfsu")
+        for layerNumber, layerInColumn in [(-1, 6), (1, 0), (-7, 0), (3, 2), (-2, 5)]:
+            with self.subTest(layerNumber=layerNumber):
+                filename = f"testdata/testtmp/test_OdenseHD3D_layer{layerNumber}.dfsu"
+                ExamplesDfsu.ExtractDfsu2DLayerFrom3D(
+                    "testdata/OdenseHD3D.dfsu", filename, layerNumber
+                )
 
-        # Data equals the top layer values of the 3D file
-        data3 = dfsu3.ReadItemTimeStep(2, 5).Data
-        data2 = dfsu2.ReadItemTimeStep(1, 5).Data
-        Assert.AreEqual(data3[topLayer], data2)
+                dfsu2 = DfsuFile.Open(filename)
+                Assert.AreEqual(724, dfsu2.NumberOfElements)
+                for timestepIndex in [0, 12]:
+                    # Items of the 3D file are 2 to 4, after the Z coordinate item
+                    for itemNumber in [1, 2, 3]:
+                        data3 = dfsu3.ReadItemTimeStep(itemNumber + 1, timestepIndex)
+                        data2 = dfsu2.ReadItemTimeStep(itemNumber, timestepIndex)
+                        Assert.AreEqual(data3.Data[layerInColumn::7], data2.Data)
+                dfsu2.Close()
+        dfsu3.Close()
 
+    def test_ExtractDfsu2DLayerFrom3DSigmaZWritesDeleteValueBelowTheBottom(self):
+        # Oresund3DSigmaZ.dfsu has columns of 3 to 33 layers. Layer -5, the fifth
+        # from the top, is below the bottom in the 649 columns of 3 or 4 layers.
+        filename = "testdata/testtmp/test_Oresund3DSigmaZ_layer-5.dfsu"
+        ExamplesDfsu.ExtractDfsu2DLayerFrom3D(
+            "testdata/Oresund3DSigmaZ.dfsu", filename, -5
+        )
+
+        dfsu3 = DfsuFile.Open("testdata/Oresund3DSigmaZ.dfsu")
+        dfsu2 = DfsuFile.Open(filename)
+        columns = ElementColumns(dfsu3)
+        Assert.AreEqual(3700, dfsu2.NumberOfElements)
+        # The 2D elements are the columns of the 3D mesh
+        column2 = [columns[key] for key in ElementCentreKeys(dfsu2)]
+        Assert.AreEqual(3700, len({tuple(column) for column in column2}))
+
+        deleteValue = np.float32(dfsu2.DeleteValueFloat)
+        for timestepIndex in [0, 8]:
+            data3 = dfsu3.ReadItemTimeStep(2, timestepIndex).Data
+            data2 = dfsu2.ReadItemTimeStep(1, timestepIndex).Data
+            expected = np.array(
+                [
+                    data3[column[4]] if len(column) >= 5 else deleteValue
+                    for column in column2
+                ],
+                dtype=np.float32,
+            )
+            Assert.AreEqual(expected, data2)
+            Assert.AreEqual(649, np.count_nonzero(data2 == deleteValue))
         dfsu3.Close()
         dfsu2.Close()
+
+    def test_ExtractDfsu2DLayerFrom3DLayerOutOfRange(self):
+        # OdenseHD3D.dfsu has 7 layers
+        for layerNumber in [0, 8, -8]:
+            with self.subTest(layerNumber=layerNumber):
+                with self.assertRaisesRegex(Exception, "Layer number is out of range"):
+                    ExamplesDfsu.ExtractDfsu2DLayerFrom3D(
+                        "testdata/OdenseHD3D.dfsu",
+                        "testdata/testtmp/test_OdenseHD3D_outofrange.dfsu",
+                        layerNumber,
+                    )
+
+    def test_ExtractDfsu2DLayerFrom2DFails(self):
+        with self.assertRaisesRegex(Exception, "not a 3D dfsu file"):
+            ExamplesDfsu.ExtractDfsu2DLayerFrom3D(
+                "testdata/OdenseHD2D.dfsu",
+                "testdata/testtmp/test_OdenseHD2D_layer.dfsu",
+                -1,
+            )
+
+
+def ElementCentreKeys(dfsu):
+    """x,y of each element centre, the mean of its nodes, rounded to millimetres"""
+    return [
+        (round(dfsu.X[elmt - 1].mean(), 3), round(dfsu.Y[elmt - 1].mean(), 3))
+        for elmt in dfsu.ElementTable
+    ]
+
+
+def ElementColumns(dfsu3):
+    """Element indices of each column of a 3D mesh, by x,y of the element centres,
+    from the top down"""
+    centreZ = [dfsu3.Z[elmt - 1].mean() for elmt in dfsu3.ElementTable]
+    columns = {}
+    for i, key in enumerate(ElementCentreKeys(dfsu3)):
+        columns.setdefault(key, []).append(i)
+    for column in columns.values():
+        column.sort(key=lambda i: -centreZ[i])
+    return columns
 
 
 class FileOresundHDDfsu:
