@@ -266,7 +266,7 @@ class MeshFile:
                 # DfsException
                 raise Exception(
                     f"Can not load mesh file (failed reading nodes): {filename}. {inner}"
-                )
+                ) from inner
 
             # Reading element header line
             line = reader.readline().strip()
@@ -285,7 +285,7 @@ class MeshFile:
             except Exception as ex:
                 raise Exception(
                     f"Can not load mesh file (failed reading element header line): {filename}. {ex}"
-                )
+                ) from ex
 
             # Allocate memory for elements
             self.ElementIds = np.zeros(noElements, dtype=np.int32)
@@ -332,7 +332,7 @@ class MeshFile:
             except Exception as inner:
                 raise Exception(
                     f"Can not load mesh file (failed reading elements): {filename}. {inner}"
-                )
+                ) from inner
 
     def Write(self, filename: str):
         """Write mesh to file"""
@@ -372,7 +372,7 @@ class MeshFile:
             nodes = self.ElementTable[i]
             for j in range(len(nodes)):
                 line += " " + str(nodes[j])
-            for j in range(len(nodes), maxNodesPerElmt):
+            for _j in range(len(nodes), maxNodesPerElmt):
                 # fill with zeros
                 line += " " + "0"
             lines.append(line)
