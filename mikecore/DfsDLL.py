@@ -104,6 +104,18 @@ class DfsDLL:
             ctypes.POINTER(ctypes.c_int),
         ]
         lib.dfsGetItemElements.argtypes = [ctypes.c_void_p]
+        lib.dfsGetItemRefCoords.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_float),
+            ctypes.POINTER(ctypes.c_float),
+            ctypes.POINTER(ctypes.c_float),
+        ]
+        lib.dfsGetItemAxisOrientation.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_float),
+            ctypes.POINTER(ctypes.c_float),
+            ctypes.POINTER(ctypes.c_float),
+        ]
 
         lib.dfsGetEqTimeAxis.argtypes = [
             ctypes.c_void_p,

@@ -1533,6 +1533,31 @@ class DfsFile:
         item.ElementCount = DfsDLL.Wrapper.dfsGetItemElements(item.ItemPointer)
         item.SpatialAxis = DfsDLLUtil.GetItemSpatialAxis(item.ItemPointer)
 
+        x = ctypes.c_float()
+        y = ctypes.c_float()
+        z = ctypes.c_float()
+        rok = DfsDLL.Wrapper.dfsGetItemRefCoords(
+            item.ItemPointer, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z)
+        )
+        DfsDLL.CheckReturnCode(rok)
+        item.SetReferenceCoordinates(
+            np.float32(x.value), np.float32(y.value), np.float32(z.value)
+        )
+
+        alpha = ctypes.c_float()
+        phi = ctypes.c_float()
+        theta = ctypes.c_float()
+        rok = DfsDLL.Wrapper.dfsGetItemAxisOrientation(
+            item.ItemPointer,
+            ctypes.byref(alpha),
+            ctypes.byref(phi),
+            ctypes.byref(theta),
+        )
+        DfsDLL.CheckReturnCode(rok)
+        item.SetOrientation(
+            np.float32(alpha.value), np.float32(phi.value), np.float32(theta.value)
+        )
+
     def __GetStaticData(self, item):
         data = item.CreateEmptyItemDataData()
         DfsDLL.Wrapper.dfsStaticGetData(item.StaticVectorPointer, data.ctypes.data)
