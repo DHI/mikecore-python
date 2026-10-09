@@ -571,7 +571,8 @@ class DfsBuilder:
 
     @staticmethod
     def __SetValuesToDynamicItem(headerPointer, itemPointer, itemNumber, itemInfo):
-
+        if itemInfo.ValueType is None:
+            raise ValueError("Data valueType has not been set.")
         rok = DfsDLL.Wrapper.dfsSetItemValueType(
             itemPointer, ctypes.c_int32(itemInfo.ValueType.value)
         )

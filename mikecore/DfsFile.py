@@ -526,10 +526,9 @@ class DfsDynamicItemInfo:
         self.AxisConversionUnit = 0
         self.AssociatedStaticItemNumbers: list[int] | None = []
         self.SpatialAxis = None
-
-    # Set on dynamic items read from a file, and by
-    # DfsDynamicItemBuilder.SetValueType before an item is built
-    ValueType: DataValueType
+        # Set on dynamic items read from a file, and by
+        # DfsDynamicItemBuilder.SetValueType before an item is built
+        self.ValueType: DataValueType | None = None
 
     def __repr__(self):
         return (
