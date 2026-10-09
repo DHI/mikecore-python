@@ -65,7 +65,7 @@ def test_getfile_not_possible_if_not_created(landuse: DfsBuilder):
 
     # Create and get file
     # builder.CreateFile("notused.dfs2") # this is an important step
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="CreateFile has not yet been called"):
         builder.GetFile()
 
 
@@ -76,7 +76,7 @@ def test_getfiletwice_not_allowed(landuse: DfsBuilder, tmp_path):
     builder.CreateFile(str(tmp_path / "notused.dfs2"))
     file = builder.GetFile()
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="File has been returned"):
         builder.GetFile()
 
 
@@ -87,7 +87,7 @@ def test_filetitle_after_create_not_possible(landuse: DfsBuilder, tmp_path):
     builder.CreateFile(str(tmp_path / "notused.dfs2"))
     file = builder.GetFile()
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="File has been returned"):
         builder.SetFileTitle("too late")
 
 
@@ -98,7 +98,7 @@ def test_apptitle_after_create_not_possible(landuse: DfsBuilder, tmp_path):
     builder.CreateFile(str(tmp_path / "notused.dfs2"))
     file = builder.GetFile()
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="File has been returned"):
         builder.SetApplicationTitle("too late")
 
 
