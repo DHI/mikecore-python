@@ -94,7 +94,7 @@ def test_MeshBuilder_mesh_is_written(tmp_path):
     assert_array_equal(CODE, mesh.Code)
     assert_array_equal(np.arange(1, len(ELEMENTS) + 1), mesh.ElementIds)
     assert len(ELEMENTS) == len(mesh.ElementTable)
-    for expected, element in zip(ELEMENTS, mesh.ElementTable):
+    for expected, element in zip(ELEMENTS, mesh.ElementTable, strict=True):
         assert_array_equal(expected, element)
 
 
@@ -222,7 +222,7 @@ def test_MeshBuilder_rebuilds_the_Oresund_mesh(tmp_path):
     assert_array_equal(original.ElementIds, mesh.ElementIds)
     assert_array_equal(original.ElementType, mesh.ElementType)
     assert len(original.ElementTable) == len(mesh.ElementTable)
-    for expected, element in zip(original.ElementTable, mesh.ElementTable):
+    for expected, element in zip(original.ElementTable, mesh.ElementTable, strict=True):
         assert_array_equal(expected, element)
 
 
@@ -330,6 +330,6 @@ def test_MeshBuilder_create_from_dfsu_file(tmp_path):
     assert_array_equal(dfsu.Code, mesh.Code)
     assert_array_equal(dfsu.ElementIds, mesh.ElementIds)
     assert len(dfsu.ElementTable) == len(mesh.ElementTable)
-    for expected, element in zip(dfsu.ElementTable, mesh.ElementTable):
+    for expected, element in zip(dfsu.ElementTable, mesh.ElementTable, strict=True):
         assert_array_equal(expected, element)
     dfsu.Close()
