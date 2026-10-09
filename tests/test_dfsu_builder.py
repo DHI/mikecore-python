@@ -28,8 +28,8 @@ def _builder(fileType=DfsuFileType.Dfsu2D):
     return builder
 
 
-def test_node_ids_set_after_nodes_are_written():
-    filename = "testdata/testtmp/test_dfsu_builder_nodeids_after.dfsu"
+def test_node_ids_set_after_nodes_are_written(tmp_path):
+    filename = str(tmp_path / "nodeids_after.dfsu")
     builder = _builder()
     builder.SetNodes(X, Y, Z, CODE)
     builder.SetNodeIds(np.array([11, 12, 13, 14], dtype=np.int32))
@@ -41,8 +41,8 @@ def test_node_ids_set_after_nodes_are_written():
     dfsu.Close()
 
 
-def test_node_ids_set_before_nodes_are_written():
-    filename = "testdata/testtmp/test_dfsu_builder_nodeids_before.dfsu"
+def test_node_ids_set_before_nodes_are_written(tmp_path):
+    filename = str(tmp_path / "nodeids_before.dfsu")
     builder = _builder()
     builder.SetNodeIds(np.array([11, 12, 13, 14], dtype=np.int32))
     builder.SetNodes(X, Y, Z, CODE)
@@ -63,8 +63,8 @@ def test_validate_reports_missing_nodes_and_elements():
     assert "Elements have not been set" in errors
 
 
-def test_spectral_file_with_directions_only():
-    filename = "testdata/testtmp/test_dfsu_builder_directions_only.dfsu"
+def test_spectral_file_with_directions_only(tmp_path):
+    filename = str(tmp_path / "directions_only.dfsu")
     directions = np.array([0.0, np.pi / 2, np.pi, 3 * np.pi / 2])
     builder = _builder(DfsuFileType.DfsuSpectral2D)
     builder.SetNodes(X, Y, Z, CODE)
