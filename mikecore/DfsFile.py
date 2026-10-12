@@ -1224,10 +1224,10 @@ class DfsFile:
 
         dynamicItem = self.ItemInfo[self.fpItemNumber - 1]
 
-        # data.Length can be larger than the number of elements.
+        # data.size can be larger than the number of elements.
         if dynamicItem.ElementCount > data.size:
             raise Exception(
-                f"Data is of wrong size. Item has {dynamicItem.ElementCount} elements, data is {data.Length} long."
+                f"Data is of wrong size. Item has {dynamicItem.ElementCount} elements, data is {data.size} long."
             )
 
         if dynamicItem.DataType == DfsSimpleType.Float and data.dtype != np.float32:
