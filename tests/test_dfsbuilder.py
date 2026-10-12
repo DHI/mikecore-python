@@ -124,7 +124,14 @@ def test_delete_value_after_create_not_possible(
         setattr(builder, delete_value, 0)
 
 
-def test_validate_reports_encode_key_outside_axis():
+@pytest.fixture(params=[1, 2], ids=["dfs2", "dfs3"])
+def compressed_builder(request):
+    """A builder for a 4 x 3 grid, ready for an encode key.
+
+    Returns the builder and its number of layers: 1 for the dfs2 axis, 2 for
+    the dfs3 axis.
+    """
+    layers = request.param
     builder = DfsBuilder.Create("title", "app", 1)
     factory = DfsFactory()
     builder.SetDataType(0)
@@ -136,23 +143,67 @@ def test_validate_reports_encode_key_outside_axis():
             eumUnit.eumUsec, datetime(2000, 1, 1), 0, 1
         )
     )
-    builder.SetSpatialAxis(
-        factory.CreateAxisEqD3(eumUnit.eumUmeter, 4, 0, 1, 3, 0, 1, 2, 0, 1)
-    )
+    if layers == 1:
+        axis = factory.CreateAxisEqD2(eumUnit.eumUmeter, 4, 0, 1, 3, 0, 1)
+    else:
+        axis = factory.CreateAxisEqD3(eumUnit.eumUmeter, 4, 0, 1, 3, 0, 1, layers, 0, 1)
+    builder.SetSpatialAxis(axis)
     builder.AddCreateDynamicItem(
         "Item",
-        eumQuantity.Create(eumItem.eumIIntegerCode, eumUnit.eumUintCode),
+        eumQuantity.Create(eumItem.eumIWaterLevel, eumUnit.eumUmeter),
         DfsSimpleType.Float,
         DataValueType.Instantaneous,
     )
-    # The second x key is past the 4 cells along x
-    builder.SetEncodingKey([0, 4], [0, 0], [0, 0])
+    return builder, layers
+
+
+def test_validate_accepts_encode_key_inside_axis(compressed_builder):
+    builder, layers = compressed_builder
+    # The first cell and the last cell of the grid
+    builder.SetEncodingKey([0, 3], [0, 2], [0, layers - 1])
+
+    assert builder.Validate(dieOnError=False) == []
+
+
+@pytest.mark.parametrize("axis", ["x", "y", "z"])
+def test_validate_reports_encode_key_outside_axis(compressed_builder, axis):
+    builder, layers = compressed_builder
+    # The second entry is one cell past the axis along x, y or z
+    past = {"x": 4, "y": 3, "z": layers}
+    key = {name: [0, past[name] if name == axis else 0] for name in past}
+    builder.SetEncodingKey(key["x"], key["y"], key["z"])
 
     errors = builder.Validate(dieOnError=False)
 
     assert errors == [
         "Encode key values are not valid for axis of dynamic item number 1"
     ]
+
+
+def test_compressed_file_stores_only_the_key_cells(compressed_builder, tmp_path):
+    builder, layers = compressed_builder
+    cells = 4 * 3 * layers
+    # Keep the first cell and the last cell of the grid
+    builder.SetEncodingKey(
+        np.array([0, 3], dtype=np.int32),
+        np.array([0, 2], dtype=np.int32),
+        np.array([0, layers - 1], dtype=np.int32),
+    )
+    filename = str(tmp_path / ("compressed.dfs2" if layers == 1 else "compressed.dfs3"))
+    builder.CreateFile(filename)
+    dfs = builder.GetFile()
+    dfs.WriteItemTimeStepNext(0, np.arange(cells, dtype=np.float32))
+    dfs.Close()
+
+    dfs = DfsFileFactory.DfsGenericOpen(filename)
+    item = dfs.ReadItemTimeStepNext()
+    delete = dfs.FileInfo.DeleteValueFloat
+    dfs.Close()
+
+    assert item is not None
+    assert item.Data[0] == 0
+    assert item.Data[-1] == cells - 1
+    assert np.all(item.Data[1:-1] == np.float32(delete))
 
 
 def test_static_item_builder_reports_missing_data_and_axis():
