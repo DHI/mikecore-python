@@ -226,6 +226,7 @@ class DfsuBuilder:
         if nodeIds is None:
             self.__nodeIds = None
             return
+        nodeIds = np.asarray(nodeIds, dtype=np.int32)
         if self.__nodes is not None and self.__nodes.x.size != nodeIds.size:
             raise Exception(
                 "Number of node id's does not match number of nodes", "nodeIds"
@@ -270,12 +271,14 @@ class DfsuBuilder:
 
     def SetElementIds(self, elementIds):
         """Set the element id's. Optional. If not set, default values are used (1,2,3,...)"""
+        elementIds = np.asarray(elementIds, dtype=np.int32)
         if (self.__connectivity is not None) and (
             len(self.__connectivity) != elementIds.size
         ):
             raise Exception(
                 "Number of element id's does not match number of elements", "elementIds"
             )
+        self.__elementIds = elementIds
 
     def SetFromMeshFile(self, meshFile: MeshFile):
         """Set projection, nodes and elements from mesh file.

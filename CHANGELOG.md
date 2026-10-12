@@ -82,5 +82,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   It read the native return code the wrong way round, so it reported no unit
   where there was one, and raised `ValueError` after the last one, where the
   native description is null.
+- `DfsuBuilder.SetElementIds` stores the ids, so the file has them instead of
+  the default 1, 2, .... `SetElementIds` and `SetNodeIds` accept int64 arrays
+  and lists and store int32 ids. Int64 node ids raised "Data type not
+  supported: int64" in `CreateFile`.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD
