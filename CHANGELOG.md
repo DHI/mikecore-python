@@ -78,5 +78,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#47](https://github.com/DHI/mikecore-python/issues/47)).
 - Reading an item's value type raises the DFS error when the native library
   reports one, instead of returning `DataValueType.Instantaneous`.
+- `eumWrapper.eumGetNextEqvUnit` returns the units equivalent to the base unit.
+  It read the native return code the wrong way round, so it reported no unit
+  where there was one, and raised `ValueError` after the last one, where the
+  native description is null.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD
