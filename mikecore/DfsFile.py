@@ -1069,6 +1069,11 @@ class DfsFile:
             res = itemData
             res.Time = time
             res.TimeStepIndex = self.fpTimeStepIndex
+        # A 0-D axis has shape (0,) while holding one value, so only reshape 2-D and
+        # 3-D. Some axis types, such as EqD4, are read as None, so stay flat.
+        axis = item.SpatialAxis
+        if reshape and axis is not None and len(shape := axis.Shape) >= 2:
+            res.Data = res.Data.reshape(shape, order="F")
         self.__FpDynamicIncrement()
         return res
 

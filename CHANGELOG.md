@@ -97,5 +97,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DfsFile.ReadStaticItem` raises `ValueError` for an item number below 1. It
   returned the first static item, numbered 0 or below. A number past the last
   item still returns `None`.
+- `DfsFile.ReadItemTimeStepNext` and `ReadItemTimeStep` with `reshape=True`
+  reshape an item with a 2-D or 3-D spatial axis to the axis shape, as
+  `Dfs2File` and `Dfs3File` do. A file opened with
+  `DfsFileFactory.DfsGenericOpen` ignored `reshape`. 0-D and 1-D items stay
+  flat.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD
