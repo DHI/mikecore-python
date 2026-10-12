@@ -91,5 +91,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `DfsuFile.Z`, is now written with the double text of those float32 values
   (`-1.7859922647476196` rather than `-1.7859923`). `MeshBuilder.Create(dfsuFile)`
   is unchanged.
+- `miketools.Dfs0ToAscii` converts item times from the time axis unit to
+  seconds, so a file with a time unit other than seconds gets the right
+  timestamps. A 10 minute step was written as 10 seconds.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD
