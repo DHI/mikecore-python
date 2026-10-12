@@ -54,7 +54,7 @@ class MeshBuilder:
         except Exception as err:
             raise TypeError("y must be array of float") from err
         try:
-            z = np.array(z, dtype=np.float32)
+            z = np.array(z, dtype=np.float64)
         except Exception as err:
             raise TypeError("z must be array of float") from err
         try:

@@ -86,5 +86,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the default 1, 2, .... `SetElementIds` and `SetNodeIds` accept int64 arrays
   and lists and store int32 ids. Int64 node ids raised "Data type not
   supported: int64" in `CreateFile`.
+- `MeshBuilder.SetNodes` keeps z as doubles, as mesh files store it, instead of
+  rounding it to float32. Float32 z passed to `SetNodes`, such as
+  `DfsuFile.Z`, is now written with the double text of those float32 values
+  (`-1.7859922647476196` rather than `-1.7859923`). `MeshBuilder.Create(dfsuFile)`
+  is unchanged.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD
