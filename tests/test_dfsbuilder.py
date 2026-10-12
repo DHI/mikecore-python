@@ -8,6 +8,7 @@ from mikecore.DfsBuilder import (
     DfsStaticItemBuilder,
 )
 from mikecore.DfsFactory import DfsFactory
+from mikecore.DfsFileFactory import DfsFileFactory
 from mikecore.eum import eumUnit, eumQuantity, eumItem
 
 import pytest
@@ -213,3 +214,64 @@ def test_dynamic_item_builder_can_be_reused():
     assert eumItem.eumIWaterLevel == second.Quantity.Item
     assert eumUnit.eumUmeter == second.Quantity.Unit
     assert DataValueType.Instantaneous == second.ValueType
+
+
+def test_reference_coordinates_and_orientation_are_read_back(tmp_path):
+    factory = DfsFactory()
+    builder = DfsBuilder.Create("title", "application", 1)
+    builder.SetDataType(0)
+    builder.SetGeographicalProjection(factory.CreateProjectionUndefined())
+    builder.SetTemporalAxis(factory.CreateTemporalEqTimeAxis(eumUnit.eumUsec, 0, 1))
+    item = builder.CreateDynamicItemBuilder()
+    item.Set(
+        "Value",
+        eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined),
+        DfsSimpleType.Float,
+    )
+    item.SetValueType(DataValueType.Instantaneous)
+    item.SetAxis(factory.CreateAxisEqD0())
+    item.SetReferenceCoordinates(1.5, 2.5, 3.5)
+    item.SetOrientation(10, 20, 30)
+    builder.AddDynamicItem(item.GetDynamicItemInfo())
+    filename = str(tmp_path / "refcoords.dfs0")
+    builder.CreateFile(filename)
+    staticItem = DfsStaticItemBuilder()
+    staticItem.Set(
+        "Static",
+        eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined),
+        DfsSimpleType.Float,
+    )
+    staticItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, 2, 0, 1))
+    staticItem.SetData(np.array([1.0, 2.0], dtype=np.float32))
+    staticItem.SetReferenceCoordinates(5, 6, 7)
+    staticItem.SetOrientation(8, 9, 10)
+    builder.AddStaticItem(staticItem.GetStaticItem())
+    builder.GetFile().Close()
+
+    file = DfsFileFactory.DfsGenericOpen(filename)
+    itemInfo = file.ItemInfo[0]
+    staticItemInfo = file.ReadStaticItemNext()
+    file.Close()
+
+    assert staticItemInfo is not None
+
+    assert (1.5, 2.5, 3.5) == (
+        itemInfo.ReferenceCoordinateX,
+        itemInfo.ReferenceCoordinateY,
+        itemInfo.ReferenceCoordinateZ,
+    )
+    assert (10, 20, 30) == (
+        itemInfo.OrientationAlpha,
+        itemInfo.OrientationPhi,
+        itemInfo.OrientationTheta,
+    )
+    assert (5, 6, 7) == (
+        staticItemInfo.ReferenceCoordinateX,
+        staticItemInfo.ReferenceCoordinateY,
+        staticItemInfo.ReferenceCoordinateZ,
+    )
+    assert (8, 9, 10) == (
+        staticItemInfo.OrientationAlpha,
+        staticItemInfo.OrientationPhi,
+        staticItemInfo.OrientationTheta,
+    )
