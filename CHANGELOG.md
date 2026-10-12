@@ -102,5 +102,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Dfs2File` and `Dfs3File` do. A file opened with
   `DfsFileFactory.DfsGenericOpen` ignored `reshape`. 0-D and 1-D items stay
   flat.
+- A `DfsDynamicItemBuilder` can be reused after `GetDynamicItemInfo`. It
+  replaced its item with a blank one but kept its "is set" flags, so the next
+  item passed validation with no name, quantity or value type. The builder now
+  keeps its settings for the next item, and changing it no longer changes the
+  item it returned. Associated static items carry over and add up: after an
+  item with static item 1, `SetAssociatedStaticItem(2)` gives the next item
+  `[1, 2]`.
+- Changing a `DfsStaticItemBuilder` after `GetStaticItem`, or the data array it
+  holds, no longer changes the static item it returned.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD
