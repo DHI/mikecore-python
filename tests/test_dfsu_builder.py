@@ -377,18 +377,6 @@ def test_temporal_axis_is_written(tmp_path):
     dfsu.Close()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Suspected bug: Validate accepts DfsuSpectral0D, but SetupBuilder has no "
-        "branch for it and raises an Exception with no message. DfsuFile reads a "
-        "Spectral0D file as data type 2001 with a 6-value MIKE_FM block "
-        "[nodes, elements, 2, 0, frequencies, directions], over a mesh with one "
-        "element per frequency-direction pair. Correct: the builder writes that, "
-        "and the file reads back as DfsuSpectral0D with one value per frequency "
-        "and direction."
-    ),
-)
 def test_spectral_0d_file_has_one_spectrum(tmp_path):
     filename = str(tmp_path / "spectral0d.dfsu")
     frequencies = np.array([0.1, 0.2])
@@ -409,3 +397,80 @@ def test_spectral_0d_file_has_one_spectrum(tmp_path):
     assert_array_equal(directions, dfsu.Directions)
     assert len(frequencies) * len(directions) == dfsu.ItemInfo[0].ElementCount
     dfsu.Close()
+
+
+# One triangle per frequency: a strip of 3 triangles over 5 nodes
+SPECTRAL_0D_X = [0.0, 1.0, 2.0, 0.0, 1.0]
+SPECTRAL_0D_Y = [0.0, 0.0, 0.0, 1.0, 1.0]
+SPECTRAL_0D_ELEMENTS = [[1, 2, 5], [1, 5, 4], [2, 3, 5]]
+
+
+def _spectral_0d_builder():
+    builder = _builder(DfsuFileType.DfsuSpectral0D)
+    builder.SetNodes(
+        SPECTRAL_0D_X,
+        SPECTRAL_0D_Y,
+        np.zeros(len(SPECTRAL_0D_X)),
+        np.zeros(len(SPECTRAL_0D_X), dtype=np.int32),
+    )
+    builder.SetElements(SPECTRAL_0D_ELEMENTS)
+    return builder
+
+
+def test_spectral_0d_file_with_only_frequencies(tmp_path):
+    filename = str(tmp_path / "spectral0d_frequencies.dfsu")
+    frequencies = np.array([0.1, 0.2, 0.3])
+    builder = _spectral_0d_builder()
+    builder.SetFrequencies(frequencies)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert DfsuFileType.DfsuSpectral0D is dfsu.DfsuFileType
+    assert_array_equal(frequencies, dfsu.Frequencies)
+    assert 0 == dfsu.NumberOfDirections
+    assert len(frequencies) == dfsu.ItemInfo[0].ElementCount
+    dfsu.Close()
+
+
+def test_spectral_0d_file_with_only_directions(tmp_path):
+    filename = str(tmp_path / "spectral0d_directions.dfsu")
+    directions = np.array([0.0, 1.0, 2.0])
+    builder = _spectral_0d_builder()
+    builder.SetDirections(directions)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert DfsuFileType.DfsuSpectral0D is dfsu.DfsuFileType
+    assert_array_equal(directions, dfsu.Directions)
+    assert 0 == dfsu.NumberOfFrequencies
+    assert len(directions) == dfsu.ItemInfo[0].ElementCount
+    dfsu.Close()
+
+
+def test_validate_spectral_0d_needs_frequencies_or_directions():
+    builder = _spectral_0d_builder()
+
+    assert [
+        "Frequencies or directions must be set for a spectral 0D file"
+    ] == builder.Validate()
+
+
+@pytest.mark.parametrize(
+    "frequencies, directions",
+    [
+        ([0.1, 0.2], None),
+        (None, [0.0, 1.0, 2.0, 3.0]),
+        ([0.1, 0.2, 0.3], [0.0, 1.0]),
+    ],
+)
+def test_validate_spectral_0d_element_count(frequencies, directions):
+    builder = _spectral_0d_builder()
+    if frequencies is not None:
+        builder.SetFrequencies(np.array(frequencies))
+    if directions is not None:
+        builder.SetDirections(np.array(directions))
+
+    errors = builder.Validate()
+
+    assert 1 == len(errors)
+    assert "Number of elements (3) must equal" in errors[0]
