@@ -317,7 +317,9 @@ class Dfsu2DTests(unittest.TestCase):
         Assert.AreEqual(model2.Z, dfsu2.Z)
         Assert.AreEqual(model2.Code, dfsu2.Code)
         Assert.AreEqual(len(model2.ElementTable), len(dfsu2.ElementTable))
-        for elmt2, modelElmt2 in zip(dfsu2.ElementTable, model2.ElementTable):
+        for elmt2, modelElmt2 in zip(
+            dfsu2.ElementTable, model2.ElementTable, strict=True
+        ):
             Assert.AreEqual(modelElmt2, elmt2)
         # Each 2D element has the 2D type of the layered elements in its column
         columns = ElementColumns(dfsu3)
@@ -474,7 +476,9 @@ def ElementPositionKeys(dfsu):
     key of the 2D element below it.
     """
     return [
-        frozenset(zip(dfsu.X[elmt - 1].tolist(), dfsu.Y[elmt - 1].tolist()))
+        frozenset(
+            zip(dfsu.X[elmt - 1].tolist(), dfsu.Y[elmt - 1].tolist(), strict=True)
+        )
         for elmt in dfsu.ElementTable
     ]
 

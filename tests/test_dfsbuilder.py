@@ -66,7 +66,7 @@ def test_getfile_not_possible_if_not_created(landuse: DfsBuilder):
 
     # Create and get file
     # builder.CreateFile("notused.dfs2") # this is an important step
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="CreateFile has not yet been called"):
         builder.GetFile()
 
 
@@ -77,7 +77,7 @@ def test_getfiletwice_not_allowed(landuse: DfsBuilder, tmp_path):
     builder.CreateFile(str(tmp_path / "notused.dfs2"))
     file = builder.GetFile()
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="File has been returned"):
         builder.GetFile()
 
 
@@ -88,7 +88,7 @@ def test_filetitle_after_create_not_possible(landuse: DfsBuilder, tmp_path):
     builder.CreateFile(str(tmp_path / "notused.dfs2"))
     file = builder.GetFile()
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="File has been returned"):
         builder.SetFileTitle("too late")
 
 
@@ -99,8 +99,148 @@ def test_apptitle_after_create_not_possible(landuse: DfsBuilder, tmp_path):
     builder.CreateFile(str(tmp_path / "notused.dfs2"))
     file = builder.GetFile()
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="File has been returned"):
         builder.SetApplicationTitle("too late")
+
+
+@pytest.mark.parametrize(
+    "delete_value",
+    [
+        "DeleteValueFloat",
+        "DeleteValueDouble",
+        "DeleteValueByte",
+        "DeleteValueInt",
+        "DeleteValueUnsignedInt",
+    ],
+)
+def test_delete_value_after_create_not_possible(
+    landuse: DfsBuilder, tmp_path, delete_value
+):
+    builder = landuse
+
+    builder.CreateFile(str(tmp_path / "notused.dfs2"))
+
+    with pytest.raises(Exception, match="CreateFile has been called"):
+        setattr(builder, delete_value, 0)
+
+
+def compressed_builder_for(axis):
+    """A builder with one float item on the given spatial axis."""
+    builder = DfsBuilder.Create("title", "app", 1)
+    factory = DfsFactory()
+    builder.SetDataType(0)
+    builder.SetGeographicalProjection(
+        factory.CreateProjectionGeoOrigin("NON-UTM", 0, 0, 0)
+    )
+    builder.SetTemporalAxis(
+        factory.CreateTemporalEqCalendarAxis(
+            eumUnit.eumUsec, datetime(2000, 1, 1), 0, 1
+        )
+    )
+    builder.SetSpatialAxis(axis)
+    builder.AddCreateDynamicItem(
+        "Item",
+        eumQuantity.Create(eumItem.eumIWaterLevel, eumUnit.eumUmeter),
+        DfsSimpleType.Float,
+        DataValueType.Instantaneous,
+    )
+    return builder
+
+
+@pytest.fixture(params=[1, 2, 3], ids=["dfs1", "dfs2", "dfs3"])
+def compressed_builder(request):
+    """A builder for 4 cells, a 4 x 3 grid or a 4 x 3 x 2 grid, ready for an encode key.
+
+    Returns the builder and its cell counts along x, y and z. A dfs1 axis is
+    one row and a dfs2 axis one layer, so their missing counts are 1.
+    """
+    dims = request.param
+    factory = DfsFactory()
+    unit = eumUnit.eumUmeter
+    if dims == 1:
+        axis = factory.CreateAxisEqD1(unit, 4, 0, 1)
+    elif dims == 2:
+        axis = factory.CreateAxisEqD2(unit, 4, 0, 1, 3, 0, 1)
+    else:
+        axis = factory.CreateAxisEqD3(unit, 4, 0, 1, 3, 0, 1, 2, 0, 1)
+    counts = (4, 3, 2)[:dims] + (1,) * (3 - dims)
+    return compressed_builder_for(axis), counts
+
+
+def test_validate_accepts_encode_key_inside_axis(compressed_builder):
+    builder, (nx, ny, nz) = compressed_builder
+    # The first cell and the last cell of the grid
+    builder.SetEncodingKey([0, nx - 1], [0, ny - 1], [0, nz - 1])
+
+    assert builder.Validate(dieOnError=False) == []
+
+
+@pytest.mark.parametrize("axis", ["x", "y", "z"])
+def test_validate_reports_encode_key_outside_axis(compressed_builder, axis):
+    builder, (nx, ny, nz) = compressed_builder
+    # The second entry is one cell past the axis along x, y or z
+    past = {"x": nx, "y": ny, "z": nz}
+    key = {name: [0, past[name] if name == axis else 0] for name in past}
+    builder.SetEncodingKey(key["x"], key["y"], key["z"])
+
+    errors = builder.Validate(dieOnError=False)
+
+    assert errors == [
+        "Encode key values are not valid for axis of dynamic item number 1"
+    ]
+
+
+def test_compressed_file_stores_only_the_key_cells(compressed_builder, tmp_path):
+    builder, (nx, ny, nz) = compressed_builder
+    cells = nx * ny * nz
+    # Keep the first cell and the last cell of the grid
+    builder.SetEncodingKey(
+        np.array([0, nx - 1], dtype=np.int32),
+        np.array([0, ny - 1], dtype=np.int32),
+        np.array([0, nz - 1], dtype=np.int32),
+    )
+    dims = builder.DynamicItems[0].SpatialAxis.Dimension
+    filename = str(tmp_path / f"compressed.dfs{dims}")
+    builder.CreateFile(filename)
+    dfs = builder.GetFile()
+    dfs.WriteItemTimeStepNext(0, np.arange(cells, dtype=np.float32))
+    dfs.Close()
+
+    dfs = DfsFileFactory.DfsGenericOpen(filename)
+    item = dfs.ReadItemTimeStepNext()
+    delete = dfs.FileInfo.DeleteValueFloat
+    dfs.Close()
+
+    assert item is not None
+    assert item.Data[0] == 0
+    assert item.Data[-1] == cells - 1
+    assert np.all(item.Data[1:-1] == np.float32(delete))
+
+
+def test_validate_ignores_encode_key_of_dfs0(tmp_path):
+    builder = compressed_builder_for(DfsFactory().CreateAxisEqD0())
+    # A dfs0 axis has a single value and no cells to key. The native library
+    # ignores the key, so even one past the axis is accepted and does no harm.
+    builder.SetEncodingKey(
+        np.array([1], dtype=np.int32),
+        np.array([0], dtype=np.int32),
+        np.array([0], dtype=np.int32),
+    )
+
+    assert builder.Validate(dieOnError=False) == []
+
+    filename = str(tmp_path / "compressed.dfs0")
+    builder.CreateFile(filename)
+    dfs = builder.GetFile()
+    dfs.WriteItemTimeStepNext(0, np.array([7], dtype=np.float32))
+    dfs.Close()
+
+    dfs = DfsFileFactory.DfsGenericOpen(filename)
+    item = dfs.ReadItemTimeStepNext()
+    dfs.Close()
+
+    assert item is not None
+    assert item.Data.tolist() == [7]
 
 
 def test_static_item_builder_reports_missing_data_and_axis():
@@ -135,6 +275,19 @@ def test_first_write_to_created_file_must_be_first_item_timestep(
 
     with pytest.raises(Exception, match="No dynamic items have been written"):
         file.WriteItemTimeStep(itemNumber, timestepIndex, 0, data)
+    file.Close()
+
+
+def test_write_reports_data_shorter_than_item(landuse: DfsBuilder, tmp_path):
+    landuse.CreateFile(str(tmp_path / "shortdata.dfs2"))
+    file = landuse.GetFile()
+    data = np.zeros(10, dtype=np.float32)
+
+    with pytest.raises(
+        Exception,
+        match="Data is of wrong size. Item has 4340 elements, data is 10 long.",
+    ):
+        file.WriteItemTimeStepNext(0, data)
     file.Close()
 
 

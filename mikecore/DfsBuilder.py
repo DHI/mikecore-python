@@ -125,7 +125,7 @@ class DfsBuilder:
         return self.FileInfo.DeleteValueFloat
 
     def SetDeleteValueFloat(self, value):
-        self.__CheckBuildStage1
+        self.__CheckBuildStage1()
         self.FileInfo.DeleteValueFloat = value
 
     DeleteValueFloat = property(GetDeleteValueFloat, SetDeleteValueFloat)
@@ -134,7 +134,7 @@ class DfsBuilder:
         return self.FileInfo.DeleteValueDouble
 
     def SetDeleteValueDouble(self, value):
-        self.__CheckBuildStage1
+        self.__CheckBuildStage1()
         self.FileInfo.DeleteValueDouble = value
 
     DeleteValueDouble = property(GetDeleteValueDouble, SetDeleteValueDouble)
@@ -145,7 +145,7 @@ class DfsBuilder:
         return self.FileInfo.DeleteValueByte
 
     def SetDeleteValueByte(self, value):
-        self.__CheckBuildStage1
+        self.__CheckBuildStage1()
         self.FileInfo.DeleteValueByte = value
 
     DeleteValueByte = property(GetDeleteValueByte, SetDeleteValueByte)
@@ -154,7 +154,7 @@ class DfsBuilder:
         return self.FileInfo.DeleteValueInt
 
     def SetDeleteValueInt(self, value):
-        self.__CheckBuildStage1
+        self.__CheckBuildStage1()
         self.FileInfo.DeleteValueInt = value
 
     DeleteValueInt = property(GetDeleteValueInt, SetDeleteValueInt)
@@ -163,7 +163,7 @@ class DfsBuilder:
         return self.FileInfo.DeleteValueUnsignedInt
 
     def SetDeleteValueUnsignedInt(self, value):
-        self.__CheckBuildStage1
+        self.__CheckBuildStage1()
         self.FileInfo.DeleteValueUnsignedInt = value
 
     DeleteValueUnsignedInt = property(
@@ -275,14 +275,16 @@ class DfsBuilder:
                 axis = itemInfo.SpatialAxis
                 xKey, yKey, zKey = self.FileInfo.GetEncodeKey()
                 encodeKeysize = len(xKey)
-                xSize = axis.Shape[0]
-                ySize = axis.Shape[1]
-                zSize = axis.Shape[2]
+                # A dfs1 axis is one row and a dfs2 axis one layer, so their
+                # missing y and z keys must be 0
+                xSize, ySize, zSize = (*axis.Shape, 1, 1)[:3]
                 ok = True
-                for j in range(encodeKeysize):
-                    if xKey[i] >= xSize or yKey[i] >= ySize or zKey[i] >= zSize:
-                        ok = False
-                        break
+                # A dfs0 axis has no cells, and the native library ignores its key
+                if axis.AxisType != SpaceAxisType.EqD0:
+                    for j in range(encodeKeysize):
+                        if xKey[j] >= xSize or yKey[j] >= ySize or zKey[j] >= zSize:
+                            ok = False
+                            break
 
                 if not ok:
                     errors.append(

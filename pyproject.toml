@@ -69,7 +69,7 @@ line-ending = "lf"
 
 # ruff takes its target version from requires-python.
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "UP"]
+select = ["E4", "E7", "E9", "F", "UP", "B"]
 # The C#-style API is re-exported through star imports throughout.
 ignore = [
     "F403", "F405",
@@ -80,6 +80,8 @@ ignore = [
     "E741",  # ambiguous variable name
     "F811",  # duplicated test helpers whose bodies differ
     "F841",  # unused variables
+    # Defaults like DfsParameters() and np.float32(...) are never mutated.
+    "B008",
 ]
 
 [tool.ruff.lint.per-file-ignores]

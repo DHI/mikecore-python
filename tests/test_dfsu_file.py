@@ -1263,7 +1263,6 @@ class FileVerticalColumnDfsu:
         Assert.AreEqual(1, axis.Dx)
 
         repr(itemInfo)  # only requirement is to not fail
-        Assert.IsTrue
 
     @staticmethod
     def StaticItemTester(dfsFile, datamanager):
