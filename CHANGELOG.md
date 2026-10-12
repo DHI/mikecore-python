@@ -111,5 +111,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `[1, 2]`.
 - Changing a `DfsStaticItemBuilder` after `GetStaticItem`, or the data array it
   holds, no longer changes the static item it returned.
+- `DfsuBuilder` creates `DfsuSpectral0D` files. It raised an `Exception` with
+  no message. The caller supplies the frequency-direction mesh, one element per
+  frequency and direction, and `Validate` reports a Spectral0D builder with no
+  frequencies or directions, or an element count that does not match them, so
+  the file reads back as `DfsuSpectral0D`.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD

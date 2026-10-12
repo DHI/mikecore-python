@@ -403,8 +403,26 @@ class DfsuBuilder:
                 errors.append(
                     "The minimum number of layers is smaller than the number of sigma layers. Element table is invalid"
                 )
+        elif self.__dfsuFileType == DfsuFileType.DfsuSpectral0D:
+            # The mesh is the frequency-direction (rose-plot) geometry, one element
+            # per frequency and direction, as DfsuFile reads it back
+            if self.__frequencies is None and self.__directions is None:
+                errors.append(
+                    "Frequencies or directions must be set for a spectral 0D file"
+                )
+            else:
+                numberOfSpectralValues = 1
+                if self.__frequencies is not None:
+                    numberOfSpectralValues *= len(self.__frequencies)
+                if self.__directions is not None:
+                    numberOfSpectralValues *= len(self.__directions)
+                if len(connectivity) != numberOfSpectralValues:
+                    errors.append(
+                        f"Number of elements ({len(connectivity)}) must equal the "
+                        "number of frequencies times the number of directions "
+                        f"({numberOfSpectralValues}) for a spectral 0D file"
+                    )
         elif self.__dfsuFileType in (
-            DfsuFileType.DfsuSpectral0D,
             DfsuFileType.DfsuSpectral1D,
             DfsuFileType.DfsuSpectral2D,
         ):
@@ -615,8 +633,29 @@ class DfsuBuilder:
                     np.int32,
                 ),
             )
+        elif self.__dfsuFileType == DfsuFileType.DfsuSpectral0D:
+            # 2 dimensions for a frequency-direction mesh, 1 for frequencies or directions
+            dimensions = (
+                2
+                if self.__frequencies is not None and self.__directions is not None
+                else 1
+            )
+            dfsBuilder.AddCreateCustomBlock(
+                "MIKE_FM",
+                np.array(
+                    [
+                        nodes.x.size,
+                        len(connectivity),
+                        dimensions,
+                        0,
+                        numberOfFrequencies,
+                        numberOfDirections,
+                    ],
+                    np.int32,
+                ),
+            )
         else:
-            raise Exception()
+            raise Exception(f"Dfsu file type {self.__dfsuFileType} not supported")
 
         # For the files with a vertical dimension, the first dynamic item is the Z-coordinate
         if (
