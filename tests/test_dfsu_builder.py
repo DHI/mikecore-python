@@ -206,6 +206,57 @@ def test_node_ids_are_written(tmp_path, dtype):
     assert_array_equal(nodeIds, readNodeIds)
 
 
+def test_element_ids_set_to_none_use_the_defaults(tmp_path):
+    filename = str(tmp_path / "element_ids_none.dfsu")
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.SetElementIds(np.array([10, 20], dtype=np.int32))
+    builder.SetElementIds(None)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    elementIds = dfsu.ElementIds
+    dfsu.Close()
+
+    assert_array_equal([1, 2], elementIds)
+
+
+INT32 = np.iinfo(np.int32)
+
+
+# The smallest and largest int32 are written; one past either end is rejected
+def test_int32_bounds_are_written(tmp_path):
+    filename = str(tmp_path / "int32_ids.dfsu")
+    nodeIds = [INT32.min, -1, 0, INT32.max]
+    elementIds = [INT32.max, INT32.min]
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.SetNodeIds(nodeIds)
+    builder.SetElementIds(elementIds)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    readNodeIds, readElementIds = dfsu.NodeIds, dfsu.ElementIds
+    dfsu.Close()
+
+    assert_array_equal(nodeIds, readNodeIds)
+    assert_array_equal(elementIds, readElementIds)
+
+
+@pytest.mark.parametrize("outside", [INT32.max + 1, INT32.min - 1, 2**40, 2**64])
+def test_ids_outside_int32_are_rejected(outside):
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+
+    with pytest.raises(ValueError, match="int32"):
+        builder.SetNodeIds(np.array([1, 2, 3, outside]))
+    with pytest.raises(ValueError, match="int32"):
+        builder.SetElementIds([1, outside])
+
+
 # Node numbers start at 1, so 0 is below the first node
 @pytest.mark.parametrize("nodeNumber", [0, len(X) + 1])
 def test_validate_reports_node_number_outside_the_nodes(nodeNumber):
