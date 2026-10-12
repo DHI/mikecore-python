@@ -172,20 +172,13 @@ def test_default_node_and_element_ids_count_from_one(tmp_path):
     dfsu.Close()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Suspected bug: SetElementIds checks the length of the ids but never "
-        "stores them, so the file gets the default ids 1, 2, ... without warning. "
-        "SetNodeIds stores its ids. Correct: the ids passed are written."
-    ),
-)
-def test_element_ids_are_written(tmp_path):
+@pytest.mark.parametrize("dtype", [np.int32, np.int64])
+def test_element_ids_are_written(tmp_path, dtype):
     filename = str(tmp_path / "element_ids.dfsu")
     builder = _builder()
     builder.SetNodes(X, Y, Z, CODE)
     builder.SetElements(ELEMENTS)
-    builder.SetElementIds(np.array([10, 20], dtype=np.int32))
+    builder.SetElementIds(np.array([10, 20], dtype=dtype))
     builder.CreateFile(filename).Close()
 
     dfsu = DfsuFile.Open(filename)
@@ -193,6 +186,24 @@ def test_element_ids_are_written(tmp_path):
     dfsu.Close()
 
     assert_array_equal([10, 20], elementIds)
+
+
+# np.array of Python ints is int64 on Linux, and the native library writes int32 ids
+@pytest.mark.parametrize("dtype", [np.int32, np.int64])
+def test_node_ids_are_written(tmp_path, dtype):
+    filename = str(tmp_path / "node_ids.dfsu")
+    nodeIds = np.arange(len(X), dtype=dtype) + 100
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.SetNodeIds(nodeIds)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    readNodeIds = dfsu.NodeIds
+    dfsu.Close()
+
+    assert_array_equal(nodeIds, readNodeIds)
 
 
 # Node numbers start at 1, so 0 is below the first node
