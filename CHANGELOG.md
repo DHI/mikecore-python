@@ -94,5 +94,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `miketools.Dfs0ToAscii` converts item times from the time axis unit to
   seconds, so a file with a time unit other than seconds gets the right
   timestamps. A 10 minute step was written as 10 seconds.
+- `DfsFile.ReadStaticItem` raises `ValueError` for an item number below 1. It
+  returned the first static item, numbered 0 or below. A number past the last
+  item still returns `None`.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD
