@@ -63,5 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so its z key must be 0.
 - `DfsBuilder.Validate` accepts an encode key on a dfs0 file without checking
   it, instead of raising `IndexError`. The native library ignores the key.
+- `DfsFile.WriteItemTimeStepNext` reports data shorter than the item with its
+  size, instead of raising `AttributeError`.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD
