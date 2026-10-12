@@ -277,7 +277,8 @@ class DfsBuilder:
                 encodeKeysize = len(xKey)
                 xSize = axis.Shape[0]
                 ySize = axis.Shape[1]
-                zSize = axis.Shape[2]
+                # A dfs2 axis is one layer, so its z key must be 0
+                zSize = axis.Shape[2] if axis.Dimension == 3 else 1
                 ok = True
                 for j in range(encodeKeysize):
                     if xKey[j] >= xSize or yKey[j] >= ySize or zKey[j] >= zSize:
