@@ -275,15 +275,16 @@ class DfsBuilder:
                 axis = itemInfo.SpatialAxis
                 xKey, yKey, zKey = self.FileInfo.GetEncodeKey()
                 encodeKeysize = len(xKey)
-                xSize = axis.Shape[0]
-                ySize = axis.Shape[1]
-                # A dfs2 axis is one layer, so its z key must be 0
-                zSize = axis.Shape[2] if axis.Dimension == 3 else 1
+                # A dfs1 axis is one row and a dfs2 axis one layer, so their
+                # missing y and z keys must be 0
+                xSize, ySize, zSize = (*axis.Shape, 1, 1)[:3]
                 ok = True
-                for j in range(encodeKeysize):
-                    if xKey[j] >= xSize or yKey[j] >= ySize or zKey[j] >= zSize:
-                        ok = False
-                        break
+                # A dfs0 axis has no cells, and the native library ignores its key
+                if axis.AxisType != SpaceAxisType.EqD0:
+                    for j in range(encodeKeysize):
+                        if xKey[j] >= xSize or yKey[j] >= ySize or zKey[j] >= zSize:
+                            ok = False
+                            break
 
                 if not ok:
                     errors.append(
