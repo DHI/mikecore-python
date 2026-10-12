@@ -184,28 +184,55 @@ class TestEUM(unittest.TestCase):
         Assert.AreEqual(np.array([0.5, 1, 2, 3.280839895]), array, 1e-6)
 
 
-EQV_UNIT_INVERTED = (
-    "Suspected bug: eumGetNextEqvUnit treats a non-zero return code as failure, "
-    "the opposite of every other eum wrapper (eumGetNextUnit, eumGetItemUnitSeq, "
-    "...). Called directly, the native function returns 1 with meter as the first "
-    "unit equivalent to meter, and 0 with a null description after the last one. "
-    "Correct: (True, eumUmeter, 'meter') for the first unit and "
-    "(False, eumUUnitUndefined, '') after the last."
-)
-
-
-@pytest.mark.xfail(strict=True, reason=EQV_UNIT_INVERTED)
 def test_eumGetNextEqvUnit_first_unit():
     assert (True, eumUnit.eumUmeter, "meter") == eumWrapper.eumGetNextEqvUnit(
         eumUnit.eumUmeter, eumUnit.eumUUnitUndefined
     )
 
 
-@pytest.mark.xfail(strict=True, reason=EQV_UNIT_INVERTED)
 def test_eumGetNextEqvUnit_after_last_unit():
     assert (False, eumUnit.eumUUnitUndefined, "") == eumWrapper.eumGetNextEqvUnit(
         eumUnit.eumUmeter, eumUnit.eumUmileUS
     )
+
+
+def _all_units():
+    units = []
+    ok, unit, description = eumWrapper.eumGetNextUnit(eumUnit.eumUUnitUndefined)
+    while ok:
+        units.append((eumUnit(unit), description))
+        ok, unit, description = eumWrapper.eumGetNextUnit(unit)
+    return units
+
+
+# eumUnitsEqv and eumGetNextUnit are the oracle: every unit equivalent to the
+# base, in the order eumGetNextUnit lists them
+@pytest.mark.parametrize(
+    "baseUnit",
+    [
+        eumUnit.eumUmeter,
+        eumUnit.eumUsec,
+        eumUnit.eumUm3PerSec,
+        eumUnit.eumUdegreeCelsius,
+    ],
+)
+def test_eumGetNextEqvUnit_lists_every_equivalent_unit(baseUnit):
+    expected = [
+        (unit, description)
+        for unit, description in _all_units()
+        if eumWrapper.eumUnitsEqv(baseUnit, unit)
+    ]
+
+    units = []
+    ok, unit, description = eumWrapper.eumGetNextEqvUnit(
+        baseUnit, eumUnit.eumUUnitUndefined
+    )
+    while ok and len(units) <= len(expected):
+        units.append((unit, description))
+        ok, unit, description = eumWrapper.eumGetNextEqvUnit(baseUnit, unit)
+
+    assert 1 < len(expected)
+    assert expected == units
 
 
 def test_GetItemTypeTag_unknown_description():
