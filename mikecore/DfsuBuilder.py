@@ -221,12 +221,24 @@ class DfsuBuilder:
         # else:
         #  raise Exception("Unit of z coordinate is not a length unit")
 
+    @staticmethod
+    def __Int32Ids(ids, name):
+        """Ids as the int32 array the file stores, rejecting ids that do not fit."""
+        ids = np.asarray(ids)
+        try:
+            int32Ids = ids.astype(np.int32)
+        except OverflowError:
+            int32Ids = None
+        if int32Ids is None or np.any(int32Ids != ids):
+            raise ValueError(f"{name} ids must be integers that fit in int32")
+        return int32Ids
+
     def SetNodeIds(self, nodeIds):
         """Set the node id's. Optional. If not set, default values are used (1,2,3,...)"""
         if nodeIds is None:
             self.__nodeIds = None
             return
-        nodeIds = np.asarray(nodeIds, dtype=np.int32)
+        nodeIds = DfsuBuilder.__Int32Ids(nodeIds, "Node")
         if self.__nodes is not None and self.__nodes.x.size != nodeIds.size:
             raise Exception(
                 "Number of node id's does not match number of nodes", "nodeIds"
@@ -271,7 +283,10 @@ class DfsuBuilder:
 
     def SetElementIds(self, elementIds):
         """Set the element id's. Optional. If not set, default values are used (1,2,3,...)"""
-        elementIds = np.asarray(elementIds, dtype=np.int32)
+        if elementIds is None:
+            self.__elementIds = None
+            return
+        elementIds = DfsuBuilder.__Int32Ids(elementIds, "Element")
         if (self.__connectivity is not None) and (
             len(self.__connectivity) != elementIds.size
         ):
