@@ -278,6 +278,19 @@ def test_first_write_to_created_file_must_be_first_item_timestep(
     file.Close()
 
 
+def test_write_reports_data_shorter_than_item(landuse: DfsBuilder, tmp_path):
+    landuse.CreateFile(str(tmp_path / "shortdata.dfs2"))
+    file = landuse.GetFile()
+    data = np.zeros(10, dtype=np.float32)
+
+    with pytest.raises(
+        Exception,
+        match="Data is of wrong size. Item has 4340 elements, data is 10 long.",
+    ):
+        file.WriteItemTimeStepNext(0, data)
+    file.Close()
+
+
 def test_static_item_builder_reports_data_not_matching_axis():
     builder = DfsStaticItemBuilder()
     builder.Set(
