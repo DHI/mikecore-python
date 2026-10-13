@@ -1137,9 +1137,8 @@ class MapProjection:
     # / </summary>
     def __del__(self):
         # Release ressources on the unmanaged side when garbage collected
-        if self._mustFree:
-            if self._mzMapProjPointer.value is not None:
-                MzCartDLL.MzMapProjDestroy(self._mzMapProjPointer)
+        if self._mustFree and self._mzMapProjPointer.value is not None:
+            MzCartDLL.MzMapProjDestroy(self._mzMapProjPointer)
         _mzMapProjPointer = ctypes.c_void_p()
 
     ##/ <summary>
