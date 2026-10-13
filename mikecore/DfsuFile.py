@@ -309,7 +309,7 @@ class DfsuFile:
         self.dfsFile.Reset()
 
     def Flush(self):
-        self.dfsFile.Flush(self)
+        self.dfsFile.Flush()
 
     def FlushTimeStep(self):
         self.dfsFile.FlushTimeStep()

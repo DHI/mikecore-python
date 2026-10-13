@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one, and changing `Quantity.Item` or `Quantity.Unit` in place is not
   written
   ([#38](https://github.com/DHI/mikecore-python/issues/38)).
+- `DfsuFile.Flush()` flushes the file instead of raising `TypeError`, and
+  `DfsFileFactory.DfsuFileOpenAppend` no longer requires `parameters`, like the
+  other `Open` methods.
 - Items read from a dfs file have the reference coordinates and orientation
   stored in the file. They had the `-1e-35` defaults, whatever the file held
   ([#31](https://github.com/DHI/mikecore-python/issues/31)).
