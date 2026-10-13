@@ -28,8 +28,6 @@ class MeshFile:
     ElementType = None
     ElementTable = []
 
-    _hasQuads = None
-
     @property
     def NumberOfNodes(self) -> int:
         """Number of nodes in the mesh."""
@@ -324,10 +322,10 @@ class MeshFile:
                         self.ElementType[i] = 21
                     elif len(self.ElementTable[i]) == 4:
                         self.ElementType[i] = 25
-                        self._hasQuads = True
                     else:
-                        self.ElementType[i] = 0
-                        # TODO: Throw an exception?
+                        raise ValueError(
+                            f"All elements must have 3 or 4 nodes. Element number {i + 1} has {len(self.ElementTable[i])} nodes"
+                        )
 
             except Exception as inner:
                 raise Exception(
@@ -338,6 +336,15 @@ class MeshFile:
         """Write mesh to file"""
         # All double values are written using the "r" format string in order to assure correct
         # round-tripping (not loosing any decimals when reading again)
+
+        # A mesh file holds 2D elements only, triangles and quadrilaterals
+        maxNodesPerElmt = 3
+        for i, nodes in enumerate(self.ElementTable):
+            if len(nodes) not in (3, 4):
+                raise ValueError(
+                    f"All elements must have 3 or 4 nodes. Element number {i + 1} has {len(nodes)} nodes"
+                )
+            maxNodesPerElmt = max(maxNodesPerElmt, len(nodes))
 
         lines = []
 
@@ -359,10 +366,7 @@ class MeshFile:
 
         # Element "header"
         line = str(len(self.ElementIds)) + " "
-        if not self._hasQuads:
-            maxNodesPerElmt, elmtType = 3, 21
-        else:
-            maxNodesPerElmt, elmtType = 4, 25
+        elmtType = 21 if maxNodesPerElmt == 3 else 25
         line += str(maxNodesPerElmt) + " " + str(elmtType)
         lines.append(line)
 
@@ -406,10 +410,6 @@ class MeshFile:
         res.ElementIds = elmtIds
         res.ElementType = elmtTypes
         res.ElementTable = connectivity
-        for i in range(len(connectivity)):
-            if len(connectivity[i]) == 4:
-                res._hasQuads = True
-                break
 
         return res
 

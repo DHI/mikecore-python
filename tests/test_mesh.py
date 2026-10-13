@@ -333,3 +333,61 @@ def test_MeshBuilder_create_from_dfsu_file(tmp_path):
     for expected, element in zip(dfsu.ElementTable, mesh.ElementTable, strict=True):
         assert_array_equal(expected, element)
     dfsu.Close()
+
+
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "testdata/OdenseHD3D.dfsu",
+        "testdata/Oresund3DSigmaZ.dfsu",
+        "testdata/VerticalProfileSigma.dfsu",
+    ],
+)
+def test_MeshBuilder_create_from_dfsu_file_that_is_not_2D_fails(filename):
+    dfsu = DfsuFile.Open(filename)
+    try:
+        with pytest.raises(ValueError, match="must be a 2D dfsu file"):
+            MeshBuilder.Create(dfsu)
+    finally:
+        dfsu.Close()
+
+
+def test_MeshFile_write_with_element_of_6_nodes_fails(tmp_path):
+    filename = tmp_path / "prism.mesh"
+    # A prism: a triangle at two levels
+    x = [0.0, 1.0, 0.0, 0.0, 1.0, 0.0]
+    y = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0]
+    z = [-1.0, -1.0, -1.0, 0.0, 0.0, 0.0]
+    mesh = MeshFile.Create(
+        eumQuantity(eumItem.eumIBathymetry, eumUnit.eumUmeter),
+        "NON-UTM",
+        np.arange(1, 7),
+        x,
+        y,
+        z,
+        np.zeros(6, dtype=np.int32),
+        [1],
+        [32],
+        [np.arange(1, 7)],
+    )
+    with pytest.raises(ValueError, match="Element number 1 has 6 nodes"):
+        mesh.Write(str(filename))
+    assert not filename.exists()
+
+
+def test_ReadMesh_with_element_of_6_nodes_fails(tmp_path):
+    filename = str(tmp_path / "prism.mesh")
+    # As MeshFile.Write wrote a prism before it checked the number of nodes
+    nodes = [
+        f"{i + 1} {x} {y} {z} 0"
+        for i, (x, y, z) in enumerate(
+            [(0, 0, -1), (1, 0, -1), (0, 1, -1), (0, 0, 0), (1, 0, 0), (0, 1, 0)]
+        )
+    ]
+    with open(filename, "w") as writer:
+        writer.write(
+            "\n".join(["100079 1000 6 NON-UTM", *nodes, "1 3 21", "1 1 2 3 4 5 6"])
+            + "\n"
+        )
+    with pytest.raises(Exception, match="Element number 1 has 6 nodes"):
+        MeshFile.ReadMesh(filename)

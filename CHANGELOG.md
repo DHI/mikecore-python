@@ -28,6 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Dfs123File.ReadItemTimeStepNext` with `reshape=True` returns `None` at the
   end of the file instead of raising `AttributeError`.
 - `DfsFile.Open` accepts integer modes such as `0`.
+- Mesh files hold only triangles and quadrilaterals, and mikecore now enforces
+  it. `MeshBuilder.Create` raises `ValueError` for a dfsu file that is not 2D,
+  `MeshFile.Write` raises for an element with other than 3 or 4 nodes, and
+  `MeshFile.ReadMesh` raises for such an element instead of giving it
+  `ElementType` 0. A 3D dfsu was written as a mesh with a `3 21` element header
+  and 6- or 8-node rows ([#68](https://github.com/DHI/mikecore-python/issues/68)).
 - `DfsuBuilder.SetNodeIds` and `SetNodes` can be called in either order, and
   `SetNodes`, `SetNodeIds` or `SetElements` after `SetFromMeshFile`, without
   raising "truth value of an array is ambiguous".
