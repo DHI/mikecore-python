@@ -777,3 +777,22 @@ def test_file_axis_reaches_an_item_whose_axis_was_replaced(fileAxisCase, replace
     file.Close()
 
     assert all(axis["X0"] == newX0 for _, _, _, axis in readItems(case.filename))
+
+
+def test_bad_file_axis_value_is_rejected_on_flush_and_close(fileAxisCase):
+    """
+    As in the C# library, a value the file axis cannot hold is accepted when
+    set and rejected on Flush and Close. The file is still closed, unchanged.
+    """
+    case = fileAxisCase
+    original = readBytes(case.filename)
+
+    file = case.dfsType.openEdit(case.filename)
+    file.SpatialAxis.AxisUnit = "abc"
+    with pytest.raises(AttributeError):
+        file.Flush()
+    with pytest.raises(AttributeError):
+        file.Close()
+
+    assert file.filePointer.value is None
+    assert original == readBytes(case.filename)
