@@ -733,3 +733,25 @@ def test_copy_of_an_item_is_not_written(case, copyForEdit, closeFirst):
         file.Close()
 
     assert original == readBytes(case.filename)
+
+
+def test_replaced_axis_writes_nothing(case):
+    """
+    As in the C# library, an axis writes only while it is the item's axis.
+    Assigning another axis to an item writes nothing, and neither the old
+    nor the new axis writes when changed, before or after Close.
+    """
+    original = readBytes(case.filename)
+
+    file = case.dfsType.openEdit(case.filename)
+    itemInfo = file.ItemInfo[0]
+    oldAxis = itemInfo.SpatialAxis
+    newAxis = copy.copy(oldAxis)
+    itemInfo.SpatialAxis = newAxis
+    newAxis.AxisUnit = NEW_AXIS_UNIT
+    oldAxis.AxisUnit = eumUnit.eumUkilometer
+    file.Close()
+    oldAxis.AxisUnit = eumUnit.eumUmillimeter
+    newAxis.AxisUnit = eumUnit.eumUmillimeter
+
+    assert original == readBytes(case.filename)
