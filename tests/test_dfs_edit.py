@@ -3,8 +3,10 @@ Editing the item info and spatial axes of an existing dfs file, on every dfs
 file type and every way of opening it for editing.
 """
 
+import gc
 import os
 import shutil
+import weakref
 from dataclasses import dataclass
 from collections.abc import Callable
 from typing import Any
@@ -668,4 +670,16 @@ def test_file_axis_is_a_copy_of_the_item_axis(fileAxisCase, mode):
     if mode == "edit":
         file.Flush()
         assert oldX0 + 5 == itemAxis.X0
+    file.Close()
+
+
+def test_static_item_read_from_an_editable_file_is_freed(staticCase):
+    """The file does not keep the static items it read alive until Close."""
+    file = DfsFileFactory.DfsGenericOpenEdit(staticCase.filename)
+    staticItem = file.ReadStaticItemNext()
+    assert staticItem is not None
+    itemRef = weakref.ref(staticItem)
+    del staticItem
+    gc.collect()
+    assert itemRef() is None
     file.Close()
