@@ -88,6 +88,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   int32. Int64 node ids raised "Data type not supported: int64" in
   `CreateFile`. `SetElementIds(None)` goes back to the default ids, as
   `SetNodeIds(None)` does.
+- `MeshBuilder.SetElementIds(None)` goes back to the default ids instead of
+  raising `TypeError` after `SetElements`, and ids that do not fit in int32
+  raise `ValueError`. They were written to a mesh file that `MeshFile.ReadMesh`
+  could not read.
 - `MeshBuilder.SetNodes` keeps z as doubles, as mesh files store it, instead of
   rounding it to float32. Float32 z passed to `SetNodes`, such as
   `DfsuFile.Z`, is now written with the double text of those float32 values
