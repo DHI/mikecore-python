@@ -9,6 +9,7 @@ from mikecore.DfsFileFactory import DfsFileFactory
 from mikecore.DfsuBuilder import DfsuBuilder
 from mikecore.DfsuFile import DfsuFile, DfsuFileType
 from mikecore.eum import eumItem, eumQuantity, eumUnit
+from mikecore.MeshBuilder import MeshBuilder
 from mikecore.MeshFile import MeshFile
 
 # Two triangles over four nodes
@@ -204,6 +205,31 @@ def test_node_ids_are_written(tmp_path, dtype):
     dfsu.Close()
 
     assert_array_equal(nodeIds, readNodeIds)
+
+
+# MeshBuilder's default ids may be int64 (NumPy's default int), and a mesh
+# with no ids gets the defaults
+@pytest.mark.parametrize("withIds", [True, False])
+def test_ids_from_a_built_mesh_are_written(tmp_path, withIds):
+    filename = str(tmp_path / "from_mesh_builder.dfsu")
+    meshBuilder = MeshBuilder()
+    meshBuilder.SetProjection("NON-UTM")
+    meshBuilder.SetNodes(X, Y, Z, CODE)
+    meshBuilder.SetElements(ELEMENTS)
+    mesh = meshBuilder.CreateMesh()
+    if not withIds:
+        mesh.NodeIds = None
+        mesh.ElementIds = None
+    builder = _builder()
+    builder.SetFromMeshFile(mesh)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    nodeIds, elementIds = dfsu.NodeIds, dfsu.ElementIds
+    dfsu.Close()
+
+    assert_array_equal([1, 2, 3, 4], nodeIds)
+    assert_array_equal([1, 2], elementIds)
 
 
 def test_element_ids_set_to_none_use_the_defaults(tmp_path):
