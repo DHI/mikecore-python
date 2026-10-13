@@ -66,6 +66,8 @@ class Dfs123File(DfsFile):
         Flush would overwrite another. The C# library writes both on Flush.
         As in the C# library, a value the file axis cannot hold is only
         rejected here or on Close, not when it is set.
+        The whole file axis is written to each item, replacing changes made
+        to an item's own axis, as in the C# library.
         """
         if self.filePointer.value is not None:
             self.__WriteSpatialAxis(staticItems=False)
