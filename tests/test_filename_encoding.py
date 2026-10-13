@@ -1,3 +1,4 @@
+import locale
 import os
 import shutil
 
@@ -9,10 +10,12 @@ from tests.examples_dfsu import ExamplesDfsu
 
 
 def _representable(name):
+    # Whether this machine can name the file at all: Linux paths are UTF-8, and
+    # Windows char* paths are in the ANSI code page, which getencoding reports.
     if os.name != "nt":
         return True
     try:
-        name.encode("mbcs")
+        name.encode(locale.getencoding())
         return True
     except UnicodeEncodeError:
         return False
@@ -33,8 +36,10 @@ def test_open_non_ascii_path(tmp_path, name):
     shutil.copy("testdata/OresundHD.dfsu", filename)
 
     dfs = DfsuFile.Open(str(filename))
-    assert dfs.NumberOfElements == 3636
-    dfs.Close()
+    try:
+        assert dfs.NumberOfElements == 3636
+    finally:
+        dfs.Close()
 
 
 @pytest.mark.parametrize("name", NAMES)
@@ -49,8 +54,10 @@ def test_create_non_ascii_path(tmp_path, name):
 
     assert filename.exists()
     dfs = DfsFileFactory.DfsuFileOpen(str(filename))
-    assert dfs.NumberOfElements == 3636
-    dfs.Close()
+    try:
+        assert dfs.NumberOfElements == 3636
+    finally:
+        dfs.Close()
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows ANSI code page only")
