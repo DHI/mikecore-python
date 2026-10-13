@@ -3,6 +3,7 @@ from enum import IntEnum
 import datetime
 import ctypes
 import locale
+import weakref
 import numpy as np
 from mikecore.eum import *
 from mikecore.DfsDLL import DfsDLL
@@ -863,8 +864,9 @@ class DfsFile:
         self.fpTimeStepIndex = 0
         self.headPointer = ctypes.c_void_p(0)
         self.filePointer = ctypes.c_void_p(0)
-        # Items that write their changes to the file, until it is closed
-        self._updatableItems = []
+        # Items that write their changes to the file, until it is closed. Weak,
+        # so that the file does not keep the static items it read alive.
+        self._updatableItems = weakref.WeakSet()
 
     def __del__(self):
         self.Close()
@@ -988,11 +990,11 @@ class DfsFile:
         if self.headPointer.value is not None:
             DfsDLL.Wrapper.dfsHeaderDestroy(ctypes.byref(self.headPointer))
         # The item pointers point into the destroyed header: stop writing to it
-        for item in self._updatableItems:
+        for item in list(self._updatableItems):
             item._OnUpdate = None
             if item.SpatialAxis is not None:
                 item.SpatialAxis._OnUpdate = None
-        self._updatableItems = []
+        self._updatableItems.clear()
 
     def GetNextItemNumber(self):
         return self.fpItemNumber
@@ -1571,7 +1573,7 @@ class DfsFile:
         # static vector, written by WriteStaticItemData, for a static item
         if self.FileMode not in (DfsFileMode.Edit, DfsFileMode.Append):
             return
-        self._updatableItems.append(item)
+        self._updatableItems.add(item)
         item._OnUpdate = lambda: self.__UpdateItemInfo(item)
         if item.SpatialAxis is not None:
             item.SpatialAxis._OnUpdate = lambda: self.__UpdateItemAxis(item)

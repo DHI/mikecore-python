@@ -10,15 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - In a dfs file opened for editing, or being created with `DfsBuilder`,
-  assigning an item's `Name` or `Quantity`, or changing its `SpatialAxis`,
-  writes the change to the file. For a static item, `WriteStaticItemData`
-  writes it. On a dfs1, dfs2 or dfs3 file, changing `SpatialAxis` updates
-  every dynamic item, and the static items with the same type of axis, when
-  the file is closed. As in the C# library, a new name is truncated or padded
-  to the length of the old one, and changing `Quantity.Item` or
-  `Quantity.Unit` in place is not written. `SpatialAxis` of a dfs1, dfs2 or
-  dfs3 file is now a copy of the first item's axis, as in the C# library, so
-  changing it in a file opened for reading no longer changes that item's axis
+  assigning an item's `Name` or `Quantity`, or changing an attribute of its
+  `SpatialAxis` (such as `X0`), writes the change to the file. For a static
+  item, `WriteStaticItemData` writes it. On a dfs1, dfs2 or dfs3 file,
+  changing `SpatialAxis` updates every dynamic item, and the static items
+  with the same type of axis, when the file is closed. As in the C# library,
+  a new name is truncated or padded to the length of the old one, and
+  changing `Quantity.Item` or `Quantity.Unit` in place is not written.
+  `SpatialAxis` of a dfs1, dfs2 or dfs3 file is now a copy of the first
+  item's axis, as in the C# library, so changing it in a file opened for
+  reading no longer changes that item's axis
   ([#38](https://github.com/DHI/mikecore-python/issues/38)).
 - `DfsuFile.Flush()` flushes the file instead of raising `TypeError`, and
   `DfsFileFactory.DfsuFileOpenAppend` no longer requires `parameters`, like the
