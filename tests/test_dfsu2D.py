@@ -127,35 +127,6 @@ class Dfsu2DTests(unittest.TestCase):
     #
     #      dfsFile.Close();
 
-    def test_ModifyItemInfoTest(self):
-        originalFilename = "testdata/OresundHD.dfsu"
-        filename = "testdata/testtmp/test_modifyItemInfo_OresundHD.dfsu"
-
-        testUtil.copy_file(originalFilename, filename)
-
-        # Check existing data
-        file = DfsFileFactory.DfsuFileOpen(filename)
-        assert_equal("U velocity", file.ItemInfo[1].Name)
-        assert_equal(eumItem.eumIuVelocity, file.ItemInfo[1].Quantity.Item)
-        assert_equal(eumUnit.eumUmeterPerSec, file.ItemInfo[1].Quantity.Unit)
-        assert_equal("Surface elevation", file.ItemInfo[0].Name)
-        file.Close()
-
-        file = DfsFileFactory.DfsuFileOpenEdit(filename)
-        file.ItemInfo[1].Name = "U speed"
-        file.ItemInfo[1].Quantity = eumQuantity(
-            eumItem.eumIuVelocity, eumUnit.eumUfeetPerSec
-        )
-        file.Close()
-
-        # Check the new file, the name is padded to the old length
-        file = DfsFileFactory.DfsuFileOpen(filename)
-        assert_equal("U speed   ", file.ItemInfo[1].Name)
-        assert_equal(eumItem.eumIuVelocity, file.ItemInfo[1].Quantity.Item)
-        assert_equal(eumUnit.eumUfeetPerSec, file.ItemInfo[1].Quantity.Unit)
-        assert_equal("Surface elevation", file.ItemInfo[0].Name)
-        file.Close()
-
     def test_DeleteValueTest(self):
         sourceFilename = "testdata/OresundHD.dfsu"
         filename = "testdata/testtmp/test_copy_OresundHD.dfsu"

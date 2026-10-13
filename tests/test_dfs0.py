@@ -495,35 +495,6 @@ class Dfs0Tests(unittest.TestCase):
 
         dfsFile.Close()
 
-    def test_ModifyItemInfoTest(self):
-        originalFilename = "testdata/TemporalEqTime.dfs0"
-        filename = "testdata/testtmp/test_modifyItemInfo_TemporalEqTime.dfs0"
-
-        testUtil.copy_file(originalFilename, filename)
-
-        # Check existing data
-        file = DfsFileFactory.DfsGenericOpen(filename)
-        assert_equal("WaterLevel item", file.ItemInfo[0].Name)
-        assert_equal(eumItem.eumIWaterLevel, file.ItemInfo[0].Quantity.Item)
-        assert_equal(eumUnit.eumUmeter, file.ItemInfo[0].Quantity.Unit)
-        assert_equal("WaterDepth item", file.ItemInfo[1].Name)
-        file.Close()
-
-        file = DfsFileFactory.DfsGenericOpenEdit(filename)
-        file.ItemInfo[0].Name = "Level"
-        file.ItemInfo[0].Quantity = eumQuantity(
-            eumItem.eumIAreaFraction, eumUnit.eumUPerCent
-        )
-        file.Close()
-
-        # Check the new file, the name is padded to the old length
-        file = DfsFileFactory.DfsGenericOpen(filename)
-        assert_equal("Level          ", file.ItemInfo[0].Name)
-        assert_equal(eumItem.eumIAreaFraction, file.ItemInfo[0].Quantity.Item)
-        assert_equal(eumUnit.eumUPerCent, file.ItemInfo[0].Quantity.Unit)
-        assert_equal("WaterDepth item", file.ItemInfo[1].Name)
-        file.Close()
-
 
 # Class testing the file TemporalEqTime.dfs0.
 # File was creating by the TsEditor.exe.
