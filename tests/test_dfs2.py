@@ -219,6 +219,12 @@ class Dfs2Tests(unittest.TestCase):
 
         testUtil.copy_file(originalFilename, filename)
 
+        source = DfsFileFactory.DfsGenericOpen(originalFilename)
+        sourceStaticItem = source.ReadStaticItemNext()
+        assert sourceStaticItem is not None
+        sourceStaticData = sourceStaticItem.Data
+        source.Close()
+
         ExamplesDfs2.ModifyDfs2ItemAxis(filename)
 
         # Check all dynamic items
@@ -242,6 +248,8 @@ class Dfs2Tests(unittest.TestCase):
             assert_equal(905, axisEqD2.Dx)
             assert_equal(-55, axisEqD2.Y0)
             assert_equal(915, axisEqD2.Dy)
+            # Writing the axis keeps the static item data
+            assert_equal(sourceStaticData, staticItem.Data)
         assert_equal(1, staticItemCount)
 
         dfs2File.Close()

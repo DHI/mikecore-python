@@ -1,4 +1,6 @@
-from mikecore.DfsFile import DfsFile, DfsFileMode, DfsItemData
+import copy
+
+from mikecore.DfsFile import DfsDLLUtil, DfsFile, DfsFileMode, DfsItemData
 
 
 class Dfs123File(DfsFile):
@@ -6,13 +8,54 @@ class Dfs123File(DfsFile):
         super().__init__()
         self.SpatialAxis = None
         self.reshape = False
+        self._spatialAxisUpdated = False
 
     def Open(self, filename, mode=DfsFileMode.Read, parameters=None, reshape=False):
         super().Open(filename, mode, parameters)
         self.reshape = reshape
+        self._spatialAxisUpdated = False
         # TODO: Need to check that this is the same for all items
         if len(self.ItemInfo) > 0:
-            self.SpatialAxis = self.ItemInfo[0].SpatialAxis
+            self.SpatialAxis = copy.copy(self.ItemInfo[0].SpatialAxis)
+            if self.SpatialAxis is not None:
+                self.SpatialAxis._OnUpdate = None
+                if mode in (DfsFileMode.Edit, DfsFileMode.Append):
+                    self.SpatialAxis._OnUpdate = self.__SpatialAxisUpdated
+
+    def __SpatialAxisUpdated(self):
+        self._spatialAxisUpdated = True
+
+    def __WriteSpatialAxis(self):
+        """
+        Write a changed SpatialAxis to all dynamic items, and to the static
+        items with the same type of axis, as the C# library does.
+        """
+        fileAxis = self.SpatialAxis
+        if not self._spatialAxisUpdated or fileAxis is None:
+            return
+        self._spatialAxisUpdated = False
+        for itemInfo in self.ItemInfo:
+            itemInfo.SpatialAxis._Update(fileAxis)
+        self.Reset()
+        staticItemNo = 1
+        while (staticItem := self.ReadStaticItem(staticItemNo)) is not None:
+            staticItemNo += 1
+            axis = staticItem.SpatialAxis
+            data = staticItem.Data
+            if axis is None or data is None or axis.AxisType != fileAxis.AxisType:
+                continue
+            axis._Update(fileAxis)
+            DfsDLLUtil.dfsSetItemSpatialAxis(staticItem.ItemPointer, axis)
+            self.WriteStaticItemData(staticItem, data)
+
+    def Flush(self):
+        self.__WriteSpatialAxis()
+        super().Flush()
+
+    def Close(self):
+        if self.filePointer.value is not None:
+            self.__WriteSpatialAxis()
+        super().Close()
 
     def Reshape(self, reshape):
         # Set True to reshape item data to multi-dimensional arrays.

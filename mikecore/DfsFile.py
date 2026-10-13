@@ -385,12 +385,30 @@ class DfsNonEqCalendarAxis(DfsTemporalAxis):
 
 
 class DfsSpatialAxis:
+    # Attributes that may change on an axis read from a file. Setting one of
+    # them invokes _OnUpdate, which writes the axis to an editable file.
+    _UpdatableAttributes = frozenset({"AxisUnit", "X0", "Dx", "Y0", "Dy", "Z0", "Dz"})
+
     def __init__(self, axisType, shape, sizeOfData, axisUnit):
+        self._OnUpdate = None
         self.AxisType = axisType
         self.Shape = shape
         self.Dimension = len(shape)
         self.SizeOfData = sizeOfData
         self.AxisUnit = axisUnit
+
+    def __setattr__(self, name, value):
+        super().__setattr__(name, value)
+        if name in self._UpdatableAttributes and self._OnUpdate is not None:
+            self._OnUpdate()
+
+    def _Update(self, source):
+        """Copy the updatable attributes of source, an axis of the same type."""
+        if self.AxisType != source.AxisType:
+            raise ValueError("Destination and source axis have different types")
+        for name in self._UpdatableAttributes:
+            if hasattr(source, name):
+                setattr(self, name, getattr(source, name))
 
 
 class DfsAxisEqD0(DfsSpatialAxis):
@@ -507,12 +525,14 @@ class DfsAxisCurveLinearD3(DfsSpatialAxis):
 
 class DfsDynamicItemInfo:
     def __init__(self, itemPointer=None, itemNumber=0):
+        # Set on dynamic items of an editable file, to write Name and Quantity
+        self._OnUpdate = None
         self.ItemPointer = itemPointer
         self.ItemNumber = itemNumber
         self.DataType = DfsSimpleType.UShort
-        self.Name = ""
+        self._Name = ""
         self.ElementCount = -1
-        self.Quantity = None
+        self._Quantity = None
         self.ReferenceCoordinateX = np.float32(-1e-35)
         self.ReferenceCoordinateY = np.float32(-1e-35)
         self.ReferenceCoordinateZ = np.float32(-1e-35)
@@ -539,6 +559,32 @@ class DfsDynamicItemInfo:
             + self.DataType.name
             + ")"
         )
+
+    @property
+    def Name(self):
+        return self._Name
+
+    @Name.setter
+    def Name(self, name):
+        if self._OnUpdate is not None:
+            # As in the C# library, the name in the file keeps its length: the
+            # new name is truncated or padded with spaces to the old length.
+            name = name[: len(self._Name)].ljust(len(self._Name))
+        self._Name = name
+        if self._OnUpdate is not None:
+            self._OnUpdate()
+
+    @property
+    def Quantity(self):
+        return self._Quantity
+
+    @Quantity.setter
+    def Quantity(self, quantity):
+        # Only assigning a quantity updates the file, as in the C# library.
+        # Changing Item or Unit of the current quantity does not.
+        self._Quantity = quantity
+        if self._OnUpdate is not None:
+            self._OnUpdate()
 
     def init(self, itemName, eumQuantity):
         self.Name = itemName
@@ -1464,7 +1510,23 @@ class DfsFile:
         )
         item = DfsDynamicItemInfo(itemPointer, itemNumber)
         self.__GetItemInfo(item)
+        if self.FileMode in (DfsFileMode.Edit, DfsFileMode.Append):
+            item._OnUpdate = lambda: self.__UpdateItemInfo(item)
+            if item.SpatialAxis is not None:
+                item.SpatialAxis._OnUpdate = lambda: DfsDLLUtil.dfsSetItemSpatialAxis(
+                    item.ItemPointer, item.SpatialAxis
+                )
         return item
+
+    def __UpdateItemInfo(self, item):
+        rok = DfsDLL.Wrapper.dfsUpdateItemInfo(
+            self.headPointer,
+            item.ItemPointer,
+            ctypes.c_int32(item.Quantity.Item.value),
+            item.Name.encode("cp1252"),
+            ctypes.c_int32(item.Quantity.Unit.value),
+        )
+        DfsDLL.CheckReturnCode(rok)
 
     def __StaticItemReadAndCreate(self, number, ubgConversion):
 
