@@ -14,25 +14,24 @@ def Dfs0ToAscii(dfs0FileName, txtFileName):
     txt.write("\n")
 
     txt.write(" Time")
-    for item in dfs.ItemInfo:
-        txt.write(f"    {item.Name}")
+    txt.writelines(f"    {item.Name}" for item in dfs.ItemInfo)
     txt.write("\n")
 
     txt.write(" Item")
-    for item in dfs.ItemInfo:
-        txt.write(
-            f" {item.Quantity.Item.value:11} {item.Quantity.Unit.value:11} {item.ValueType.name:11}"
-        )
+    txt.writelines(
+        f" {item.Quantity.Item.value:11} {item.Quantity.Unit.value:11} {item.ValueType.name:11}"
+        for item in dfs.ItemInfo
+    )
     txt.write("\n")
     txt.write(" Item")
-    for item in dfs.ItemInfo:
-        txt.write(
-            " {:11} {:11} {:11}".format(
-                '"' + item.Quantity.ItemDescription + '"',
-                '"' + item.Quantity.UnitDescription + '"',
-                item.ValueType.name,
-            )
+    txt.writelines(
+        " {:11} {:11} {:11}".format(
+            '"' + item.Quantity.ItemDescription + '"',
+            '"' + item.Quantity.UnitDescription + '"',
+            item.ValueType.name,
         )
+        for item in dfs.ItemInfo
+    )
     txt.write("\n")
 
     # Only set for calendar time axes; otherwise times are written as offsets.
