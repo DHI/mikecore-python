@@ -25,17 +25,20 @@ class Dfs123File(DfsFile):
     def __SpatialAxisUpdated(self):
         self._spatialAxisUpdated = True
 
-    def __WriteSpatialAxis(self):
+    def __WriteSpatialAxis(self, staticItems):
         """
-        Write a changed SpatialAxis to all dynamic items, and to the static
-        items with the same type of axis, as the C# library does.
+        Write a changed SpatialAxis to all dynamic items, and with
+        staticItems to the static items with the same type of axis, as the
+        C# library does. Writing static items moves the file pointer.
         """
         fileAxis = self.SpatialAxis
         if not self._spatialAxisUpdated or fileAxis is None:
             return
-        self._spatialAxisUpdated = False
         for itemInfo in self.ItemInfo:
             itemInfo.SpatialAxis._Update(fileAxis)
+        if not staticItems:
+            return
+        self._spatialAxisUpdated = False
         self.Reset()
         staticItemNo = 1
         while (staticItem := self.ReadStaticItem(staticItemNo)) is not None:
@@ -49,13 +52,16 @@ class Dfs123File(DfsFile):
             self.WriteStaticItemData(staticItem, data)
 
     def Flush(self):
-        self.__WriteSpatialAxis()
+        # Static items are written on Close, to keep the file pointer
+        self.__WriteSpatialAxis(staticItems=False)
         super().Flush()
 
     def Close(self):
-        if self.filePointer.value is not None:
-            self.__WriteSpatialAxis()
-        super().Close()
+        try:
+            if self.filePointer.value is not None:
+                self.__WriteSpatialAxis(staticItems=True)
+        finally:
+            super().Close()
 
     def Reshape(self, reshape):
         # Set True to reshape item data to multi-dimensional arrays.

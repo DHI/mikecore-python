@@ -406,9 +406,17 @@ class DfsSpatialAxis:
         """Copy the updatable attributes of source, an axis of the same type."""
         if self.AxisType != source.AxisType:
             raise ValueError("Destination and source axis have different types")
-        for name in self._UpdatableAttributes:
-            if hasattr(source, name):
-                setattr(self, name, getattr(source, name))
+        # Invoke _OnUpdate once, not for every attribute
+        onUpdate = self._OnUpdate
+        self._OnUpdate = None
+        try:
+            for name in self._UpdatableAttributes:
+                if hasattr(source, name):
+                    setattr(self, name, getattr(source, name))
+        finally:
+            self._OnUpdate = onUpdate
+        if onUpdate is not None:
+            onUpdate()
 
 
 class DfsAxisEqD0(DfsSpatialAxis):
@@ -570,9 +578,13 @@ class DfsDynamicItemInfo:
             # As in the C# library, the name in the file keeps its length: the
             # new name is truncated or padded with spaces to the old length.
             name = name[: len(self._Name)].ljust(len(self._Name))
+        oldName = self._Name
         self._Name = name
-        if self._OnUpdate is not None:
-            self._OnUpdate()
+        try:
+            self._InvokeOnUpdate()
+        except BaseException:
+            self._Name = oldName
+            raise
 
     @property
     def Quantity(self):
@@ -582,7 +594,15 @@ class DfsDynamicItemInfo:
     def Quantity(self, quantity):
         # Only assigning a quantity updates the file, as in the C# library.
         # Changing Item or Unit of the current quantity does not.
+        oldQuantity = self._Quantity
         self._Quantity = quantity
+        try:
+            self._InvokeOnUpdate()
+        except BaseException:
+            self._Quantity = oldQuantity
+            raise
+
+    def _InvokeOnUpdate(self):
         if self._OnUpdate is not None:
             self._OnUpdate()
 
