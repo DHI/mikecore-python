@@ -65,5 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it, instead of raising `IndexError`. The native library ignores the key.
 - `DfsFile.WriteItemTimeStepNext` reports data shorter than the item with its
   size, instead of raising `AttributeError`.
+- `DfsuBuilder` writes the `X-coord` and `Y-coord` static items of a file with
+  a geographic projection, such as `LONG/LAT`, as `eumILatLong` in degrees.
+  They were `eumIGeographicalCoordinate` in metres whatever the projection.
+  Files with a projected coordinate system are unchanged
+  ([#47](https://github.com/DHI/mikecore-python/issues/47)).
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD
