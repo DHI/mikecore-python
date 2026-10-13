@@ -456,10 +456,12 @@ def test_axis_attribute_the_axis_type_does_not_have(case):
 def test_flush_then_append(case):
     """
     Changes written on Flush do not move the file pointer: a time step
-    appended after Flush is added at the end, and the edits are kept.
+    appended after Flush is added at the end, and the edits are kept. A
+    changed file axis also reaches the static items on Close.
     """
     dynamicData = readDynamicData(case.filename)
     items = readItems(case.filename)
+    staticItems = readStaticItems(case.filename)
 
     file = case.dfsType.openAppend(case.filename)
     file.ItemInfo[0].Name = "Q" * len(items[0][0])
@@ -487,6 +489,14 @@ def test_flush_then_append(case):
     assert "Q" * len(items[0][0]) == newItems[0][0]
     if spatialAxis is not None:
         assert all(axis["X0"] == NEW_X0 for _, _, _, axis in newItems)
+    for (values, axisType, data), (newValues, _, newData) in zip(
+        staticItems, readStaticItems(case.filename), strict=True
+    ):
+        name, item, unit, axis = values
+        if spatialAxis is not None and axisType == spatialAxis.AxisType:
+            axis = {**axis, "X0": NEW_X0}
+        assert (name, item, unit, axis) == newValues
+        np.testing.assert_array_equal(data, newData)
 
 
 def test_file_axis_is_written_to_every_item(fileAxisCase):
@@ -609,3 +619,32 @@ def test_edit_while_building(tmp_path):
     assert ("Longe", NEW_QUANTITY, NEW_X0) == (name, (item, unit), axis["X0"])
     assert "Depth" == readItems(filename)[1][0]
     assert 6 == len(readDynamicData(filename))
+
+
+def test_quantity_edit_keeps_a_name_cp1252_cannot_decode(case):
+    """
+    A name with a byte cp1252 leaves undefined, such as one written as UTF-8
+    by another tool, is read with U+FFFD in it. Assigning only a new
+    Quantity must still work, and must write the name bytes back unchanged.
+    """
+    original = readBytes(case.filename)
+    oldName = readItems(case.filename)[0][0]
+    oldBytes = oldName.encode("cp1252") + b"\0"
+    assert original.count(oldBytes) == 1
+    offset = original.index(oldBytes)
+    # 0x81 is undefined in cp1252
+    nameBytes = b"\x81" + oldBytes[1:]
+    patched = original[:offset] + nameBytes + original[offset + len(oldBytes) :]
+    with open(case.filename, "wb") as f:
+        f.write(patched)
+    assert "\ufffd" == readItems(case.filename)[0][0][0]
+
+    file = case.dfsType.openEdit(case.filename)
+    file.ItemInfo[0].Quantity = eumQuantity(*NEW_QUANTITY)
+    file.Close()
+
+    after = readBytes(case.filename)
+    assert nameBytes == after[offset : offset + len(nameBytes)]
+    _, item, unit, _ = readItems(case.filename)[0]
+    assert NEW_QUANTITY == (item, unit)
+    assertOnlyHeaderChanged(case, patched)
