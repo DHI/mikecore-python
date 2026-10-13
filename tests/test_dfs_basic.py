@@ -1,5 +1,6 @@
 import ctypes
 
+import numpy as np
 import pytest
 
 from mikecore.DfsDLL import DfsDLL
@@ -49,6 +50,45 @@ def test_read_itemtimestep():
 
     assert data is not None
     assert data.Data[0] == 104
+
+
+@pytest.mark.parametrize(
+    "opener, filename, reshape",
+    [
+        ("DfsGenericOpen", "testdata/TemporalNeqCal.dfs0", False),
+        ("Dfs2FileOpen", "testdata/OresundHD.dfs2", False),
+        ("Dfs2FileOpen", "testdata/OresundHD.dfs2", True),
+        ("Dfs3FileOpen", "testdata/OresundHD.dfs3", True),
+        ("DfsGenericOpen", "testdata/OdenseHD2D.dfsu", False),
+    ],
+    ids=["dfs0", "dfs2", "dfs2-reshape", "dfs3-reshape", "dfsu"],
+)
+def test_read_itemtimestep_into_given_itemdata(opener, filename, reshape):
+    """ReadItemTimeStep(itemData, j) fills and returns the itemData it is given,
+    with the same values as ReadItemTimeStep(itemNumber, j) allocates."""
+    dfs = getattr(DfsFileFactory, opener)(filename)
+    numberOfTimeSteps = dfs.FileInfo.TimeAxis.NumberOfTimeSteps
+    assert numberOfTimeSteps > 1
+
+    changed = False
+    for itemNumber in range(1, len(dfs.ItemInfo) + 1):
+        itemData = dfs.ReadItemTimeStep(itemNumber, numberOfTimeSteps - 1, reshape)
+        buffer = itemData.Data
+        # Backwards, so the buffer holds another timestep's values before each read
+        for j in reversed(range(numberOfTimeSteps)):
+            expected = dfs.ReadItemTimeStep(itemNumber, j, reshape)
+            before = itemData.Data.copy()
+
+            assert dfs.ReadItemTimeStep(itemData, j, reshape) is itemData
+            assert np.shares_memory(itemData.Data, buffer)
+            assert itemNumber == itemData.ItemNumber
+            assert j == itemData.TimeStepIndex
+            assert expected.Time == itemData.Time
+            np.testing.assert_array_equal(expected.Data, itemData.Data)
+            changed = changed or not np.array_equal(before, itemData.Data)
+    dfs.Close()
+
+    assert changed, "every read left the buffer as it was"
 
 
 def test_error_reporting():
