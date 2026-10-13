@@ -1060,6 +1060,8 @@ class FileOdenseHD2DDfsu:
         for itemInfo in dfsFile.ItemInfo:
             itemDatas.append(dfsFile.CreateEmptyItemData(itemInfo))
 
+        # test_dfs_basic.py::test_read_itemtimestep_into_given_itemdata checks this
+        # overload against ReadItemTimeStep(itemNumber, j) for every item-timestep.
         for j in range(13):
             for i in range(3):
                 itemData = itemDatas[i]
