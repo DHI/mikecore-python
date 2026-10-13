@@ -549,8 +549,11 @@ class DfsAxisCurveLinearD3(DfsSpatialAxis):
 
 class DfsDynamicItemInfo:
     def __init__(self, itemPointer=None, itemNumber=0):
-        # Set on dynamic items of an editable file, to write Name and Quantity
+        # Set on items of an editable file, to write Name and Quantity
         self._OnUpdate = None
+        # The name read from the file and its bytes, which are written back
+        # while Name is unchanged, as cp1252 may not encode the decoded name
+        self._NameInFile = None
         self.ItemPointer = itemPointer
         self.ItemNumber = itemNumber
         self.DataType = DfsSimpleType.UShort
@@ -1577,11 +1580,14 @@ class DfsFile:
         DfsDLLUtil.dfsSetItemSpatialAxis(item.ItemPointer, item.SpatialAxis)
 
     def __UpdateItemInfo(self, item):
+        nameInFile, nameBytes = item._NameInFile
+        if item.Name != nameInFile:
+            nameBytes = item.Name.encode("cp1252")
         rok = DfsDLL.Wrapper.dfsUpdateItemInfo(
             self.headPointer,
             item.ItemPointer,
             ctypes.c_int32(item.Quantity.Item.value),
-            item.Name.encode("cp1252"),
+            nameBytes,
             ctypes.c_int32(item.Quantity.Unit.value),
         )
         DfsDLL.CheckReturnCode(rok)
@@ -1649,6 +1655,7 @@ class DfsFile:
         quantity.UnitDescription = eumUnitDesc
 
         item.init(itemName, quantity)
+        item._NameInFile = (itemName, itemNameP.value)
         item.DataType = itemDataType
         item.ValueType = DfsDLLUtil.dfsGetItemValueType(item.ItemPointer)
         item.ElementCount = DfsDLL.Wrapper.dfsGetItemElements(item.ItemPointer)
