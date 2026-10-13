@@ -1452,7 +1452,7 @@ class eumDLL:
             # TODO: Should this not be simpler?
             eumFilePath = path + "/EUM.xml"
             eumFilePathP = ctypes.c_char_p(eumFilePath.encode("ascii"))
-            res = lib.eumSetupLoadLinux(eumFilePathP)
+            lib.eumSetupLoadLinux(eumFilePathP)
 
         lib.eumUnitGetParameters.argtypes = [
             ctypes.c_int32,
@@ -1536,7 +1536,7 @@ class eumWrapper:
     # / <returns>A hashtable with item type text description, numeric key pairs.</returns>
     @staticmethod
     def CreateItemHashtable() -> dict:
-        itemHash = dict()
+        itemHash = {}
         n = eumWrapper.eumGetItemTypeCount()
         for i in range(1, n + 1):
             ok, key, desc = eumWrapper.eumGetItemTypeSeq(i)
@@ -1554,7 +1554,7 @@ class eumWrapper:
     # / <returns></returns>
     @staticmethod
     def CreateUnitHashTable(abbreviations: bool = False):
-        unitHash = dict()  # current number of unique desc/abbrs.
+        unitHash = {}  # current number of unique desc/abbrs.
         prevKey = eumUnit.eumUUnitUndefined
         ok, unitKey, desc = eumWrapper.eumGetNextUnit(prevKey)
         while ok:

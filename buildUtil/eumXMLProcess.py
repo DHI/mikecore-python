@@ -16,8 +16,8 @@ eumFile = open("mikecore/bin/windows/EUM.xml")
 eumLines = eumFile.readlines()
 eumFile.close()
 
-recItem = re.compile('"(eumI\w+)" MzId="(\w*)"')
-recUnit = re.compile('"(eumU\w+)" MzId="(\w*)"')
+recItem = re.compile(r'"(eumI\w+)" MzId="(\w*)"')
+recUnit = re.compile(r'"(eumU\w+)" MzId="(\w*)"')
 
 itemDict = {}
 unitDict = {}
@@ -38,12 +38,12 @@ unitKeys.sort()
 print("# Predefined enums of EUM item types.")
 print("#")
 print("# Must be updated with every new release, or if the EUM.xml is updated")
-print("# Run buildUtil\eumXMLProcess.py to create the lists")
+print(r"# Run buildUtil\eumXMLProcess.py to create the lists")
 print("class eumItem(IntEnum):")
 for key in itemKeys:
     print(f"    {itemDict[key]} = {key}")
 
-print("")
+print()
 print("# Predefined enums of EUM units.")
 print("#")
 print("# Must be updated with every new release, or if the EUM.xml is updated")

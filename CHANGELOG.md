@@ -76,5 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   They were `eumIGeographicalCoordinate` in metres whatever the projection.
   Files with a projected coordinate system are unchanged
   ([#47](https://github.com/DHI/mikecore-python/issues/47)).
+- Reading an item's value type raises the DFS error when the native library
+  reports one, instead of returning `DataValueType.Instantaneous`.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD

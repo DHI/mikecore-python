@@ -58,7 +58,7 @@ def test_validate_empty_builder():
 def test_empty_title(landuse: DfsBuilder, tmp_path):
     # Create and get file
     landuse.CreateFile(str(tmp_path / "notused.dfs2"))
-    file = landuse.GetFile()
+    landuse.GetFile()
 
 
 def test_getfile_not_possible_if_not_created(landuse: DfsBuilder):
@@ -75,7 +75,7 @@ def test_getfiletwice_not_allowed(landuse: DfsBuilder, tmp_path):
 
     # Create and get file
     builder.CreateFile(str(tmp_path / "notused.dfs2"))
-    file = builder.GetFile()
+    builder.GetFile()
 
     with pytest.raises(Exception, match="File has been returned"):
         builder.GetFile()
@@ -86,7 +86,7 @@ def test_filetitle_after_create_not_possible(landuse: DfsBuilder, tmp_path):
 
     # Create and get file
     builder.CreateFile(str(tmp_path / "notused.dfs2"))
-    file = builder.GetFile()
+    builder.GetFile()
 
     with pytest.raises(Exception, match="File has been returned"):
         builder.SetFileTitle("too late")
@@ -97,7 +97,7 @@ def test_apptitle_after_create_not_possible(landuse: DfsBuilder, tmp_path):
 
     # Create and get file
     builder.CreateFile(str(tmp_path / "notused.dfs2"))
-    file = builder.GetFile()
+    builder.GetFile()
 
     with pytest.raises(Exception, match="File has been returned"):
         builder.SetApplicationTitle("too late")

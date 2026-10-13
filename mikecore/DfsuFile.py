@@ -272,11 +272,10 @@ class DfsuFile:
         self.NumberOfElements = self.ElementIds.size
         # self.NumberOfNodes = self.X.size
 
-        if not build:
-            # In append mode, move the file pointer to end of file
-            # It was moved elsewhere when reading static data...
-            if self.dfsFile.FileMode == DfsFileMode.Append:
-                self.dfsFile.FindTimeStep(self.NumberOfTimeSteps)
+        # In append mode, move the file pointer to end of file
+        # It was moved elsewhere when reading static data...
+        if not build and self.dfsFile.FileMode == DfsFileMode.Append:
+            self.dfsFile.FindTimeStep(self.NumberOfTimeSteps)
 
     def Dispose(self):
         """
@@ -655,8 +654,7 @@ class DfsuUtil:
                 dx = x2 - x1
                 dy = y2 - y1
                 nodeDist2 = dx * dx + dy * dy
-                if nodeDist2 > maxNodeDist2:
-                    maxNodeDist2 = nodeDist2
+                maxNodeDist2 = max(maxNodeDist2, nodeDist2)
 
             # Check if element center coordinates differ more than a tolerance
             # times the reference lenght - the maximum node distance.
@@ -681,8 +679,7 @@ class DfsuUtil:
         maxLayers = topLayerElements[0] + 1
         for i in range(1, topLayerElements.size):
             layers = topLayerElements[i] - topLayerElements[i - 1]
-            if layers > maxLayers:
-                maxLayers = layers
+            maxLayers = max(maxLayers, layers)
         return maxLayers
 
     @staticmethod
@@ -697,6 +694,5 @@ class DfsuUtil:
         minLayers = topLayerElements[0] + 1
         for i in range(1, topLayerElements.size):
             layers = topLayerElements[i] - topLayerElements[i - 1]
-            if layers < minLayers:
-                minLayers = layers
+            minLayers = min(minLayers, layers)
         return minLayers

@@ -1109,9 +1109,8 @@ class MapProjection:
             raise Exception(
                 "Projection string cannot be null or empty", "projectionString"
             )
-        if validateProjectionString:
-            if not MapProjection.IsValid(projectionString):
-                raise Exception("Not a valid projection string", "projectionString")
+        if validateProjectionString and not MapProjection.IsValid(projectionString):
+            raise Exception("Not a valid projection string", "projectionString")
         return MapProjection(projectionString, mustFree=True)
 
     # / <summary>
@@ -1137,9 +1136,8 @@ class MapProjection:
     # / </summary>
     def __del__(self):
         # Release ressources on the unmanaged side when garbage collected
-        if self._mustFree:
-            if self._mzMapProjPointer.value is not None:
-                MzCartDLL.MzMapProjDestroy(self._mzMapProjPointer)
+        if self._mustFree and self._mzMapProjPointer.value is not None:
+            MzCartDLL.MzMapProjDestroy(self._mzMapProjPointer)
         _mzMapProjPointer = ctypes.c_void_p()
 
     ##/ <summary>
@@ -1523,9 +1521,8 @@ class Cartography:
 
         self._mzCartPointer = ctypes.c_void_p(0)
 
-        if validateProjectionString:
-            if not MapProjection.IsValid(projectionString):
-                raise Exception("Not a valid projection string", "projectionString")
+        if validateProjectionString and not MapProjection.IsValid(projectionString):
+            raise Exception("Not a valid projection string", "projectionString")
 
         if lonOrigin is None:
             lonOrigin, latOrigin = MapProjection.ProjectionOrigin(
@@ -1697,9 +1694,8 @@ class Cartography:
     ):
         if projectionString is None or projectionString == "":
             raise ValueError("Projection string can not be null or empty")
-        if validateProjectionString:
-            if not MapProjection.IsValid(projectionString):
-                raise ValueError("Not a valid projection string")
+        if validateProjectionString and not MapProjection.IsValid(projectionString):
+            raise ValueError("Not a valid projection string")
         cart = Cartography(
             projectionString,
             lonOrigin,
@@ -1733,9 +1729,8 @@ class Cartography:
     ):
         if projectionString is None or projectionString == "":
             raise ValueError("Projection string cannot be null or empty")
-        if validateProjectionString:
-            if not MapProjection.IsValid(projectionString):
-                raise ValueError("Not a valid projection string")
+        if validateProjectionString and not MapProjection.IsValid(projectionString):
+            raise ValueError("Not a valid projection string")
         proj = MapProjection.Create(projectionString, validateProjectionString)
         lonOrigin, latOrigin = proj.Proj2Geo(east, north)
         orientationGeo = proj.Proj2GeoRotation(east, north, orientationProj)

@@ -1,7 +1,9 @@
+import ctypes
+
 import pytest
 
 from mikecore.DfsDLL import DfsDLL
-from mikecore.DfsFile import DfsFile, DfsFileMode, TimeAxisType
+from mikecore.DfsFile import DfsDLLUtil, DfsFile, DfsFileMode, TimeAxisType
 from mikecore.DfsFileFactory import DfsFileFactory
 
 
@@ -56,6 +58,11 @@ def test_error_reporting():
         DfsDLL.CheckReturnCode(2007)
     except Exception as e:
         print("Exception:", e)
+
+
+def test_item_value_type_reports_dfs_error():
+    with pytest.raises(Exception, match="DFS error code 1000"):
+        DfsDLLUtil.dfsGetItemValueType(ctypes.c_void_p())
 
 
 def test_open_with_integer_mode():

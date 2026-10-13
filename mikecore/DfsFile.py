@@ -1167,16 +1167,15 @@ class DfsFile:
 
         # More elaborate action is required, when appending to file. If appending then
         # (itemNumber == _fpItemNumber && timestepIndex == _fileInfo.TimeAxis.NumberOfTimeSteps == _fpTimeStepIndex)
-        if timestepIndex == self.FileInfo.TimeAxis.NumberOfTimeSteps:
-            if (
-                timestepIndex == self.fpTimeStepIndex
-                and itemNumber != self.fpItemNumber
-                or timestepIndex != self.fpTimeStepIndex
-                and itemNumber != 1
-            ):
-                raise IndexError(
-                    "Wrong item number while trying to append item data to file. Item data must be appended in order, and for all items in the time step"
-                )
+        if timestepIndex == self.FileInfo.TimeAxis.NumberOfTimeSteps and (
+            timestepIndex == self.fpTimeStepIndex
+            and itemNumber != self.fpItemNumber
+            or timestepIndex != self.fpTimeStepIndex
+            and itemNumber != 1
+        ):
+            raise IndexError(
+                "Wrong item number while trying to append item data to file. Item data must be appended in order, and for all items in the time step"
+            )
 
         # Position file pointer
         self.__FpFindItemTimeStep(itemNumber, timestepIndex)
@@ -1249,11 +1248,13 @@ class DfsFile:
             self.headPointer, self.filePointer, ctypes.c_double(time), data.ctypes.data
         )
 
-        if self.__FpDynamicIncrement():
-            if self.fpTimeStepIndex > self.FileInfo.TimeAxis.NumberOfTimeSteps:
-                # One entire time step (all items) has just been written to file,
-                # increment the number of time steps
-                self.FileInfo.TimeAxis.IncrementNumberOfTimeSteps(time)
+        if (
+            self.__FpDynamicIncrement()
+            and self.fpTimeStepIndex > self.FileInfo.TimeAxis.NumberOfTimeSteps
+        ):
+            # One entire time step (all items) has just been written to file,
+            # increment the number of time steps
+            self.FileInfo.TimeAxis.IncrementNumberOfTimeSteps(time)
 
     def Reset(self):
         """
@@ -1365,12 +1366,12 @@ class DfsFile:
 
         # Need to handle StartTimeOffset similar to in __GetTime
         timeaxis = self.FileInfo.TimeAxis
-        if timeaxis.TimeAxisType == TimeAxisType.TimeEquidistant:
-            if timeaxis.StartTimeOffset != 0.0:
-                data[:, 0] = data[:, 0] + timeaxis.StartTimeOffset
-        elif timeaxis.TimeAxisType == TimeAxisType.CalendarEquidistant:
-            if timeaxis.StartTimeOffset != 0.0:
-                data[:, 0] = data[:, 0] + timeaxis.StartTimeOffset
+        if (
+            timeaxis.TimeAxisType
+            in (TimeAxisType.TimeEquidistant, TimeAxisType.CalendarEquidistant)
+            and timeaxis.StartTimeOffset != 0.0
+        ):
+            data[:, 0] = data[:, 0] + timeaxis.StartTimeOffset
 
         return data
 
@@ -2112,7 +2113,8 @@ class DfsDLLUtil:
     @staticmethod
     def dfsGetItemValueType(itemPointer):
         valueTypeInt = ctypes.c_int()
-        err = DfsDLL.Wrapper.dfsGetItemValueType(
+        rok = DfsDLL.Wrapper.dfsGetItemValueType(
             itemPointer, ctypes.byref(valueTypeInt)
         )
+        DfsDLL.CheckReturnCode(rok)
         return DataValueType(valueTypeInt.value)

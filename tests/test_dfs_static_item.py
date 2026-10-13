@@ -32,13 +32,13 @@ class Test_dfs_static_item(unittest.TestCase):
         elif eumItem.eumIGeographicalCoordinate == staticItem.Quantity.Item:
             assert eumUnit.eumUmeter == staticItem.Quantity.Unit
         else:
-            assert "X coordinate axis item type mismatch" == ""
+            self.fail("X coordinate axis item type mismatch")
 
         if (
             staticItem.DataType != DfsSimpleType.Double
             and staticItem.DataType != DfsSimpleType.Float
         ):
-            assert "DataType of X static item mismatch" == ""
+            self.fail("DataType of X static item mismatch")
 
         # assert deleteValueFloat == staticItem.ReferenceCoordinateX
         # assert deleteValueFloat == staticItem.ReferenceCoordinateY

@@ -69,7 +69,66 @@ line-ending = "lf"
 
 # ruff takes its target version from requires-python.
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "UP", "B"]
+select = [
+    "E4", "E7", "E9", "F", "UP", "B",
+    # The other stable rules ruff tags correctness, complexity or performance
+    # (the "category" field of `ruff rule --all --output-format json`). F, UP, B and
+    # E9 already hold theirs. Rules for frameworks mikecore does not use (FastAPI,
+    # pandas) are left out. TID255 joins once CI's ruff has it as stable.
+
+    # flake8-comprehensions
+    "C400", "C401", "C402", "C403", "C404", "C405", "C406", "C408", "C409", "C410",
+    "C411", "C413", "C414", "C415", "C417", "C418", "C419", "C420",
+    # flake8-executable
+    "EXE002", "EXE004",
+    # flake8-future-annotations
+    "FA102",
+    # flynt
+    "FLY002",
+    # refurb
+    "FURB105", "FURB110", "FURB122", "FURB129", "FURB132", "FURB136", "FURB157",
+    "FURB161", "FURB162", "FURB163", "FURB166", "FURB168", "FURB169", "FURB171",
+    "FURB177", "FURB181", "FURB188", "FURB192",
+    # flake8-logging-format
+    "G101", "G201",
+    # flake8-logging
+    "LOG001",
+    # Perflint
+    "PERF101", "PERF102", "PERF402",
+    # flake8-pie
+    "PIE794", "PIE800", "PIE807", "PIE808", "PIE810",
+    # Pylint
+    "PLC0131", "PLC0206", "PLC0207", "PLC0208", "PLC0414", "PLC3002", "PLE0100",
+    "PLE0101", "PLE0115", "PLE0116", "PLE0117", "PLE0118", "PLE0241", "PLE0604",
+    "PLE0605", "PLE0643", "PLE1132", "PLE1142", "PLE1205", "PLE1206", "PLE1300",
+    "PLE1307", "PLE1310", "PLE1507", "PLE1700", "PLR0133", "PLR0206", "PLR0402",
+    "PLR1708", "PLR1711", "PLR1730", "PLR1733", "PLR1736", "PLW0128", "PLW0129",
+    "PLW0131", "PLW0133", "PLW0177", "PLW0245", "PLW0604", "PLW1501", "PLW1507",
+    "PLW2101",
+    # flake8-pytest-style
+    "PT008", "PT010", "PT014", "PT024", "PT025", "PT026",
+    # flake8-use-pathlib
+    "PTH210",
+    # flake8-pyi
+    "PYI010", "PYI012", "PYI013", "PYI016", "PYI019", "PYI030", "PYI035", "PYI041",
+    "PYI044", "PYI045", "PYI048", "PYI055", "PYI059", "PYI064",
+    # Ruff-specific rules
+    "RUF007", "RUF010", "RUF015", "RUF016", "RUF017", "RUF019", "RUF020", "RUF026",
+    "RUF030", "RUF034", "RUF037", "RUF046", "RUF049", "RUF051", "RUF053", "RUF057",
+    "RUF058", "RUF060", "RUF068", "RUF200",
+    # flake8-simplify
+    "SIM101", "SIM102", "SIM103", "SIM107", "SIM110", "SIM113", "SIM117", "SIM118",
+    "SIM201", "SIM202", "SIM208", "SIM210", "SIM211", "SIM220", "SIM221", "SIM222",
+    "SIM223", "SIM401", "SIM905", "SIM911",
+    # flake8-debugger
+    "T100",
+    # flake8-type-checking
+    "TC004", "TC007", "TC010",
+    # tryceratops
+    "TRY201", "TRY203", "TRY401",
+    # pycodestyle
+    "W605",
+]
 # The C#-style API is re-exported through star imports throughout.
 ignore = [
     "F403", "F405",
@@ -79,7 +138,6 @@ ignore = [
     "E731",  # lambda assignment
     "E741",  # ambiguous variable name
     "F811",  # duplicated test helpers whose bodies differ
-    "F841",  # unused variables
     # Defaults like DfsParameters() and np.float32(...) are never mutated.
     "B008",
 ]
