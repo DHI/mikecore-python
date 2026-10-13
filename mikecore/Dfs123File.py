@@ -17,10 +17,11 @@ class Dfs123File(DfsFile):
         # TODO: Need to check that this is the same for all items
         if len(self.ItemInfo) > 0:
             self.SpatialAxis = copy.copy(self.ItemInfo[0].SpatialAxis)
-            if self.SpatialAxis is not None:
-                self.SpatialAxis._OnUpdate = None
-                if mode in (DfsFileMode.Edit, DfsFileMode.Append):
-                    self.SpatialAxis._OnUpdate = self.__SpatialAxisUpdated
+            if self.SpatialAxis is not None and mode in (
+                DfsFileMode.Edit,
+                DfsFileMode.Append,
+            ):
+                self.SpatialAxis._OnUpdate = self.__SpatialAxisUpdated
 
     def __SpatialAxisUpdated(self):
         self._spatialAxisUpdated = True

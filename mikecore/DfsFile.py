@@ -403,6 +403,12 @@ class DfsSpatialAxis:
         self.SizeOfData = sizeOfData
         self.AxisUnit = axisUnit
 
+    def __getstate__(self):
+        # A copy is not in the file: it must not write to it
+        state = self.__dict__.copy()
+        state["_OnUpdate"] = None
+        return state
+
     def __setattr__(self, name, value):
         onUpdate = self.__dict__.get("_OnUpdate")
         if name not in self._UpdatableAttributes or onUpdate is None:
@@ -621,6 +627,12 @@ class DfsDynamicItemInfo:
         except BaseException:
             self._Quantity = oldQuantity
             raise
+
+    def __getstate__(self):
+        # A copy is not in the file: it must not write to it
+        state = self.__dict__.copy()
+        state["_OnUpdate"] = None
+        return state
 
     def _InvokeOnUpdate(self):
         if self._OnUpdate is not None:
