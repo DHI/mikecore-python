@@ -3,6 +3,7 @@ Editing the item info and spatial axes of an existing dfs file, on every dfs
 file type and every way of opening it for editing.
 """
 
+import copy
 import gc
 import os
 import shutil
@@ -683,3 +684,52 @@ def test_static_item_read_from_an_editable_file_is_freed(staticCase):
     gc.collect()
     assert itemRef() is None
     file.Close()
+
+
+def copyItem(itemInfo):
+    itemCopy = copy.copy(itemInfo)
+
+    def edit():
+        # Not the axis: a shallow copy shares it with the item
+        itemCopy.Name = "abc"
+        itemCopy.Quantity = eumQuantity(*NEW_QUANTITY)
+        assert "abc" == itemCopy.Name
+
+    return edit
+
+
+def copyAxis(itemInfo, copyFunction=copy.copy):
+    axisCopy = copyFunction(itemInfo.SpatialAxis)
+
+    def edit():
+        axisCopy.AxisUnit = NEW_AXIS_UNIT
+        assert NEW_AXIS_UNIT == axisCopy.AxisUnit
+
+    return edit
+
+
+def deepcopyAxis(itemInfo):
+    # An item can't be deep-copied: its native pointer can't be pickled
+    return copyAxis(itemInfo, copy.deepcopy)
+
+
+@pytest.mark.parametrize("copyForEdit", [copyItem, copyAxis, deepcopyAxis])
+@pytest.mark.parametrize("closeFirst", [False, True], ids=["open", "closed"])
+def test_copy_of_an_item_is_not_written(case, copyForEdit, closeFirst):
+    """
+    A copy of an item or of its axis, taken from an open editable file, is a
+    plain object: changing it writes nothing, while the file is open or after
+    it is closed.
+    """
+    original = readBytes(case.filename)
+
+    file = case.dfsType.openEdit(case.filename)
+    edit = copyForEdit(file.ItemInfo[0])
+    if closeFirst:
+        file.Close()
+        edit()
+    else:
+        edit()
+        file.Close()
+
+    assert original == readBytes(case.filename)
