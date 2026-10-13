@@ -213,69 +213,86 @@ class Dfs2Tests(unittest.TestCase):
         FileOresundBathy900Dfs2.DynamicItemTester(dfsFile.ItemInfo)
         FileOresundBathy900Dfs2.ReadTester(dfsFile)
 
-    #    def ModifyAxisTest():
-    #        originalFilename = "testdata/OresundHD.dfs2";
-    #        filename = "testdata/testtmp/test_modifyAxis_OresundHD.dfs2";
-    #
-    #        testUtil.copy_file(originalFilename, filename)
-    #
-    #        ExamplesDfs2.ModifyDfs2ItemAxis(filename);
-    #
-    #        # Check all dynamic items
-    #        dfs2File = DfsFileFactory.DfsGenericOpen(filename);
-    #        for itemInfo in dfs2File.ItemInfo:
-    #            axisEqD2 = itemInfo.SpatialAxis;
-    #            assert_equal( 55, axisEqD2.X0);
-    #            assert_equal(905, axisEqD2.Dx);
-    #            assert_equal(-55, axisEqD2.Y0);
-    #            assert_equal(915, axisEqD2.Dy);
-    #
-    #        # Check all static items
-    #        while (True):
-    #            staticItem = dfs2File.ReadStaticItemNext()
-    #            if (staticItem is None):
-    #                break;
-    #            axisEqD2 = staticItem.SpatialAxis;
-    #            assert_equal( 55, axisEqD2.X0);
-    #            assert_equal(905, axisEqD2.Dx);
-    #            assert_equal(-55, axisEqD2.Y0);
-    #            assert_equal(915, axisEqD2.Dy);
-    #
-    #        dfs2File.Close();
+    def test_ModifyAxisTest(self):
+        originalFilename = "testdata/OresundHD.dfs2"
+        filename = "testdata/testtmp/test_modifyAxis_OresundHD.dfs2"
 
-    #    def ModifyLanduseItemInfoTest():
-    #
-    #        originalFilename = "testdata/Landuse.dfs2";
-    #        filename = "testdata/testtmp/test_create_Landuse.dfs2";
-    #
-    #        File.Copy(originalFilename, filename, true);
-    #        File.SetAttributes(filename, FileAttributes.Normal); # remove read-only flag
-    #
-    #        # Check the new file
-    #
-    #        file = DfsFileFactory.Dfs2FileOpen(filename);
-    #
-    #        # Check existing data
-    #        itemInfo = file.ItemInfo[0];
-    #        assert_equal("Landuse", itemInfo.Name);
-    #        assert_equal(eumItem.eumIIntegerCode, itemInfo.Quantity.Item);
-    #        assert_equal(eumUnit.eumUintCode, itemInfo.Quantity.Unit);
-    #
-    #        file.Close();
-    #
-    #        # Method that modifies the Landuse.dfs2 file
-    #        ExamplesDfs2.ModifyDfs2ItemInfo(filename);
-    #
-    #        # Check the new file
-    #        file = DfsFileFactory.Dfs2FileOpen(filename);
-    #
-    #        # Check existing data
-    #        itemInfo = file.ItemInfo[0];
-    #        assert_equal("GroundU", itemInfo.Name);
-    #        assert_equal(eumItem.eumIAreaFraction, itemInfo.Quantity.Item);
-    #        assert_equal(eumUnit.eumUPerCent, itemInfo.Quantity.Unit);
-    #
-    #        file.Close();
+        testUtil.copy_file(originalFilename, filename)
+
+        # Check existing data
+        source = DfsFileFactory.DfsGenericOpen(filename)
+        for itemInfo in source.ItemInfo:
+            axisEqD2 = itemInfo.SpatialAxis
+            assert_equal(0, axisEqD2.X0)
+            assert_equal(900, axisEqD2.Dx)
+            assert_equal(0, axisEqD2.Y0)
+            assert_equal(900, axisEqD2.Dy)
+        sourceStaticItem = source.ReadStaticItemNext()
+        assert sourceStaticItem is not None
+        axisEqD2 = sourceStaticItem.SpatialAxis
+        assert axisEqD2 is not None
+        assert_equal(0, axisEqD2.X0)
+        assert_equal(900, axisEqD2.Dx)
+        assert_equal(0, axisEqD2.Y0)
+        assert_equal(900, axisEqD2.Dy)
+        sourceStaticData = sourceStaticItem.Data
+        assert source.ReadStaticItemNext() is None
+        source.Close()
+
+        ExamplesDfs2.ModifyDfs2ItemAxis(filename)
+
+        # Check all dynamic items
+        dfs2File = DfsFileFactory.DfsGenericOpen(filename)
+        for itemInfo in dfs2File.ItemInfo:
+            axisEqD2 = itemInfo.SpatialAxis
+            assert_equal(55, axisEqD2.X0)
+            assert_equal(905, axisEqD2.Dx)
+            assert_equal(-55, axisEqD2.Y0)
+            assert_equal(915, axisEqD2.Dy)
+
+        # Check all static items
+        staticItemCount = 0
+        while True:
+            staticItem = dfs2File.ReadStaticItemNext()
+            if staticItem is None:
+                break
+            staticItemCount += 1
+            axisEqD2 = staticItem.SpatialAxis
+            assert axisEqD2 is not None
+            assert_equal(55, axisEqD2.X0)
+            assert_equal(905, axisEqD2.Dx)
+            assert_equal(-55, axisEqD2.Y0)
+            assert_equal(915, axisEqD2.Dy)
+            # Writing the axis keeps the static item data
+            assert_equal(sourceStaticData, staticItem.Data)
+        assert_equal(1, staticItemCount)
+
+        dfs2File.Close()
+
+    def test_ModifyLanduseItemInfoTest(self):
+        originalFilename = "testdata/Landuse.dfs2"
+        filename = "testdata/testtmp/test_modifyItemInfo_Landuse.dfs2"
+
+        testUtil.copy_file(originalFilename, filename)
+
+        # Check existing data
+        file = DfsFileFactory.Dfs2FileOpen(filename)
+        itemInfo = file.ItemInfo[0]
+        assert_equal("Landuse", itemInfo.Name)
+        assert_equal(eumItem.eumIIntegerCode, itemInfo.Quantity.Item)
+        assert_equal(eumUnit.eumUintCode, itemInfo.Quantity.Unit)
+        file.Close()
+
+        # Method that modifies the Landuse.dfs2 file
+        ExamplesDfs2.ModifyDfs2ItemInfo(filename)
+
+        # Check the new file
+        file = DfsFileFactory.Dfs2FileOpen(filename)
+        itemInfo = file.ItemInfo[0]
+        assert_equal("GroundU", itemInfo.Name)
+        assert_equal(eumItem.eumIAreaFraction, itemInfo.Quantity.Item)
+        assert_equal(eumUnit.eumUPerCent, itemInfo.Quantity.Unit)
+        file.Close()
 
     def test_ReadReshapedPastEndReturnsNone(self):
         dfsFile = DfsFileFactory.Dfs2FileOpen("testdata/OresundHD.dfs2")

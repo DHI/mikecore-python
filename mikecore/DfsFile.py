@@ -3,6 +3,7 @@ from enum import IntEnum
 import datetime
 import ctypes
 import locale
+import weakref
 import numpy as np
 from mikecore.eum import *
 from mikecore.DfsDLL import DfsDLL
@@ -385,13 +386,60 @@ class DfsNonEqCalendarAxis(DfsTemporalAxis):
         self.TimeSpan = time - self.StartTimeOffset
 
 
+# Marks an attribute that was not set
+_Missing = object()
+
+
 class DfsSpatialAxis:
+    # Attributes that may change on an axis read from a file. Setting one of
+    # them invokes _OnUpdate, which writes the axis to an editable file.
+    _UpdatableAttributes = frozenset({"AxisUnit", "X0", "Dx", "Y0", "Dy", "Z0", "Dz"})
+
     def __init__(self, axisType, shape, sizeOfData, axisUnit):
+        self._OnUpdate = None
         self.AxisType = axisType
         self.Shape = shape
         self.Dimension = len(shape)
         self.SizeOfData = sizeOfData
         self.AxisUnit = axisUnit
+
+    def __getstate__(self):
+        # A copy is not in the file: it must not write to it
+        state = self.__dict__.copy()
+        state["_OnUpdate"] = None
+        return state
+
+    def __setattr__(self, name, value):
+        onUpdate = self.__dict__.get("_OnUpdate")
+        if name not in self._UpdatableAttributes or onUpdate is None:
+            super().__setattr__(name, value)
+            return
+        oldValue = self.__dict__.get(name, _Missing)
+        super().__setattr__(name, value)
+        try:
+            onUpdate()
+        except BaseException:
+            if oldValue is _Missing:
+                super().__delattr__(name)
+            else:
+                super().__setattr__(name, oldValue)
+            raise
+
+    def _Update(self, source):
+        """Copy the updatable attributes of source, an axis of the same type."""
+        if self.AxisType != source.AxisType:
+            raise ValueError("Destination and source axis have different types")
+        # Invoke _OnUpdate once, not for every attribute
+        onUpdate = self._OnUpdate
+        self._OnUpdate = None
+        try:
+            for name in self._UpdatableAttributes:
+                if hasattr(source, name):
+                    setattr(self, name, getattr(source, name))
+        finally:
+            self._OnUpdate = onUpdate
+        if onUpdate is not None:
+            onUpdate()
 
 
 class DfsAxisEqD0(DfsSpatialAxis):
@@ -508,12 +556,17 @@ class DfsAxisCurveLinearD3(DfsSpatialAxis):
 
 class DfsDynamicItemInfo:
     def __init__(self, itemPointer=None, itemNumber=0):
+        # Set on items of an editable file, to write Name and Quantity
+        self._OnUpdate = None
+        # The name read from the file and its bytes, which are written back
+        # while Name is unchanged, as cp1252 may not encode the decoded name
+        self._NameInFile = None
         self.ItemPointer = itemPointer
         self.ItemNumber = itemNumber
         self.DataType = DfsSimpleType.UShort
-        self.Name = ""
+        self._Name = ""
         self.ElementCount = -1
-        self.Quantity = None
+        self._Quantity = None
         self.ReferenceCoordinateX = np.float32(-1e-35)
         self.ReferenceCoordinateY = np.float32(-1e-35)
         self.ReferenceCoordinateZ = np.float32(-1e-35)
@@ -540,6 +593,50 @@ class DfsDynamicItemInfo:
             + self.DataType.name
             + ")"
         )
+
+    @property
+    def Name(self):
+        return self._Name
+
+    @Name.setter
+    def Name(self, name):
+        if self._OnUpdate is not None:
+            # As in the C# library, the name in the file keeps its length: the
+            # new name is truncated or padded with spaces to the old length.
+            name = name[: len(self._Name)].ljust(len(self._Name))
+        oldName = self._Name
+        self._Name = name
+        try:
+            self._InvokeOnUpdate()
+        except BaseException:
+            self._Name = oldName
+            raise
+
+    @property
+    def Quantity(self):
+        return self._Quantity
+
+    @Quantity.setter
+    def Quantity(self, quantity):
+        # Only assigning a quantity updates the file, as in the C# library.
+        # Changing Item or Unit of the current quantity does not.
+        oldQuantity = self._Quantity
+        self._Quantity = quantity
+        try:
+            self._InvokeOnUpdate()
+        except BaseException:
+            self._Quantity = oldQuantity
+            raise
+
+    def __getstate__(self):
+        # A copy is not in the file: it must not write to it
+        state = self.__dict__.copy()
+        state["_OnUpdate"] = None
+        return state
+
+    def _InvokeOnUpdate(self):
+        if self._OnUpdate is not None:
+            self._OnUpdate()
 
     def init(self, itemName, eumQuantity):
         self.Name = itemName
@@ -779,6 +876,10 @@ class DfsFile:
         self.fpTimeStepIndex = 0
         self.headPointer = ctypes.c_void_p(0)
         self.filePointer = ctypes.c_void_p(0)
+        # Items and axes that write their changes to the file, until it is
+        # closed. Weak, so that the file does not keep the static items it
+        # read alive.
+        self._updatableItems = weakref.WeakSet()
 
     def __del__(self):
         self.Close()
@@ -901,6 +1002,10 @@ class DfsFile:
             )
         if self.headPointer.value is not None:
             DfsDLL.Wrapper.dfsHeaderDestroy(ctypes.byref(self.headPointer))
+        # The item pointers point into the destroyed header: stop writing to it
+        for itemOrAxis in list(self._updatableItems):
+            itemOrAxis._OnUpdate = None
+        self._updatableItems.clear()
 
     def GetNextItemNumber(self):
         return self.fpItemNumber
@@ -1470,7 +1575,40 @@ class DfsFile:
         )
         item = DfsDynamicItemInfo(itemPointer, itemNumber)
         self.__GetItemInfo(item)
+        self.__AttachItemUpdate(item)
         return item
+
+    def __AttachItemUpdate(self, item):
+        # In an editable file, changing the name, quantity or axis of an item
+        # updates its item info: in the header for a dynamic item, and in the
+        # static vector, written by WriteStaticItemData, for a static item
+        if self.FileMode not in (DfsFileMode.Edit, DfsFileMode.Append):
+            return
+        self._updatableItems.add(item)
+        item._OnUpdate = lambda: self.__UpdateItemInfo(item)
+        axis = item.SpatialAxis
+        if axis is not None:
+            self._updatableItems.add(axis)
+            axis._OnUpdate = lambda: self.__UpdateItemAxis(item, axis)
+
+    def __UpdateItemAxis(self, item, axis):
+        # As in the C# library, an axis writes only while it is the item's
+        # axis: one replaced by assigning SpatialAxis writes nothing
+        if item.SpatialAxis is axis:
+            DfsDLLUtil.dfsSetItemSpatialAxis(item.ItemPointer, axis)
+
+    def __UpdateItemInfo(self, item):
+        nameInFile, nameBytes = item._NameInFile
+        if item.Name != nameInFile:
+            nameBytes = item.Name.encode("cp1252")
+        rok = DfsDLL.Wrapper.dfsUpdateItemInfo(
+            self.headPointer,
+            item.ItemPointer,
+            ctypes.c_int32(item.Quantity.Item.value),
+            nameBytes,
+            ctypes.c_int32(item.Quantity.Unit.value),
+        )
+        DfsDLL.CheckReturnCode(rok)
 
     def __StaticItemReadAndCreate(self, number, ubgConversion):
 
@@ -1503,6 +1641,7 @@ class DfsFile:
 
         self.__GetItemInfo(staticItem)
         self.__GetStaticData(staticItem)
+        self.__AttachItemUpdate(staticItem)
 
         return staticItem
 
@@ -1534,6 +1673,7 @@ class DfsFile:
         quantity.UnitDescription = eumUnitDesc
 
         item.init(itemName, quantity)
+        item._NameInFile = (itemName, itemNameP.value)
         item.DataType = itemDataType
         item.ValueType = DfsDLLUtil.dfsGetItemValueType(item.ItemPointer)
         item.ElementCount = DfsDLL.Wrapper.dfsGetItemElements(item.ItemPointer)
