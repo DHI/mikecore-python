@@ -244,6 +244,7 @@ class Dfs2Tests(unittest.TestCase):
                 break
             staticItemCount += 1
             axisEqD2 = staticItem.SpatialAxis
+            assert axisEqD2 is not None
             assert_equal(55, axisEqD2.X0)
             assert_equal(905, axisEqD2.Dx)
             assert_equal(-55, axisEqD2.Y0)
@@ -381,6 +382,47 @@ class Dfs2Tests(unittest.TestCase):
         with self.assertRaises(AttributeError):
             itemInfo.Quantity = None
         assert quantity is itemInfo.Quantity
+        file.Close()
+
+    def test_ModifyItemInfoAfterCloseTest(self):
+        # After Close only the Python objects change, the file is not touched
+        originalFilename = "testdata/OresundHD.dfs2"
+        filename = "testdata/testtmp/test_modifyAfterClose_OresundHD.dfs2"
+
+        testUtil.copy_file(originalFilename, filename)
+
+        file = DfsFileFactory.Dfs2FileOpenEdit(filename)
+        file.Close()
+        itemInfo = file.ItemInfo[0]
+        itemInfo.Name = "abc"
+        itemInfo.Quantity = eumQuantity(eumItem.eumIAreaFraction, eumUnit.eumUPerCent)
+        itemInfo.SpatialAxis.X0 = 5
+        spatialAxis = file.SpatialAxis
+        assert spatialAxis is not None
+        spatialAxis.X0 = 5
+        with self.assertRaises(OSError):
+            file.Flush()
+        assert_equal("abc", itemInfo.Name)
+        assert_equal(5, itemInfo.SpatialAxis.X0)
+
+        file = DfsFileFactory.Dfs2FileOpen(filename)
+        source = DfsFileFactory.Dfs2FileOpen(originalFilename)
+        assert_equal(source.ItemInfo[0].Name, file.ItemInfo[0].Name)
+        assert_equal(0, file.ItemInfo[0].SpatialAxis.X0)
+        source.Close()
+        file.Close()
+
+    def test_ModifyItemSpatialAxisFailureKeepsOldValue(self):
+        originalFilename = "testdata/OresundHD.dfs2"
+        filename = "testdata/testtmp/test_modifyItemAxisFailure_OresundHD.dfs2"
+
+        testUtil.copy_file(originalFilename, filename)
+
+        file = DfsFileFactory.DfsGenericOpenEdit(filename)
+        axis = file.ItemInfo[0].SpatialAxis
+        with self.assertRaises(TypeError):
+            axis.X0 = "abc"
+        assert_equal(0, axis.X0)
         file.Close()
 
     def test_ReadReshapedPastEndReturnsNone(self):
