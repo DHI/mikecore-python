@@ -219,10 +219,24 @@ class Dfs2Tests(unittest.TestCase):
 
         testUtil.copy_file(originalFilename, filename)
 
-        source = DfsFileFactory.DfsGenericOpen(originalFilename)
+        # Check existing data
+        source = DfsFileFactory.DfsGenericOpen(filename)
+        for itemInfo in source.ItemInfo:
+            axisEqD2 = itemInfo.SpatialAxis
+            assert_equal(0, axisEqD2.X0)
+            assert_equal(900, axisEqD2.Dx)
+            assert_equal(0, axisEqD2.Y0)
+            assert_equal(900, axisEqD2.Dy)
         sourceStaticItem = source.ReadStaticItemNext()
         assert sourceStaticItem is not None
+        axisEqD2 = sourceStaticItem.SpatialAxis
+        assert axisEqD2 is not None
+        assert_equal(0, axisEqD2.X0)
+        assert_equal(900, axisEqD2.Dx)
+        assert_equal(0, axisEqD2.Y0)
+        assert_equal(900, axisEqD2.Dy)
         sourceStaticData = sourceStaticItem.Data
+        assert source.ReadStaticItemNext() is None
         source.Close()
 
         ExamplesDfs2.ModifyDfs2ItemAxis(filename)
@@ -311,6 +325,10 @@ class Dfs2Tests(unittest.TestCase):
         spatialAxis = file.SpatialAxis
         assert timeAxis is not None and spatialAxis is not None
         numberOfTimeSteps = timeAxis.NumberOfTimeSteps
+        assert_equal(13, numberOfTimeSteps)
+        assert_equal(0, spatialAxis.X0)
+        for itemInfo in file.ItemInfo:
+            assert_equal(0, itemInfo.SpatialAxis.X0)
         spatialAxis.X0 = 55
         file.Flush()
         for itemInfo in file.ItemInfo:
@@ -342,6 +360,8 @@ class Dfs2Tests(unittest.TestCase):
         testUtil.copy_file(originalFilename, filename)
 
         file = DfsFileFactory.DfsGenericOpenEdit(filename)
+        assert_equal(0, file.ItemInfo[0].SpatialAxis.X0)
+        assert_equal(0, file.ItemInfo[1].SpatialAxis.X0)
         file.ItemInfo[1].SpatialAxis.X0 = 55
         file.Close()
 
@@ -394,11 +414,14 @@ class Dfs2Tests(unittest.TestCase):
         file = DfsFileFactory.Dfs2FileOpenEdit(filename)
         file.Close()
         itemInfo = file.ItemInfo[0]
+        assert_equal("H Water Depth m", itemInfo.Name)
+        assert_equal(0, itemInfo.SpatialAxis.X0)
         itemInfo.Name = "abc"
         itemInfo.Quantity = eumQuantity(eumItem.eumIAreaFraction, eumUnit.eumUPerCent)
         itemInfo.SpatialAxis.X0 = 5
         spatialAxis = file.SpatialAxis
         assert spatialAxis is not None
+        assert_equal(0, spatialAxis.X0)
         spatialAxis.X0 = 5
         with self.assertRaises(OSError):
             file.Flush()
@@ -420,6 +443,7 @@ class Dfs2Tests(unittest.TestCase):
 
         file = DfsFileFactory.DfsGenericOpenEdit(filename)
         axis = file.ItemInfo[0].SpatialAxis
+        assert_equal(0, axis.X0)
         with self.assertRaises(TypeError):
             axis.X0 = "abc"
         assert_equal(0, axis.X0)
@@ -435,6 +459,7 @@ class Dfs2Tests(unittest.TestCase):
 
         file = DfsFileFactory.DfsGenericOpenEdit(filename)
         axis = file.ItemInfo[0].SpatialAxis
+        assert not hasattr(axis, "Z0")
         axis.Z0 = 1
         assert_equal(1, axis.Z0)
         file.Close()
