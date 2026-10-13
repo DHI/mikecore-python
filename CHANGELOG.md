@@ -65,5 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it, instead of raising `IndexError`. The native library ignores the key.
 - `DfsFile.WriteItemTimeStepNext` reports data shorter than the item with its
   size, instead of raising `AttributeError`.
+- Reading an item's value type raises the DFS error when the native library
+  reports one, instead of returning `DataValueType.Instantaneous`.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD
