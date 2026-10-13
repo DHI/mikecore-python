@@ -298,6 +298,91 @@ class Dfs2Tests(unittest.TestCase):
         assert_equal(eumUnit.eumUintCode, itemInfo.Quantity.Unit)
         file.Close()
 
+    def test_ModifyAxisFlushThenAppendTest(self):
+        # Writing the axis on Flush must not move the file pointer
+        originalFilename = "testdata/OresundHD.dfs2"
+        filename = "testdata/testtmp/test_modifyAxisAppend_OresundHD.dfs2"
+
+        testUtil.copy_file(originalFilename, filename)
+
+        file = DfsFileFactory.Dfs2FileOpenAppend(filename)
+        timeAxis = file.FileInfo.TimeAxis
+        spatialAxis = file.SpatialAxis
+        assert timeAxis is not None and spatialAxis is not None
+        numberOfTimeSteps = timeAxis.NumberOfTimeSteps
+        spatialAxis.X0 = 55
+        file.Flush()
+        for itemInfo in file.ItemInfo:
+            data = np.full(itemInfo.ElementCount, 123, dtype=np.float32)
+            file.WriteItemTimeStepNext(0.0, data)
+        file.Close()
+
+        file = DfsFileFactory.Dfs2FileOpen(filename)
+        timeAxis = file.FileInfo.TimeAxis
+        assert timeAxis is not None
+        assert_equal(numberOfTimeSteps + 1, timeAxis.NumberOfTimeSteps)
+        firstData = file.ReadItemTimeStep(1, 0)
+        appendedData = file.ReadItemTimeStep(1, numberOfTimeSteps)
+        assert firstData is not None and appendedData is not None
+        assert not np.all(firstData.Data == 123)
+        assert np.all(appendedData.Data == 123)
+        for itemInfo in file.ItemInfo:
+            assert_equal(55, itemInfo.SpatialAxis.X0)
+        staticItem = file.ReadStaticItemNext()
+        assert staticItem is not None and staticItem.SpatialAxis is not None
+        assert_equal(55, staticItem.SpatialAxis.X0)
+        file.Close()
+
+    def test_ModifyItemSpatialAxisTest(self):
+        # The axis of a single item can be changed on a generic dfs file
+        originalFilename = "testdata/OresundHD.dfs2"
+        filename = "testdata/testtmp/test_modifyItemAxis_OresundHD.dfs2"
+
+        testUtil.copy_file(originalFilename, filename)
+
+        file = DfsFileFactory.DfsGenericOpenEdit(filename)
+        file.ItemInfo[1].SpatialAxis.X0 = 55
+        file.Close()
+
+        file = DfsFileFactory.DfsGenericOpen(filename)
+        assert_equal(0, file.ItemInfo[0].SpatialAxis.X0)
+        assert_equal(55, file.ItemInfo[1].SpatialAxis.X0)
+        file.Close()
+
+    def test_ModifyItemNamePaddedTest(self):
+        # As in the C# library, a shorter name is padded to the old length
+        originalFilename = "testdata/Landuse.dfs2"
+        filename = "testdata/testtmp/test_modifyItemNamePadded_Landuse.dfs2"
+
+        testUtil.copy_file(originalFilename, filename)
+
+        file = DfsFileFactory.Dfs2FileOpenEdit(filename)
+        file.ItemInfo[0].Name = "Zz"
+        assert_equal("Zz     ", file.ItemInfo[0].Name)
+        file.Close()
+
+        file = DfsFileFactory.Dfs2FileOpen(filename)
+        assert_equal("Zz     ", file.ItemInfo[0].Name)
+        file.Close()
+
+    def test_ModifyItemInfoFailureKeepsOldValues(self):
+        originalFilename = "testdata/Landuse.dfs2"
+        filename = "testdata/testtmp/test_modifyItemInfoFailure_Landuse.dfs2"
+
+        testUtil.copy_file(originalFilename, filename)
+
+        file = DfsFileFactory.Dfs2FileOpenEdit(filename)
+        itemInfo = file.ItemInfo[0]
+        quantity = itemInfo.Quantity
+        # Not in the cp1252 encoding of dfs names
+        with self.assertRaises(UnicodeEncodeError):
+            itemInfo.Name = "Ω"
+        assert_equal("Landuse", itemInfo.Name)
+        with self.assertRaises(AttributeError):
+            itemInfo.Quantity = None
+        assert quantity is itemInfo.Quantity
+        file.Close()
+
     def test_ReadReshapedPastEndReturnsNone(self):
         dfsFile = DfsFileFactory.Dfs2FileOpen("testdata/OresundHD.dfs2")
         dfsFile.Reshape(True)
