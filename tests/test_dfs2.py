@@ -425,6 +425,20 @@ class Dfs2Tests(unittest.TestCase):
         assert_equal(0, axis.X0)
         file.Close()
 
+    def test_ModifyItemSpatialAxisOtherAttributeTest(self):
+        # Setting an attribute the axis type does not have, here Z0 on a 2D
+        # axis, sets it as on an axis that is not in an editable file
+        originalFilename = "testdata/OresundHD.dfs2"
+        filename = "testdata/testtmp/test_modifyItemAxisOther_OresundHD.dfs2"
+
+        testUtil.copy_file(originalFilename, filename)
+
+        file = DfsFileFactory.DfsGenericOpenEdit(filename)
+        axis = file.ItemInfo[0].SpatialAxis
+        axis.Z0 = 1
+        assert_equal(1, axis.Z0)
+        file.Close()
+
     def test_ReadReshapedPastEndReturnsNone(self):
         dfsFile = DfsFileFactory.Dfs2FileOpen("testdata/OresundHD.dfs2")
         dfsFile.Reshape(True)
