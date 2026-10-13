@@ -5,6 +5,7 @@ import pytest
 from numpy.testing import assert_array_equal
 
 from mikecore.DfsFactory import DfsFactory
+from mikecore.DfsFileFactory import DfsFileFactory
 from mikecore.DfsuBuilder import DfsuBuilder
 from mikecore.DfsuFile import DfsuFile, DfsuFileType
 from mikecore.eum import eumItem, eumQuantity, eumUnit
@@ -100,6 +101,31 @@ def test_z_unit_is_written(tmp_path):
     assert eumUnit.eumUfeet == dfsu.ZUnit
     assert_array_equal(Z, dfsu.Z)
     dfsu.Close()
+
+
+@pytest.mark.parametrize(
+    "projection, xyQuantity",
+    [
+        ("LONG/LAT", (eumItem.eumILatLong, eumUnit.eumUdegree)),
+        ("UTM-33", (eumItem.eumIGeographicalCoordinate, eumUnit.eumUmeter)),
+        ("NON-UTM", (eumItem.eumIGeographicalCoordinate, eumUnit.eumUmeter)),
+    ],
+)
+def test_xy_quantity_follows_projection(tmp_path, projection, xyQuantity):
+    filename = str(tmp_path / "xyquantity.dfsu")
+    builder = _builder()
+    builder.SetProjection(DfsFactory().CreateProjection(projection))
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    builder.CreateFile(filename).Close()
+
+    dfs = DfsFileFactory.DfsGenericOpen(filename)
+    dfs.ReadStaticItemNext()  # Node id
+    for name in ["X-coord", "Y-coord"]:
+        staticItem = dfs.ReadStaticItemNext()
+        assert name == staticItem.Name
+        assert xyQuantity == (staticItem.Quantity.Item, staticItem.Quantity.Unit)
+    dfs.Close()
 
 
 def test_z_unit_must_be_meter_or_feet():
