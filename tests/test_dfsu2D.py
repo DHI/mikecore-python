@@ -1063,10 +1063,7 @@ class FileOdenseHD2DDfsu:
         for j in range(13):
             for i in range(3):
                 itemData = itemDatas[i]
-                # TODO: Implement?
-                # dfsFile.ReadItemTimeStep(itemData, j);
-                itemData = dfsFile.ReadItemTimeStep(i + 1, j)
-                itemDatas[i] = itemData
+                dfsFile.ReadItemTimeStep(itemData, j)
                 Assert.AreEqual(i + 1, itemData.ItemNumber)
                 Assert.AreEqual(j * 86400, itemData.Time)
 
