@@ -384,6 +384,10 @@ class DfsNonEqCalendarAxis(DfsTemporalAxis):
         self.TimeSpan = time - self.StartTimeOffset
 
 
+# Marks an attribute that was not set
+_Missing = object()
+
+
 class DfsSpatialAxis:
     # Attributes that may change on an axis read from a file. Setting one of
     # them invokes _OnUpdate, which writes the axis to an editable file.
@@ -402,12 +406,15 @@ class DfsSpatialAxis:
         if name not in self._UpdatableAttributes or onUpdate is None:
             super().__setattr__(name, value)
             return
-        oldValue = getattr(self, name)
+        oldValue = self.__dict__.get(name, _Missing)
         super().__setattr__(name, value)
         try:
             onUpdate()
         except BaseException:
-            super().__setattr__(name, oldValue)
+            if oldValue is _Missing:
+                super().__delattr__(name)
+            else:
+                super().__setattr__(name, oldValue)
             raise
 
     def _Update(self, source):

@@ -11,12 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - In a dfs file opened for editing, assigning an item's `Name` or `Quantity`,
   or changing its `SpatialAxis`, writes the change to the file. On a dfs1,
-  dfs2 or dfs3 file, changing `SpatialAxis` updates every dynamic item when
-  the file is flushed or closed, and the static items with the same type of
-  axis when it is closed (the C# library also writes those on flush, which
-  moves the file pointer). As in the C# library, a new name is truncated or padded to the
-  length of the old one, and changing `Quantity.Item` or `Quantity.Unit` in
-  place is not written
+  dfs2 or dfs3 file, changing `SpatialAxis` updates every dynamic item, and
+  the static items with the same type of axis, when the file is closed. As in
+  the C# library, a new name is truncated or padded to the length of the old
+  one, and changing `Quantity.Item` or `Quantity.Unit` in place is not
+  written
   ([#38](https://github.com/DHI/mikecore-python/issues/38)).
 - Items read from a dfs file have the reference coordinates and orientation
   stored in the file. They had the `-1e-35` defaults, whatever the file held
