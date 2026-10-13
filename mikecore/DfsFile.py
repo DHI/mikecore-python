@@ -876,8 +876,9 @@ class DfsFile:
         self.fpTimeStepIndex = 0
         self.headPointer = ctypes.c_void_p(0)
         self.filePointer = ctypes.c_void_p(0)
-        # Items that write their changes to the file, until it is closed. Weak,
-        # so that the file does not keep the static items it read alive.
+        # Items and axes that write their changes to the file, until it is
+        # closed. Weak, so that the file does not keep the static items it
+        # read alive.
         self._updatableItems = weakref.WeakSet()
 
     def __del__(self):
@@ -1002,10 +1003,8 @@ class DfsFile:
         if self.headPointer.value is not None:
             DfsDLL.Wrapper.dfsHeaderDestroy(ctypes.byref(self.headPointer))
         # The item pointers point into the destroyed header: stop writing to it
-        for item in list(self._updatableItems):
-            item._OnUpdate = None
-            if item.SpatialAxis is not None:
-                item.SpatialAxis._OnUpdate = None
+        for itemOrAxis in list(self._updatableItems):
+            itemOrAxis._OnUpdate = None
         self._updatableItems.clear()
 
     def GetNextItemNumber(self):
@@ -1587,11 +1586,16 @@ class DfsFile:
             return
         self._updatableItems.add(item)
         item._OnUpdate = lambda: self.__UpdateItemInfo(item)
-        if item.SpatialAxis is not None:
-            item.SpatialAxis._OnUpdate = lambda: self.__UpdateItemAxis(item)
+        axis = item.SpatialAxis
+        if axis is not None:
+            self._updatableItems.add(axis)
+            axis._OnUpdate = lambda: self.__UpdateItemAxis(item, axis)
 
-    def __UpdateItemAxis(self, item):
-        DfsDLLUtil.dfsSetItemSpatialAxis(item.ItemPointer, item.SpatialAxis)
+    def __UpdateItemAxis(self, item, axis):
+        # As in the C# library, an axis writes only while it is the item's
+        # axis: one replaced by assigning SpatialAxis writes nothing
+        if item.SpatialAxis is axis:
+            DfsDLLUtil.dfsSetItemSpatialAxis(item.ItemPointer, axis)
 
     def __UpdateItemInfo(self, item):
         nameInFile, nameBytes = item._NameInFile
