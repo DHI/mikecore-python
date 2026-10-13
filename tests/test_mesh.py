@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 import pytest
-from numpy.testing import assert_allclose, assert_array_equal
+from numpy.testing import assert_array_equal
 
 from mikecore.DfsuBuilder import DfsuBuilder
 from mikecore.DfsuFile import DfsuFile, DfsuFileType
@@ -216,8 +216,7 @@ def test_MeshBuilder_rebuilds_the_Oresund_mesh(tmp_path):
     z = mesh.Z
     assert originalZ is not None
     assert z is not None
-    # To float32 precision; exact z is test_MeshBuilder_keeps_z_precision
-    assert_allclose(originalZ, z, rtol=float(np.finfo(np.float32).eps))
+    assert_array_equal(originalZ, z)
     assert_array_equal(original.Code, mesh.Code)
     assert_array_equal(original.ElementIds, mesh.ElementIds)
     assert_array_equal(original.ElementType, mesh.ElementType)
@@ -226,15 +225,6 @@ def test_MeshBuilder_rebuilds_the_Oresund_mesh(tmp_path):
         assert_array_equal(expected, element)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Suspected bug: MeshBuilder.SetNodes converts z to float32, so a mesh built "
-        "from double z values, such as one read with MeshFile.ReadMesh, is written "
-        "with z rounded to about 7 digits. Mesh files store z as doubles, and "
-        "MeshFile and SetNodes keep x and y as doubles. Correct: z is kept as given."
-    ),
-)
 def test_MeshBuilder_keeps_z_precision(tmp_path):
     filename = str(tmp_path / "z.mesh")
     # ## 1 359862.97332797921 6206313.7132576201 -1.7859922534795478 1
@@ -249,18 +239,54 @@ def test_MeshBuilder_keeps_z_precision(tmp_path):
     assert_array_equal(z, mesh.Z)
 
 
-def test_MeshBuilder_element_ids_are_written(tmp_path):
-    filename = str(tmp_path / "element_ids.mesh")
+INT32 = np.iinfo(np.int32)
+
+
+def _square_mesh_builder():
     builder = MeshBuilder()
     builder.SetProjection("NON-UTM")
     builder.SetNodes(X, Y, Z, CODE)
     builder.SetElements(ELEMENTS)
-    elementIds = [10, 20]
+    return builder
+
+
+# MeshFile.ReadMesh reads ids as int32, so the int32 bounds are the range
+@pytest.mark.parametrize(
+    "elementIds",
+    [
+        [10, 20],
+        np.array([10, 20], dtype=np.int32),
+        np.array([10, 20], dtype=np.int64),
+        [INT32.min, INT32.max],
+    ],
+)
+def test_MeshBuilder_element_ids_are_written(tmp_path, elementIds):
+    filename = str(tmp_path / "element_ids.mesh")
+    builder = _square_mesh_builder()
     builder.SetElementIds(elementIds)
     builder.CreateMesh().Write(filename)
 
     mesh = MeshFile.ReadMesh(filename)
     assert_array_equal(elementIds, mesh.ElementIds)
+
+
+def test_MeshBuilder_element_ids_set_to_none_use_the_defaults(tmp_path):
+    filename = str(tmp_path / "element_ids_none.mesh")
+    builder = _square_mesh_builder()
+    builder.SetElementIds([10, 20])
+    builder.SetElementIds(None)
+    builder.CreateMesh().Write(filename)
+
+    mesh = MeshFile.ReadMesh(filename)
+    assert_array_equal([1, 2], mesh.ElementIds)
+
+
+@pytest.mark.parametrize("outside", [INT32.max + 1, INT32.min - 1, 2**40, 2**64])
+def test_MeshBuilder_element_ids_outside_int32_are_rejected(outside):
+    builder = _square_mesh_builder()
+
+    with pytest.raises(ValueError, match="int32"):
+        builder.SetElementIds([1, outside])
 
 
 def test_MeshBuilder_mixed_triangles_and_quadrilaterals(tmp_path):

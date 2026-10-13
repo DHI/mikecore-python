@@ -26,7 +26,7 @@ class MeshBuilder:
         self.__nodeIds: np.ndarray | None = None
         self.__nodes: MeshNodes | None = None
 
-        self.__elementIds: Sequence[int] | np.ndarray | None = None
+        self.__elementIds: np.ndarray | None = None
         self.__connectivity: Sequence | np.ndarray | None = None
 
     def SetProjection(self, projection):
@@ -54,7 +54,7 @@ class MeshBuilder:
         except Exception as err:
             raise TypeError("y must be array of float") from err
         try:
-            z = np.array(z, dtype=np.float32)
+            z = np.array(z, dtype=np.float64)
         except Exception as err:
             raise TypeError("z must be array of float") from err
         try:
@@ -98,8 +98,24 @@ class MeshBuilder:
 
         self.__connectivity = connectivity
 
+    @staticmethod
+    def __Int32Ids(ids):
+        """Ids as the int32 array MeshFile reads, rejecting ids that do not fit."""
+        ids = np.asarray(ids)
+        try:
+            int32Ids = ids.astype(np.int32)
+        except OverflowError:
+            int32Ids = None
+        if int32Ids is None or np.any(int32Ids != ids):
+            raise ValueError("Element ids must be integers that fit in int32")
+        return int32Ids
+
     def SetElementIds(self, elementIds):
         """Set the element id's. Optional. If not set, default values are used (1,2,3,...)"""
+        if elementIds is None:
+            self.__elementIds = None
+            return
+        elementIds = MeshBuilder.__Int32Ids(elementIds)
         if (self.__connectivity is not None) and (
             len(self.__connectivity) != len(elementIds)
         ):

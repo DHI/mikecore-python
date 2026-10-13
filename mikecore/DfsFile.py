@@ -945,10 +945,15 @@ class DfsFile:
 
         :param staticItemNo: Number of static item in the file to read. First static item has number 1
         :returns: The static item number <paramref name="staticItemNo"/>, null if there are not that many static items.
+        :raises ValueError: If <paramref name="staticItemNo"/> is below 1.
         """
         self.__CheckIfOpen()
         if self.fpState == DfsFilePointerState.CreatingItems:
             raise Exception("Can not read static items when file is being created.")
+        if staticItemNo < 1:
+            raise ValueError(
+                f"Static item number must be 1 or more, got {staticItemNo}"
+            )
 
         if (
             self.fpState != DfsFilePointerState.StaticItem
@@ -1064,6 +1069,11 @@ class DfsFile:
             res = itemData
             res.Time = time
             res.TimeStepIndex = self.fpTimeStepIndex
+        # A 0-D axis has shape (0,) while holding one value, so only reshape 2-D and
+        # 3-D. Some axis types, such as EqD4, are read as None, so stay flat.
+        axis = item.SpatialAxis
+        if reshape and axis is not None and len(shape := axis.Shape) >= 2:
+            res.Data = res.Data.reshape(shape, order="F")
         self.__FpDynamicIncrement()
         return res
 

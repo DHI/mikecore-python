@@ -7,6 +7,10 @@ def Dfs0ToAscii(dfs0FileName, txtFileName):
     """Writes dfs0 data to text file in similar format as other MIKE Zero tools"""
 
     dfs = DfsFileFactory.DfsGenericOpen(dfs0FileName)
+    timeAxis = dfs.FileInfo.TimeAxis
+    if timeAxis is None:
+        dfs.Close()
+        raise Exception(f"{dfs0FileName} has no time axis")
     txt = open(txtFileName, "w")
 
     txt.write(" ")
@@ -37,12 +41,12 @@ def Dfs0ToAscii(dfs0FileName, txtFileName):
     # Only set for calendar time axes; otherwise times are written as offsets.
     startDateTime = None
     if (
-        dfs.FileInfo.TimeAxis.TimeAxisType == TimeAxisType.CalendarEquidistant
-        or dfs.FileInfo.TimeAxis.TimeAxisType == TimeAxisType.CalendarNonEquidistant
+        timeAxis.TimeAxisType == TimeAxisType.CalendarEquidistant
+        or timeAxis.TimeAxisType == TimeAxisType.CalendarNonEquidistant
     ):
-        startDateTime = dfs.FileInfo.TimeAxis.StartDateTime
+        startDateTime = timeAxis.StartDateTime
 
-    for i in range(dfs.FileInfo.TimeAxis.NumberOfTimeSteps):
+    for i in range(timeAxis.NumberOfTimeSteps):
         for j in range(len(dfs.ItemInfo)):
             itemData = dfs.ReadItemTimeStepNext()
             if itemData is None:
@@ -51,8 +55,9 @@ def Dfs0ToAscii(dfs0FileName, txtFileName):
                 )
             if j == 0:
                 if startDateTime is not None:
-                    # TODO: Time unit is not always seconds
-                    itemTime = startDateTime + timedelta(seconds=itemData.Time)
+                    itemTime = startDateTime + timedelta(
+                        seconds=timeAxis.ToSeconds(itemData.Time)
+                    )
                     # Depending on the format to write to the file:
                     # txt.write(itemTime.strftime("%Y-%m-%d %H:%M:%S"));         # Seconds accuracy
                     txt.write(
