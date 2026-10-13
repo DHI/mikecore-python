@@ -648,3 +648,24 @@ def test_quantity_edit_keeps_a_name_cp1252_cannot_decode(case):
     _, item, unit, _ = readItems(case.filename)[0]
     assert NEW_QUANTITY == (item, unit)
     assertOnlyHeaderChanged(case, patched)
+
+
+@pytest.mark.parametrize("mode", ["read", "edit"])
+def test_file_axis_is_a_copy_of_the_item_axis(fileAxisCase, mode):
+    """
+    As in the C# library, the axis of a dfs1, dfs2 or dfs3 file is a copy of
+    the first item's axis: changing it changes the items only when an
+    editable file is flushed or closed, and never in a file opened to read.
+    """
+    case = fileAxisCase
+    opener = case.dfsType.open if mode == "read" else case.dfsType.openEdit
+    file = opener(case.filename)
+    itemAxis = file.ItemInfo[0].SpatialAxis
+    assert file.SpatialAxis is not itemAxis
+    oldX0 = itemAxis.X0
+    file.SpatialAxis.X0 = oldX0 + 5
+    assert oldX0 == itemAxis.X0
+    if mode == "edit":
+        file.Flush()
+        assert oldX0 + 5 == itemAxis.X0
+    file.Close()
