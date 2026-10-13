@@ -23,15 +23,22 @@ class ExamplesDfsu:
         numberOfNodes = file.NumberOfNodes  # 2057
         firstNodeXCoordinate = file.X[0]  # 359978.8
         firstElementNodes = file.ElementTable[0]  # [1, 2, 3]
+        assert (numberOfElements, numberOfNodes) == (3636, 2057)
+        assert math.isclose(firstNodeXCoordinate, 359978.8, abs_tol=0.1)
+        assert list(firstElementNodes) == [1, 2, 3]
 
         # Read dynamic item info
         firstItemName = file.ItemInfo[0].Name  # "Surface elevation"
         quantity = file.ItemInfo[0].Quantity  # eumISurfaceElevation in eumUmeter
+        assert firstItemName == "Surface elevation"
+        assert quantity.Item == eumItem.eumISurfaceElevation
+        assert quantity.Unit == eumUnit.eumUmeter
 
         # load data for the first item, 6th timestep
         itemTimeStepData = file.ReadItemTimeStep(1, 5).Data
         # Read the value of the third element
         thirdElementValue = itemTimeStepData[2]  # 0.0014070312
+        assert math.isclose(thirdElementValue, 0.0014070312, rel_tol=1e-6)
 
         file.Close()
 
@@ -158,7 +165,6 @@ class ExamplesDfsu:
 
         # Create a dfs0 file for each element in elmtsIndices
         dfs0Files = []
-        timeSpan = source.TimeStepInSeconds * source.NumberOfTimeSteps
         for k in range(elmtsIndices.size):
             # Index of element to create dfs0 for
             elmtsIndex = elmtsIndices[k]
@@ -216,7 +222,7 @@ class ExamplesDfsu:
         for i in range(source.NumberOfTimeSteps):
             for j in range(len(source.ItemInfo)):
                 dfsuItemData = dfsuItemDatas[j]
-                ok = source.ReadItemTimeStep(dfsuItemData, i)
+                source.ReadItemTimeStep(dfsuItemData, i)
                 floats = dfsuItemData.Data
 
                 # write data to dfs0's
@@ -413,7 +419,7 @@ class ExamplesDfsu:
             for j in range(len(dfsu3File.ItemInfo)):
                 # Read data from 3D dfsu
                 data3Item = dfsu3ItemDatas[j]
-                ok = dfsu3File.ReadItemTimeStep(data3Item, i)
+                dfsu3File.ReadItemTimeStep(data3Item, i)
                 # 3D data
                 data3 = data3Item.Data
 

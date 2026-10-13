@@ -16,16 +16,20 @@ class ExamplesDfs2:
         axisEqD2 = dfs2File.SpatialAxis
         dx = axisEqD2.Dx  # 900
         dy = axisEqD2.Dy  # 900
+        assert (dx, dy) == (900, 900)
 
         # Header information is contained in the IDfsFileInfo
         fileInfo = dfs2File.FileInfo
         steps = fileInfo.TimeAxis.NumberOfTimeSteps  # 13
         projectionString = fileInfo.Projection.WKTString  # "UTM-33"
+        assert projectionString == "UTM-33"
 
         # Information on each of the dynamic items, here the first one
         dynamicItemInfo = dfs2File.ItemInfo[0]
         nameOfFirstDynamicItem = dynamicItemInfo.Name  # "H Water Depth m"
         typeOfFirstDynamicItem = dynamicItemInfo.DataType  # Float
+        assert nameOfFirstDynamicItem == "H Water Depth m"
+        assert typeOfFirstDynamicItem == DfsSimpleType.Float
 
         # Read data of first item, third time step (items start by 1, timesteps by 0),
         # assuming data is of type float.
