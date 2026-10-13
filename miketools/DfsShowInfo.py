@@ -46,11 +46,10 @@ def DfsShowInfo(dfsFileName, showAxis=False):
         txt.write(
             f"item {item.ItemNumber!s:>2}: {item.Name!s:<40}: {item.ElementCount!s:>5}: {item.DataType.name!s:>6} {item.SpatialAxis.AxisType.name!s:>6} ({item.Quantity.ItemDescription!s:>11}: {item.Quantity.UnitDescription!s:>11}) \n"
         )
-        if showAxis:
-            if item.SpatialAxis.AxisType is SpaceAxisType.EqD1:
-                txt.write(
-                    f"  axis : dx = {item.SpatialAxis.Dx}, xCount = {item.SpatialAxis.XCount}, x0 = {item.SpatialAxis.X0} ({item.SpatialAxis.AxisUnit.name})\n"
-                )
+        if showAxis and item.SpatialAxis.AxisType is SpaceAxisType.EqD1:
+            txt.write(
+                f"  axis : dx = {item.SpatialAxis.Dx}, xCount = {item.SpatialAxis.XCount}, x0 = {item.SpatialAxis.X0} ({item.SpatialAxis.AxisUnit.name})\n"
+            )
 
     dfs.Close()
 

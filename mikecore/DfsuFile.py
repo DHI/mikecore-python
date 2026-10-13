@@ -272,11 +272,10 @@ class DfsuFile:
         self.NumberOfElements = self.ElementIds.size
         # self.NumberOfNodes = self.X.size
 
-        if not build:
-            # In append mode, move the file pointer to end of file
-            # It was moved elsewhere when reading static data...
-            if self.dfsFile.FileMode == DfsFileMode.Append:
-                self.dfsFile.FindTimeStep(self.NumberOfTimeSteps)
+        # In append mode, move the file pointer to end of file
+        # It was moved elsewhere when reading static data...
+        if not build and self.dfsFile.FileMode == DfsFileMode.Append:
+            self.dfsFile.FindTimeStep(self.NumberOfTimeSteps)
 
     def Dispose(self):
         """
