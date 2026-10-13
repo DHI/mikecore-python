@@ -2112,7 +2112,8 @@ class DfsDLLUtil:
     @staticmethod
     def dfsGetItemValueType(itemPointer):
         valueTypeInt = ctypes.c_int()
-        err = DfsDLL.Wrapper.dfsGetItemValueType(
+        rok = DfsDLL.Wrapper.dfsGetItemValueType(
             itemPointer, ctypes.byref(valueTypeInt)
         )
+        DfsDLL.CheckReturnCode(rok)
         return DataValueType(valueTypeInt.value)
