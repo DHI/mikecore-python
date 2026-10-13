@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from typing import NamedTuple
 
 import numpy as np
-from mikecore.DfsuFile import DfsuFile
+from mikecore.DfsuFile import DfsuFile, DfsuFileType
 from mikecore.eum import eumQuantity, eumItem, eumUnit
 from mikecore.MeshFile import MeshFile
 from mikecore.DfsBuilder import DfsBuilder
@@ -168,10 +168,6 @@ class MeshBuilder:
                 elmtTypeNumber = 21
             elif len(elmt) == 4:
                 elmtTypeNumber = 25
-            elif len(elmt) == 6:
-                elmtTypeNumber = 32
-            elif len(elmt) == 8:
-                elmtTypeNumber = 33
             else:
                 raise Exception("Element with invalid number of nodes encountered")
 
@@ -208,6 +204,13 @@ class MeshBuilder:
         """Create a mesh file from the provided dfsu file.
         The dfsu file must be a 2D dfsu file.
         """
+        if dfsuFile.DfsuFileType not in (
+            DfsuFileType.Dfsu2D,
+            DfsuFileType.DfsuSpectral2D,
+        ):
+            raise ValueError(
+                f"The dfsu file must be a 2D dfsu file, but it is {dfsuFile.DfsuFileType.name}"
+            )
         if dfsuFile.ZUnit != eumUnit.eumUUnitUndefined:
             bathyQuantity = eumQuantity(eumItem.eumIBathymetry, dfsuFile.ZUnit)
         else:

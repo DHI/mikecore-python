@@ -2,6 +2,7 @@ import os.path
 from enum import IntEnum
 import datetime
 import ctypes
+import locale
 import numpy as np
 from mikecore.eum import *
 from mikecore.DfsDLL import DfsDLL
@@ -872,6 +873,10 @@ class DfsFile:
         filename: name and path of file to open
         """
 
+        # Encode first, so a name the native library can not open fails before
+        # any file system access.
+        encodedFileName = DfsDLLUtil.EncodeFileName(filename)
+
         # Close file, if already open
         if self.filePointer.value is not None:
             self.Close()
@@ -896,7 +901,7 @@ class DfsFile:
         self.headPointer = ctypes.c_void_p()
         # Marshal filename string to C char*
         fnp = ctypes.c_char_p()
-        fnp.value = filename.encode("cp1252")
+        fnp.value = encodedFileName
 
         if mode == DfsFileMode.Read:
             # Open file for reading
@@ -1253,16 +1258,15 @@ class DfsFile:
 
         # More elaborate action is required, when appending to file. If appending then
         # (itemNumber == _fpItemNumber && timestepIndex == _fileInfo.TimeAxis.NumberOfTimeSteps == _fpTimeStepIndex)
-        if timestepIndex == self.FileInfo.TimeAxis.NumberOfTimeSteps:
-            if (
-                timestepIndex == self.fpTimeStepIndex
-                and itemNumber != self.fpItemNumber
-                or timestepIndex != self.fpTimeStepIndex
-                and itemNumber != 1
-            ):
-                raise IndexError(
-                    "Wrong item number while trying to append item data to file. Item data must be appended in order, and for all items in the time step"
-                )
+        if timestepIndex == self.FileInfo.TimeAxis.NumberOfTimeSteps and (
+            timestepIndex == self.fpTimeStepIndex
+            and itemNumber != self.fpItemNumber
+            or timestepIndex != self.fpTimeStepIndex
+            and itemNumber != 1
+        ):
+            raise IndexError(
+                "Wrong item number while trying to append item data to file. Item data must be appended in order, and for all items in the time step"
+            )
 
         # Position file pointer
         self.__FpFindItemTimeStep(itemNumber, timestepIndex)
@@ -1335,11 +1339,13 @@ class DfsFile:
             self.headPointer, self.filePointer, ctypes.c_double(time), data.ctypes.data
         )
 
-        if self.__FpDynamicIncrement():
-            if self.fpTimeStepIndex > self.FileInfo.TimeAxis.NumberOfTimeSteps:
-                # One entire time step (all items) has just been written to file,
-                # increment the number of time steps
-                self.FileInfo.TimeAxis.IncrementNumberOfTimeSteps(time)
+        if (
+            self.__FpDynamicIncrement()
+            and self.fpTimeStepIndex > self.FileInfo.TimeAxis.NumberOfTimeSteps
+        ):
+            # One entire time step (all items) has just been written to file,
+            # increment the number of time steps
+            self.FileInfo.TimeAxis.IncrementNumberOfTimeSteps(time)
 
     def Reset(self):
         """
@@ -1451,12 +1457,12 @@ class DfsFile:
 
         # Need to handle StartTimeOffset similar to in __GetTime
         timeaxis = self.FileInfo.TimeAxis
-        if timeaxis.TimeAxisType == TimeAxisType.TimeEquidistant:
-            if timeaxis.StartTimeOffset != 0.0:
-                data[:, 0] = data[:, 0] + timeaxis.StartTimeOffset
-        elif timeaxis.TimeAxisType == TimeAxisType.CalendarEquidistant:
-            if timeaxis.StartTimeOffset != 0.0:
-                data[:, 0] = data[:, 0] + timeaxis.StartTimeOffset
+        if (
+            timeaxis.TimeAxisType
+            in (TimeAxisType.TimeEquidistant, TimeAxisType.CalendarEquidistant)
+            and timeaxis.StartTimeOffset != 0.0
+        ):
+            data[:, 0] = data[:, 0] + timeaxis.StartTimeOffset
 
         return data
 
@@ -1665,7 +1671,24 @@ class DfsFile:
 
 
 class DfsDLLUtil:
-    """Utilities class, creating various Dfs classes based on pointers to DFS native data"""
+    """Utilities class, marshalling values to and from the DFS native library,
+    and creating various Dfs classes based on pointers to DFS native data"""
+
+    @staticmethod
+    def EncodeFileName(filename: str | os.PathLike[str]) -> bytes:
+        # The native library opens char* paths, which Windows interprets in the
+        # ANSI code page ("mbcs"), not UTF-8.
+        if os.name != "nt":
+            return os.fsencode(filename)
+        name: str = os.fspath(filename)
+        try:
+            return name.encode("mbcs")
+        except UnicodeEncodeError as e:
+            raise ValueError(
+                f"File name can not be represented in the Windows ANSI code page "
+                f"({locale.getencoding()}), character {e.object[e.start : e.end]!r} "
+                f"is not supported: {name}"
+            ) from e
 
     # In case of incorrect eumUnitInt then return eumUmeter, the default axis unit
     @staticmethod
@@ -2214,7 +2237,8 @@ class DfsDLLUtil:
     @staticmethod
     def dfsGetItemValueType(itemPointer):
         valueTypeInt = ctypes.c_int()
-        err = DfsDLL.Wrapper.dfsGetItemValueType(
+        rok = DfsDLL.Wrapper.dfsGetItemValueType(
             itemPointer, ctypes.byref(valueTypeInt)
         )
+        DfsDLL.CheckReturnCode(rok)
         return DataValueType(valueTypeInt.value)

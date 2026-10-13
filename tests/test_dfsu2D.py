@@ -476,13 +476,15 @@ class Dfsu2DTests(unittest.TestCase):
         numberOfLayers = dfsu3.NumberOfLayers
         dfsu3.Close()
         for layerNumber in [0, numberOfLayers + 1, -(numberOfLayers + 1)]:
-            with self.subTest(layerNumber=layerNumber):
-                with self.assertRaisesRegex(Exception, "Layer number is out of range"):
-                    ExamplesDfsu.ExtractDfsu2DLayerFrom3D(
-                        "testdata/OdenseHD3D.dfsu",
-                        "testdata/testtmp/test_OdenseHD3D_outofrange.dfsu",
-                        layerNumber,
-                    )
+            with (
+                self.subTest(layerNumber=layerNumber),
+                self.assertRaisesRegex(Exception, "Layer number is out of range"),
+            ):
+                ExamplesDfsu.ExtractDfsu2DLayerFrom3D(
+                    "testdata/OdenseHD3D.dfsu",
+                    "testdata/testtmp/test_OdenseHD3D_outofrange.dfsu",
+                    layerNumber,
+                )
 
     def test_ExtractDfsu2DLayerFrom2DFails(self):
         with self.assertRaisesRegex(Exception, "not a 3D dfsu file"):

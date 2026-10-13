@@ -1451,8 +1451,8 @@ class eumDLL:
             lib.eumSetupLoadLinux.argtypes = [ctypes.c_char_p]
             # TODO: Should this not be simpler?
             eumFilePath = path + "/EUM.xml"
-            eumFilePathP = ctypes.c_char_p(eumFilePath.encode("ascii"))
-            res = lib.eumSetupLoadLinux(eumFilePathP)
+            eumFilePathP = ctypes.c_char_p(os.fsencode(eumFilePath))
+            lib.eumSetupLoadLinux(eumFilePathP)
 
         lib.eumUnitGetParameters.argtypes = [
             ctypes.c_int32,
@@ -1536,7 +1536,7 @@ class eumWrapper:
     # / <returns>A hashtable with item type text description, numeric key pairs.</returns>
     @staticmethod
     def CreateItemHashtable() -> dict:
-        itemHash = dict()
+        itemHash = {}
         n = eumWrapper.eumGetItemTypeCount()
         for i in range(1, n + 1):
             ok, key, desc = eumWrapper.eumGetItemTypeSeq(i)
@@ -1554,7 +1554,7 @@ class eumWrapper:
     # / <returns></returns>
     @staticmethod
     def CreateUnitHashTable(abbreviations: bool = False):
-        unitHash = dict()  # current number of unique desc/abbrs.
+        unitHash = {}  # current number of unique desc/abbrs.
         prevKey = eumUnit.eumUUnitUndefined
         ok, unitKey, desc = eumWrapper.eumGetNextUnit(prevKey)
         while ok:
@@ -2068,84 +2068,6 @@ class eumWrapper:
             ctypes.c_float(float(fDeleteValue)),
         )
 
-    #    #/ <summary>
-    #    #/ TODO: Pending
-    #    #/ </summary>
-    #    @staticmethod
-    #    def eumGetFilterCount(); -> int:
-    #
-    #    private static bool _eumGetFilterSeq(SeqNo: int, out FtKey: int, out IntPtr lpFtDesc);
-    #
-    #    #/ <summary>
-    #    #/ TODO: Pending
-    #    #/ </summary>
-    #    @staticmethod
-    #    def eumGetFilterSeq(SeqNo: int, out FtKey: int, out FtDesc: str) -> bool:
-    #      IntPtr lpFtDesc;
-    #
-    #      if (not _eumGetFilterSeq(SeqNo, ctypes.byref(FtKey), ctypes.byref(lpFtDesc))):
-    #        FtDesc = string.Empty;
-    #        return False;
-    #
-    #      FtDesc = Marshal.PtrToStringAnsi(lpFtDesc);
-    #      return True;
-    #
-    #    private static bool _eumGetFilterKey(FtKey: int, out IntPtr lpFtDesc);
-    #
-    #    #/ <summary>
-    #    #/ TODO: Pending
-    #    #/ </summary>
-    #    @staticmethod
-    #    def eumGetFilterKey(FtKey: int, out FtDesc: str) -> bool:
-    #      IntPtr lpFtDesc;
-    #
-    #      if (not _eumGetFilterKey(FtKey, ctypes.byref(lpFtDesc))):
-    #        FtDesc = string.Empty;
-    #        return False;
-    #
-    #      FtDesc = Marshal.PtrToStringAnsi(lpFtDesc);
-    #      return True;
-    #
-    #    #/ <summary>
-    #    #/ TODO: Pending
-    #    #/ </summary>
-    #    @staticmethod
-    #    def eumGetFilteredItemTypeCount(Filter: int); -> int:
-    #
-    #    private static bool _eumGetFilteredItemTypeSeq(Filter: int, SeqNo: int, out itemKey: eumItem, out IntPtr lpItDesc);
-    #
-    #    #/ <summary>
-    #    #/ TODO: Pending
-    #    #/ </summary>
-    #    @staticmethod
-    #    def eumGetFilteredItemTypeSeq(Filter: int, SeqNo: int, out itemKey: eumItem, out ItDesc: str) -> bool:
-    #      IntPtr lpItDesc;
-    #
-    #      if (not _eumGetFilteredItemTypeSeq(Filter, SeqNo, ctypes.byref(itemKey), ctypes.byref(lpItDesc))):
-    #        ItDesc = string.Empty;
-    #        return False;
-    #
-    #      ItDesc = Marshal.PtrToStringAnsi(lpItDesc);
-    #      return True;
-    #
-    #    #/ <summary>
-    #    #/ TODO: Pending
-    #    #/ </summary>
-    #    @staticmethod
-    #    def eumItemFilterEqv(itemKey: eumItem, Filter: int); -> bool:
-    #
-    #    #/ <summary>
-    #    #/ TODO: Pending
-    #    #/ </summary>
-    #    @staticmethod
-    #    def eumSetProductFilter(Filter: int); -> void:
-    #
-    #    #/ <summary>
-    #    #/ TODO: Pending
-    #    #/ </summary>
-    #    @staticmethod
-    #    def eumGetProductFilter(); -> int:
-
     # / <summary>
     # / Returns factor and offset to SI base unit
     @staticmethod
@@ -2193,12 +2115,6 @@ class eumWrapper:
             return factor.value, offset.value, powdim, facdim
         raise Exception("Unit no defined")
 
-
-#    #/ <summary>
-#    #/ TODO: Pending
-#    #/ </summary>
-#    @staticmethod
-#    def eumGetFlybyFilter(); -> int:
 
 #    #/ <summary>
 #    #/ computes, if possible, the derivation factor <paramref name="Factor"/> to use

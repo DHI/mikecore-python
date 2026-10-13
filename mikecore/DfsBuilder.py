@@ -322,18 +322,18 @@ class DfsBuilder:
 
         filePointer = ctypes.c_void_p(0)
         headerPointer = ctypes.c_void_p(0)
-        fnp = ctypes.c_char_p(filename.encode("cp1252"))
+        fnp = ctypes.c_char_p(DfsDLLUtil.EncodeFileName(filename))
         try:
             headerPointer = self.__CreateHeader()
             DfsDLL.Wrapper.dfsFileCreate(
                 fnp.value, headerPointer, ctypes.byref(filePointer)
             )
 
-        except Exception as e:
+        except Exception:
             # In case of any exception, destroy the header.
             if headerPointer.value is not None:
                 DfsDLL.Wrapper.dfsHeaderDestroy(ctypes.byref(headerPointer))
-            raise e
+            raise
 
         # The create function will free ressources, if something fails.
         dfsFile = DfsFile()
@@ -468,12 +468,12 @@ class DfsBuilder:
             DfsBuilder.__SetValuesToItem(dfsFile.headPointer, itemPointer, staticItem)
 
             # From now on the responsibility of the staticVectorPointer is taken over bye the DfsStaticItem (ending the try-catch)
-        except Exception as e:
+        except Exception:
             # As long as the static vector pointer is not null, the
             # responsibility for destroying the header structure is here.
             if staticVectorPointer.value is not None:
                 DfsDLL.Wrapper.dfsStaticDestroy(ctypes.byref(staticVectorPointer))
-            raise e
+            raise
 
         # Create a DfsStaticItem that belongs to the current dfs file
         myStaticItem = DfsStaticItem(dfsFile, staticVectorPointer, itemPointer)
