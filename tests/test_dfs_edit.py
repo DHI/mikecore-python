@@ -781,8 +781,8 @@ def test_file_axis_reaches_an_item_whose_axis_was_replaced(fileAxisCase, replace
 
 def test_bad_file_axis_value_is_rejected_on_flush_and_close(fileAxisCase):
     """
-    As in the C# library, a value the file axis cannot hold is accepted when
-    set and rejected on Flush and Close. The file is still closed, unchanged.
+    A value the file axis cannot hold is accepted when set and rejected on
+    Flush and Close. The file is still closed, unchanged.
     """
     case = fileAxisCase
     original = readBytes(case.filename)
@@ -794,5 +794,6 @@ def test_bad_file_axis_value_is_rejected_on_flush_and_close(fileAxisCase):
     with pytest.raises(AttributeError):
         file.Close()
 
-    assert file.filePointer.value is None
+    with pytest.raises(OSError):
+        file.Flush()
     assert original == readBytes(case.filename)
