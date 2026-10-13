@@ -1,6 +1,6 @@
 import copy
 
-from mikecore.DfsFile import DfsDLLUtil, DfsFile, DfsFileMode, DfsItemData
+from mikecore.DfsFile import DfsFile, DfsFileMode, DfsItemData
 
 
 class Dfs123File(DfsFile):
@@ -48,11 +48,15 @@ class Dfs123File(DfsFile):
             if axis is None or data is None or axis.AxisType != fileAxis.AxisType:
                 continue
             axis._Update(fileAxis)
-            DfsDLLUtil.dfsSetItemSpatialAxis(staticItem.ItemPointer, axis)
             self.WriteStaticItemData(staticItem, data)
 
     def Flush(self):
-        # Static items are written on Close, to keep the file pointer
+        """
+        Flush cached data to the file. A changed SpatialAxis is written to the
+        dynamic items here, and to the static items only on Close: writing a
+        static item moves the file pointer, so a time step appended after
+        Flush would overwrite another. The C# library writes both on Flush.
+        """
         if self.filePointer.value is not None:
             self.__WriteSpatialAxis(staticItems=False)
         super().Flush()

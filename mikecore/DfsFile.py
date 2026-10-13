@@ -860,6 +860,8 @@ class DfsFile:
         self.fpTimeStepIndex = 0
         self.headPointer = ctypes.c_void_p(0)
         self.filePointer = ctypes.c_void_p(0)
+        # Items that write their changes to the file, until it is closed
+        self._updatableItems = []
 
     def __del__(self):
         self.Close()
@@ -983,10 +985,11 @@ class DfsFile:
         if self.headPointer.value is not None:
             DfsDLL.Wrapper.dfsHeaderDestroy(ctypes.byref(self.headPointer))
         # The item pointers point into the destroyed header: stop writing to it
-        for itemInfo in getattr(self, "ItemInfo", []):
-            itemInfo._OnUpdate = None
-            if itemInfo.SpatialAxis is not None:
-                itemInfo.SpatialAxis._OnUpdate = None
+        for item in self._updatableItems:
+            item._OnUpdate = None
+            if item.SpatialAxis is not None:
+                item.SpatialAxis._OnUpdate = None
+        self._updatableItems = []
 
     def GetNextItemNumber(self):
         return self.fpItemNumber
@@ -1556,13 +1559,22 @@ class DfsFile:
         )
         item = DfsDynamicItemInfo(itemPointer, itemNumber)
         self.__GetItemInfo(item)
-        if self.FileMode in (DfsFileMode.Edit, DfsFileMode.Append):
-            item._OnUpdate = lambda: self.__UpdateItemInfo(item)
-            if item.SpatialAxis is not None:
-                item.SpatialAxis._OnUpdate = lambda: DfsDLLUtil.dfsSetItemSpatialAxis(
-                    item.ItemPointer, item.SpatialAxis
-                )
+        self.__AttachItemUpdate(item)
         return item
+
+    def __AttachItemUpdate(self, item):
+        # In an editable file, changing the name, quantity or axis of an item
+        # updates its item info: in the header for a dynamic item, and in the
+        # static vector, written by WriteStaticItemData, for a static item
+        if self.FileMode not in (DfsFileMode.Edit, DfsFileMode.Append):
+            return
+        self._updatableItems.append(item)
+        item._OnUpdate = lambda: self.__UpdateItemInfo(item)
+        if item.SpatialAxis is not None:
+            item.SpatialAxis._OnUpdate = lambda: self.__UpdateItemAxis(item)
+
+    def __UpdateItemAxis(self, item):
+        DfsDLLUtil.dfsSetItemSpatialAxis(item.ItemPointer, item.SpatialAxis)
 
     def __UpdateItemInfo(self, item):
         rok = DfsDLL.Wrapper.dfsUpdateItemInfo(
@@ -1605,6 +1617,7 @@ class DfsFile:
 
         self.__GetItemInfo(staticItem)
         self.__GetStaticData(staticItem)
+        self.__AttachItemUpdate(staticItem)
 
         return staticItem
 
