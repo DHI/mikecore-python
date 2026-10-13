@@ -17,6 +17,7 @@ import pytest
 
 from mikecore.DfsBuilder import DataValueType, DfsBuilder, DfsSimpleType
 from mikecore.DfsFactory import DfsFactory
+from mikecore.DfsFile import DfsAxisEqD0
 from mikecore.DfsFileFactory import DfsFileFactory
 from mikecore.eum import eumItem, eumQuantity, eumUnit
 
@@ -755,3 +756,24 @@ def test_replaced_axis_writes_nothing(case):
     newAxis.AxisUnit = eumUnit.eumUmillimeter
 
     assert original == readBytes(case.filename)
+
+
+@pytest.mark.parametrize("replacement", ["copy", "othertype"])
+def test_file_axis_reaches_an_item_whose_axis_was_replaced(fileAxisCase, replacement):
+    """
+    Changing the axis of a dfs1, dfs2 or dfs3 file writes it to every
+    dynamic item in the file, also one whose SpatialAxis object was replaced.
+    """
+    case = fileAxisCase
+    file = case.dfsType.openEdit(case.filename)
+    itemInfo = file.ItemInfo[1]
+    if replacement == "copy":
+        itemInfo.SpatialAxis = copy.copy(itemInfo.SpatialAxis)
+    else:
+        itemInfo.SpatialAxis = DfsAxisEqD0()
+    newX0 = file.SpatialAxis.X0 + 5
+    file.SpatialAxis.X0 = newX0
+    file.Flush()
+    file.Close()
+
+    assert all(axis["X0"] == newX0 for _, _, _, axis in readItems(case.filename))
