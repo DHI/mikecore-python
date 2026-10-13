@@ -29,8 +29,9 @@ class DfsType:
     encoded: bool = False
 
 
-def createDfs1(filename):
-    # There is no dfs1 file in testdata, so the tests create one
+def createDfs1(filename, beforeData=None):
+    # There is no dfs1 file in testdata, so the tests create one. beforeData
+    # is called with the file being built, before any data is written.
     factory = DfsFactory()
     builder = DfsBuilder.Create("title", "application", 1)
     builder.SetDataType(0)
@@ -55,6 +56,8 @@ def createDfs1(filename):
         factory.CreateAxisEqD1(eumUnit.eumUmeter, 5, 0, 10),
     )
     file = builder.GetFile()
+    if beforeData is not None:
+        beforeData(file)
     for timeStep in range(3):
         for itemNumber in (1, 2):
             data = np.arange(5, dtype=np.float32) + 10 * timeStep + itemNumber
@@ -155,14 +158,13 @@ def readItems(filename):
 
 
 def readStaticItems(filename):
+    """The item values, axis type and data of each static item."""
     file = DfsFileFactory.DfsGenericOpen(filename)
     staticItems = []
     while (staticItem := file.ReadStaticItemNext()) is not None:
         axis = staticItem.SpatialAxis
         assert axis is not None
-        staticItems.append(
-            (staticItem.Name, axis.AxisType, axisValues(axis), staticItem.Data)
-        )
+        staticItems.append((itemValues(staticItem), axis.AxisType, staticItem.Data))
     file.Close()
     return staticItems
 
@@ -288,8 +290,8 @@ def test_edit_each_item(case, opener, edit):
     for staticItem, newStaticItem in zip(
         staticItems, readStaticItems(case.filename), strict=True
     ):
-        assert staticItem[:3] == newStaticItem[:3]
-        np.testing.assert_array_equal(staticItem[3], newStaticItem[3])
+        assert staticItem[:2] == newStaticItem[:2]
+        np.testing.assert_array_equal(staticItem[2], newStaticItem[2])
     for (time, data), (newTime, newData) in zip(
         dynamicData, readDynamicData(case.filename), strict=True
     ):
@@ -378,11 +380,15 @@ def test_rejected_value_keeps_old_value(case, setter, error):
     assert original == readBytes(case.filename)
 
 
+def editItem(itemInfo):
+    itemInfo.Name = "abc"
+    itemInfo.Quantity = eumQuantity(*NEW_QUANTITY)
+    itemInfo.SpatialAxis.AxisUnit = NEW_AXIS_UNIT
+
+
 def editEverything(file):
     for itemInfo in file.ItemInfo:
-        itemInfo.Name = "abc"
-        itemInfo.Quantity = eumQuantity(*NEW_QUANTITY)
-        itemInfo.SpatialAxis.AxisUnit = NEW_AXIS_UNIT
+        editItem(itemInfo)
     spatialAxis = getattr(file, "SpatialAxis", None)
     if spatialAxis is not None:
         spatialAxis.X0 = NEW_X0
@@ -404,9 +410,14 @@ def test_edit_after_close_writes_nothing(case):
     original = readBytes(case.filename)
 
     file = case.dfsType.openEdit(case.filename)
+    dfsFile = getattr(file, "dfsFile", file)
+    staticItem = dfsFile.ReadStaticItemNext()
     file.Close()
     editEverything(file)
     assert "abc" == file.ItemInfo[0].Name
+    if staticItem is not None:
+        editItem(staticItem)
+        assert "abc" == staticItem.Name
     with pytest.raises(OSError):
         file.Flush()
 
@@ -499,15 +510,102 @@ def test_file_axis_is_written_to_every_item(fileAxisCase):
 
     for _, _, _, axis in readItems(case.filename):
         assert newValues == axis
-    assert axisType in [staticAxisType for _, staticAxisType, _, _ in staticItems]
-    for (name, staticAxisType, axis, data), (newName, _, newAxis, newData) in zip(
+    assert axisType in [staticAxisType for _, staticAxisType, _ in staticItems]
+    for (values, staticAxisType, data), (newValues_, _, newData) in zip(
         staticItems, readStaticItems(case.filename), strict=True
     ):
-        assert name == newName
-        assert (newValues if staticAxisType == axisType else axis) == newAxis
+        name, item, unit, axis = values
+        if staticAxisType == axisType:
+            axis = newValues
+        assert (name, item, unit, axis) == newValues_
         np.testing.assert_array_equal(data, newData)
     for (_, data), (_, newData) in zip(
         dynamicData, readDynamicData(case.filename), strict=True
     ):
         np.testing.assert_array_equal(data, newData)
     assertOnlyHeaderChanged(case, original)
+
+
+STATIC_ITEM_TYPES = ["dfs1", "dfs2", "dfs3", "dfsu"]
+
+
+@pytest.fixture(params=STATIC_ITEM_TYPES)
+def staticCase(request, tmp_path):
+    return makeCase(request.param, tmp_path)
+
+
+@pytest.mark.parametrize("edit", list(EDITS))
+def test_edit_each_static_item(staticCase, edit):
+    """
+    As in the C# library, a changed static item is written by
+    WriteStaticItemData. Only that static item changes, and the data is kept.
+    Checked for each static item of the file.
+    """
+    case = staticCase
+    editItem, expectItem = EDITS[edit]
+    items = readItems(case.filename)
+    dynamicData = readDynamicData(case.filename)
+    staticItems = readStaticItems(case.filename)
+    expected = [values for values, _, _ in staticItems]
+    assert len(expected) > 0
+
+    for staticItemNo in range(len(expected)):
+        before = readBytes(case.filename)
+        file = DfsFileFactory.DfsGenericOpenEdit(case.filename)
+        staticItem = file.ReadStaticItem(staticItemNo + 1)
+        assert staticItem is not None and staticItem.Data is not None
+        editItem(staticItem)
+        file.WriteStaticItemData(staticItem, staticItem.Data)
+        file.Close()
+
+        expected[staticItemNo] = expectItem(expected[staticItemNo])
+        newStaticItems = readStaticItems(case.filename)
+        assert expected == [values for values, _, _ in newStaticItems]
+        assertOnlyHeaderChanged(case, before)
+
+    for (_, _, data), (_, _, newData) in zip(
+        staticItems, readStaticItems(case.filename), strict=True
+    ):
+        np.testing.assert_array_equal(data, newData)
+    assert items == readItems(case.filename)
+    for (_, data), (_, newData) in zip(
+        dynamicData, readDynamicData(case.filename), strict=True
+    ):
+        np.testing.assert_array_equal(data, newData)
+
+
+def test_static_item_edit_is_written_only_by_write_static_item_data(staticCase):
+    original = readBytes(staticCase.filename)
+
+    file = DfsFileFactory.DfsGenericOpenEdit(staticCase.filename)
+    staticItem = file.ReadStaticItemNext()
+    assert staticItem is not None
+    editItem(staticItem)
+    file.Close()
+
+    assert original == readBytes(staticCase.filename)
+
+
+def test_edit_while_building(tmp_path):
+    """
+    A file made with DfsBuilder is open in Append mode, so item edits made
+    before its data is written go to the file, as in the C# library.
+    """
+    filename = str(tmp_path / "test.dfs1")
+    namesInMemory = []
+
+    def editFirstItem(file):
+        itemInfo = file.ItemInfo[0]
+        itemInfo.Name = "LongerName"
+        itemInfo.Quantity = eumQuantity(*NEW_QUANTITY)
+        itemInfo.SpatialAxis.X0 = NEW_X0
+        namesInMemory.append(itemInfo.Name)
+
+    createDfs1(filename, editFirstItem)
+
+    # The name keeps the length of "Level", the name the item was built with
+    assert ["Longe"] == namesInMemory
+    name, item, unit, axis = readItems(filename)[0]
+    assert ("Longe", NEW_QUANTITY, NEW_X0) == (name, (item, unit), axis["X0"])
+    assert "Depth" == readItems(filename)[1][0]
+    assert 6 == len(readDynamicData(filename))
