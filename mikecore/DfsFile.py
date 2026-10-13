@@ -2,6 +2,7 @@ import os.path
 from enum import IntEnum
 import datetime
 import ctypes
+import locale
 import numpy as np
 from mikecore.eum import *
 from mikecore.DfsDLL import DfsDLL
@@ -791,6 +792,10 @@ class DfsFile:
         filename: name and path of file to open
         """
 
+        # Encode first, so a name the native library can not open fails before
+        # any file system access.
+        encodedFileName = DfsDLLUtil.EncodeFileName(filename)
+
         # Close file, if already open
         if self.filePointer.value is not None:
             self.Close()
@@ -815,7 +820,7 @@ class DfsFile:
         self.headPointer = ctypes.c_void_p()
         # Marshal filename string to C char*
         fnp = ctypes.c_char_p()
-        fnp.value = filename.encode("cp1252")
+        fnp.value = encodedFileName
 
         if mode == DfsFileMode.Read:
             # Open file for reading
@@ -1564,7 +1569,24 @@ class DfsFile:
 
 
 class DfsDLLUtil:
-    """Utilities class, creating various Dfs classes based on pointers to DFS native data"""
+    """Utilities class, marshalling values to and from the DFS native library,
+    and creating various Dfs classes based on pointers to DFS native data"""
+
+    @staticmethod
+    def EncodeFileName(filename: str | os.PathLike[str]) -> bytes:
+        # The native library opens char* paths, which Windows interprets in the
+        # ANSI code page ("mbcs"), not UTF-8.
+        if os.name != "nt":
+            return os.fsencode(filename)
+        name: str = os.fspath(filename)
+        try:
+            return name.encode("mbcs")
+        except UnicodeEncodeError as e:
+            raise ValueError(
+                f"File name can not be represented in the Windows ANSI code page "
+                f"({locale.getencoding()}), character {e.object[e.start : e.end]!r} "
+                f"is not supported: {name}"
+            ) from e
 
     # In case of incorrect eumUnitInt then return eumUmeter, the default axis unit
     @staticmethod
