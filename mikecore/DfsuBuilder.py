@@ -313,11 +313,19 @@ class DfsuBuilder:
             raise ValueError("Mesh file has no projection, nodes or quantity")
         self.__dfsProjection = DfsProjection.Create(wktString)
 
-        self.__nodeIds = meshFile.NodeIds
+        nodeIds = meshFile.NodeIds
+        self.__nodeIds = (
+            None if nodeIds is None else DfsuBuilder.__Int32Ids(nodeIds, "Node")
+        )
         self.__nodes = MeshNodes(x, y, z.astype(dtype=np.float32), code)
         self.__zUnit = quantity.Unit
 
-        self.__elementIds = meshFile.ElementIds
+        elementIds = meshFile.ElementIds
+        self.__elementIds = (
+            None
+            if elementIds is None
+            else DfsuBuilder.__Int32Ids(elementIds, "Element")
+        )
         self.__connectivity = meshFile.ElementTable
 
     def AddDynamicItem(self, itemName: str, quantity):

@@ -87,7 +87,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and lists and store int32 ids, raising `ValueError` for ids that do not fit in
   int32. Int64 node ids raised "Data type not supported: int64" in
   `CreateFile`. `SetElementIds(None)` goes back to the default ids, as
-  `SetNodeIds(None)` does.
+  `SetNodeIds(None)` does. `SetFromMeshFile` stores a mesh's ids as int32 too,
+  so a mesh from `MeshBuilder.CreateMesh()`, whose default ids may be int64,
+  can be written.
 - `MeshBuilder.SetElementIds(None)` goes back to the default ids instead of
   raising `TypeError` after `SetElements`, and ids that do not fit in int32
   raise `ValueError`. They were written to a mesh file that `MeshFile.ReadMesh`
