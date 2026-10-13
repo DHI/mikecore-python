@@ -14,6 +14,7 @@ from mikecore.DfsuFile import (
     DfsuUtil,
 )
 from mikecore.eum import eumUnit, eumQuantity, eumItem
+from mikecore.Projections import MapProjection
 
 
 # / <summary>
@@ -703,11 +704,10 @@ class DfsuBuilder:
         nodes, connectivity = self.__NodesAndElements()
         intCode = eumQuantity(eumItem.eumIIntegerCode, eumUnit.eumUintCode)
         xyQuantity = eumQuantity(eumItem.eumIGeographicalCoordinate, eumUnit.eumUmeter)
-
-        # TODO: reenable:
-        # if (MapProjection.IsValid(self.__dfsProjection.WKTString)):
-        #    if (MapProjection.IsGeographical(self.__dfsProjection.WKTString)):
-        #        xyQuantity = eumQuantity(eumItem.eumILatLong, eumUnit.eumUdegree)
+        if self.__dfsProjection is not None:
+            wkt = self.__dfsProjection.WKTString
+            if MapProjection.IsValid(wkt) and MapProjection.IsGeographical(wkt):
+                xyQuantity = eumQuantity(eumItem.eumILatLong, eumUnit.eumUdegree)
 
         # Node id
         nodeIdItem = dfsBuilder.AddCreateStaticItem("Node id", intCode, self.__nodeIds)
