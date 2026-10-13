@@ -22,7 +22,6 @@ def DfsShowInfo(dfsFileName, showAxis=False):
         dfs.FileInfo.TimeAxis.TimeAxisType == TimeAxisType.CalendarEquidistant
         or dfs.FileInfo.TimeAxis.TimeAxisType == TimeAxisType.CalendarNonEquidistant
     ):
-        isCalendarTime = True
         startDateTime = dfs.FileInfo.TimeAxis.StartDateTime
     txt.write(
         f"Time                : {dfs.FileInfo.TimeAxis.TimeAxisType}, {dfs.FileInfo.TimeAxis.NumberOfTimeSteps}, {startDateTime}\n"
@@ -74,7 +73,6 @@ def DfsuShowInfo(dfsFileName, showMesh=False):
         dfs.FileInfo.TimeAxis.TimeAxisType == TimeAxisType.CalendarEquidistant
         or dfs.FileInfo.TimeAxis.TimeAxisType == TimeAxisType.CalendarNonEquidistant
     ):
-        isCalendarTime = True
         startDateTime = dfs.FileInfo.TimeAxis.StartDateTime
     txt.write(
         f"Time                : {dfs.FileInfo.TimeAxis.TimeAxisType}, {dfs.FileInfo.TimeAxis.NumberOfTimeSteps}, {startDateTime}\n"

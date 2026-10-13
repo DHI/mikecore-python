@@ -730,19 +730,13 @@ class DfsuBuilder:
         )
 
         # Element type
-        elmtTypeItem = dfsBuilder.AddCreateStaticItem(
-            "Element type", intCode, elementType
-        )
+        dfsBuilder.AddCreateStaticItem("Element type", intCode, elementType)
 
         # No of nodes (per element)
-        nodesPerElmtItem = dfsBuilder.AddCreateStaticItem(
-            "No of nodes", intCode, nodesPerElmt
-        )
+        dfsBuilder.AddCreateStaticItem("No of nodes", intCode, nodesPerElmt)
 
         # Connectivity
-        connectivityItem = dfsBuilder.AddCreateStaticItem(
-            "Connectivity", intCode, connectivityArray
-        )
+        dfsBuilder.AddCreateStaticItem("Connectivity", intCode, connectivityArray)
 
         # Spectral
         frequencyItem = (

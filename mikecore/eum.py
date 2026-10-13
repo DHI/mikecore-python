@@ -1452,7 +1452,7 @@ class eumDLL:
             # TODO: Should this not be simpler?
             eumFilePath = path + "/EUM.xml"
             eumFilePathP = ctypes.c_char_p(eumFilePath.encode("ascii"))
-            res = lib.eumSetupLoadLinux(eumFilePathP)
+            lib.eumSetupLoadLinux(eumFilePathP)
 
         lib.eumUnitGetParameters.argtypes = [
             ctypes.c_int32,
