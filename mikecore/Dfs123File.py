@@ -1,6 +1,6 @@
 import copy
 
-from mikecore.DfsFile import DfsFile, DfsFileMode, DfsItemData
+from mikecore.DfsFile import DfsDLLUtil, DfsFile, DfsFileMode, DfsItemData
 
 
 class Dfs123File(DfsFile):
@@ -36,7 +36,14 @@ class Dfs123File(DfsFile):
         if not self._spatialAxisUpdated or fileAxis is None:
             return
         for itemInfo in self.ItemInfo:
-            itemInfo.SpatialAxis._Update(fileAxis)
+            # Write to the item's axis in the file, also when the item was given
+            # another SpatialAxis object, which writes nothing itself
+            itemAxis = DfsDLLUtil.GetItemSpatialAxis(itemInfo.ItemPointer)
+            itemAxis._Update(fileAxis)
+            DfsDLLUtil.dfsSetItemSpatialAxis(itemInfo.ItemPointer, itemAxis)
+            axis = itemInfo.SpatialAxis
+            if axis is not None and axis.AxisType == fileAxis.AxisType:
+                axis._Update(fileAxis)
         if not staticItems:
             return
         self._spatialAxisUpdated = False
@@ -57,6 +64,8 @@ class Dfs123File(DfsFile):
         dynamic items here, and to the static items only on Close: writing a
         static item moves the file pointer, so a time step appended after
         Flush would overwrite another. The C# library writes both on Flush.
+        As in the C# library, a value the file axis cannot hold is only
+        rejected here or on Close, not when it is set.
         """
         if self.filePointer.value is not None:
             self.__WriteSpatialAxis(staticItems=False)
