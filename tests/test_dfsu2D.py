@@ -71,6 +71,17 @@ class Dfsu2DTests(unittest.TestCase):
         FileOresundHDDfsu.StaticItemTester(dfsFile)
         FileOresundHDDfsu.ReadTester(dfsFile)
 
+    def test_ReadOresundHDTest(self):
+        dfsFile = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfsu")
+
+        FileOresundHDDfsu.FileInfoTester(dfsFile)
+        FileOresundHDDfsu.CustomBlockTester(dfsFile)
+        FileOresundHDDfsu.DynamicItemTester(dfsFile)
+        FileOresundHDDfsu.StaticItemTester(dfsFile, original=True)
+        FileOresundHDDfsu.ReadTester(dfsFile)
+
+        dfsFile.Close()
+
     def test_ReadOdenseHD2DTest(self):
         filename = "testdata/OdenseHD2D.dfsu"
 
@@ -578,7 +589,7 @@ class FileOresundHDDfsu:
             Assert.AreEqual(1, axis.Dx)
 
     @staticmethod
-    def StaticItemTester(dfsFile):
+    def StaticItemTester(dfsFile, original=False):
         staticItems = []
 
         staticItemNumber = 1
@@ -638,7 +649,10 @@ class FileOresundHDDfsu:
         axis = staticItem.SpatialAxis
         Assert.IsNotNull(axis)
         Assert.AreEqual(1, axis.Dimension)
-        # TODO: Assert.AreEqual(eumUnit.eumUmeter, axis.AxisUnit);
+        if original:
+            Assert.AreEqual(eumUnit.eumUmeter, axis.AxisUnit)
+        else:
+            Assert.AreEqual(eumUnit.eumUUnitUndefined, axis.AxisUnit)
         Assert.AreEqual(2057, axis.XCount)
         Assert.AreEqual(0, axis.X0)
         Assert.AreEqual(1, axis.Dx)
@@ -703,7 +717,10 @@ class FileOresundHDDfsu:
         axis = staticItem.SpatialAxis
         Assert.IsNotNull(axis)
         Assert.AreEqual(1, axis.Dimension)
-        # TODO: Assert.AreEqual(eumUnit.eumUmeter, axis.AxisUnit);
+        if original:
+            Assert.AreEqual(eumUnit.eumUmeter, axis.AxisUnit)
+        else:
+            Assert.AreEqual(eumUnit.eumUUnitUndefined, axis.AxisUnit)
         Assert.AreEqual(3 * 3636, axis.XCount)
         Assert.AreEqual(0, axis.X0)
         Assert.AreEqual(1, axis.Dx)
