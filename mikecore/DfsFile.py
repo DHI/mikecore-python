@@ -1585,9 +1585,7 @@ class DfsDLLUtil:
             raise ValueError(
                 f"File name can not be represented in the Windows ANSI code page "
                 f"({locale.getencoding()}), character {e.object[e.start : e.end]!r} "
-                f"is not supported: {name}. Rename the file or folder, or enable "
-                "'Beta: Use Unicode UTF-8 for worldwide language support' in Windows "
-                "region settings."
+                f"is not supported: {name}"
             ) from e
 
     # In case of incorrect eumUnitInt then return eumUmeter, the default axis unit
