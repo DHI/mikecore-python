@@ -398,9 +398,17 @@ class DfsSpatialAxis:
         self.AxisUnit = axisUnit
 
     def __setattr__(self, name, value):
+        onUpdate = self.__dict__.get("_OnUpdate")
+        if name not in self._UpdatableAttributes or onUpdate is None:
+            super().__setattr__(name, value)
+            return
+        oldValue = getattr(self, name)
         super().__setattr__(name, value)
-        if name in self._UpdatableAttributes and self._OnUpdate is not None:
-            self._OnUpdate()
+        try:
+            onUpdate()
+        except BaseException:
+            super().__setattr__(name, oldValue)
+            raise
 
     def _Update(self, source):
         """Copy the updatable attributes of source, an axis of the same type."""
@@ -962,6 +970,11 @@ class DfsFile:
             )
         if self.headPointer.value is not None:
             DfsDLL.Wrapper.dfsHeaderDestroy(ctypes.byref(self.headPointer))
+        # The item pointers point into the destroyed header: stop writing to it
+        for itemInfo in getattr(self, "ItemInfo", []):
+            itemInfo._OnUpdate = None
+            if itemInfo.SpatialAxis is not None:
+                itemInfo.SpatialAxis._OnUpdate = None
 
     def GetNextItemNumber(self):
         return self.fpItemNumber

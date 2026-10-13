@@ -53,7 +53,8 @@ class Dfs123File(DfsFile):
 
     def Flush(self):
         # Static items are written on Close, to keep the file pointer
-        self.__WriteSpatialAxis(staticItems=False)
+        if self.filePointer.value is not None:
+            self.__WriteSpatialAxis(staticItems=False)
         super().Flush()
 
     def Close(self):
@@ -61,6 +62,9 @@ class Dfs123File(DfsFile):
             if self.filePointer.value is not None:
                 self.__WriteSpatialAxis(staticItems=True)
         finally:
+            self._spatialAxisUpdated = False
+            if self.SpatialAxis is not None:
+                self.SpatialAxis._OnUpdate = None
             super().Close()
 
     def Reshape(self, reshape):
