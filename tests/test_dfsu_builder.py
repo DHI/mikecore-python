@@ -283,6 +283,27 @@ def test_ids_outside_int32_are_rejected(outside):
         builder.SetElementIds([1, outside])
 
 
+# One id per node or element, so a 2-D array or a scalar is rejected even when its
+# size fits
+@pytest.mark.parametrize(
+    "nodeIds, elementIds, match",
+    [
+        (np.array([[1, 2], [3, 4]]), np.array([[10], [20]]), "1-D"),
+        (7, 7, "1-D"),
+        ([True, False, True, False], [True, False], "not booleans"),
+    ],
+)
+def test_ids_must_be_a_1d_integer_array(nodeIds, elementIds, match):
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+
+    with pytest.raises(ValueError, match=match):
+        builder.SetNodeIds(nodeIds)
+    with pytest.raises(ValueError, match=match):
+        builder.SetElementIds(elementIds)
+
+
 # Node numbers start at 1, so 0 is below the first node
 @pytest.mark.parametrize("nodeNumber", [0, len(X) + 1])
 def test_validate_reports_node_number_outside_the_nodes(nodeNumber):
