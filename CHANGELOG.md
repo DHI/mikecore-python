@@ -69,6 +69,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   engine in the same process loaded first (#45).
 - `uv build --wheel` works with hatchling 1.31 and later, and the wheel holds
   each native library once. It held each one twice before.
+- `DfsuFile.Flush()` flushes the file instead of raising `TypeError`, and
+  `DfsFileFactory.DfsuFileOpenAppend` no longer requires `parameters`, like the
+  other `Open` methods.
 - Items read from a dfs file have the reference coordinates and orientation
   stored in the file. They had the `-1e-35` defaults, whatever the file held
   ([#31](https://github.com/DHI/mikecore-python/issues/31)).
