@@ -18,6 +18,21 @@ class MeshNodes(NamedTuple):
     code: np.ndarray
 
 
+def _Int32Ids(ids, name):
+    """Ids as the int32 array mesh and dfsu files store, rejecting ids that do not fit.
+
+    Shared by MeshBuilder and DfsuBuilder; name starts the error message.
+    """
+    ids = np.asarray(ids)
+    try:
+        int32Ids = ids.astype(np.int32)
+    except OverflowError:
+        int32Ids = None
+    if int32Ids is None or np.any(int32Ids != ids):
+        raise ValueError(f"{name} ids must be integers that fit in int32")
+    return int32Ids
+
+
 class MeshBuilder:
     def __init__(self):
         self.__projectionString: str | None = None
@@ -98,24 +113,12 @@ class MeshBuilder:
 
         self.__connectivity = connectivity
 
-    @staticmethod
-    def __Int32Ids(ids):
-        """Ids as the int32 array MeshFile reads, rejecting ids that do not fit."""
-        ids = np.asarray(ids)
-        try:
-            int32Ids = ids.astype(np.int32)
-        except OverflowError:
-            int32Ids = None
-        if int32Ids is None or np.any(int32Ids != ids):
-            raise ValueError("Element ids must be integers that fit in int32")
-        return int32Ids
-
     def SetElementIds(self, elementIds):
         """Set the element id's. Optional. If not set, default values are used (1,2,3,...)"""
         if elementIds is None:
             self.__elementIds = None
             return
-        elementIds = MeshBuilder.__Int32Ids(elementIds)
+        elementIds = _Int32Ids(elementIds, "Element")
         if (self.__connectivity is not None) and (
             len(self.__connectivity) != len(elementIds)
         ):
