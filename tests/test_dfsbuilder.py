@@ -435,6 +435,23 @@ def test_reused_static_item_builder_leaves_earlier_items_alone():
     assert_array_equal([3.0, 4.0], third.Data)
 
 
+def test_static_item_keeps_its_data_when_the_caller_changes_the_array():
+    data = np.array([1.0, 2.0], dtype=np.float32)
+    staticItem = DfsStaticItemBuilder()
+    staticItem.Set(
+        "Item",
+        eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined),
+        DfsSimpleType.Float,
+    )
+    staticItem.SetAxis(DfsFactory().CreateAxisEqD1(eumUnit.eumUmeter, 2, 0, 1))
+    staticItem.SetData(data)
+    item = staticItem.GetStaticItem()
+
+    data[0] = 10.0
+
+    assert_array_equal([1.0, 2.0], item.Data)
+
+
 def _dynamic_item_builder():
     factory = DfsFactory()
     builder = DfsBuilder.Create().CreateDynamicItemBuilder()
