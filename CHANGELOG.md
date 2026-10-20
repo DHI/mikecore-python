@@ -78,5 +78,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#47](https://github.com/DHI/mikecore-python/issues/47)).
 - Reading an item's value type raises the DFS error when the native library
   reports one, instead of returning `DataValueType.Instantaneous`.
+- `eumWrapper.eumGetNextEqvUnit` returns the units equivalent to the base unit.
+  It read the native return code the wrong way round, so it reported no unit
+  where there was one, and raised `ValueError` after the last one, where the
+  native description is null.
+- `DfsuBuilder.SetElementIds` stores the ids, so the file has them instead of
+  the default 1, 2, .... `SetElementIds` and `SetNodeIds` accept int64 arrays
+  and lists and store int32 ids, raising `ValueError` for ids that do not fit in
+  int32. Int64 node ids raised "Data type not supported: int64" in
+  `CreateFile`. `SetElementIds(None)` goes back to the default ids, as
+  `SetNodeIds(None)` does. `SetFromMeshFile` stores a mesh's ids as int32 too,
+  so a mesh from `MeshFile.Create` with int64 ids can be written.
+- `MeshBuilder.SetElementIds(None)` goes back to the default ids instead of
+  raising `TypeError` after `SetElements`, and ids that do not fit in int32
+  raise `ValueError`. They were written to a mesh file that `MeshFile.ReadMesh`
+  could not read.
+- `MeshBuilder.CreateMesh()` makes its default node and element ids int32, as
+  `MeshFile.ReadMesh` reads them. They were int64 on Linux, so the id dtype of
+  a built mesh depended on whether ids were set.
+- The id setters of `DfsuBuilder` and `MeshBuilder` raise `ValueError` for ids
+  that are not a 1-D array, or are booleans. A 2-D array whose size matched
+  the number of nodes or elements, and booleans as 0 and 1, were accepted.
+- `MeshBuilder.SetNodes` keeps z as doubles, as mesh files store it, instead of
+  rounding it to float32. Float32 z passed to `SetNodes`, such as
+  `DfsuFile.Z`, is now written with the double text of those float32 values
+  (`-1.7859922647476196` rather than `-1.7859923`). `MeshBuilder.Create(dfsuFile)`
+  is unchanged.
+- `miketools.Dfs0ToAscii` converts item times from the time axis unit to
+  seconds, so a file with a time unit other than seconds gets the right
+  timestamps. A 10 minute step was written as 10 seconds.
+- `DfsFile.ReadStaticItem` raises `ValueError` for an item number below 1. It
+  returned the first static item, numbered 0 or below. A number past the last
+  item still returns `None`, and so does a number too large for int32, which
+  returned another item or raised `ctypes.ArgumentError`.
+- `DfsFile.ReadItemTimeStepNext` and `ReadItemTimeStep` with `reshape=True`
+  reshape an item with a 2-D or 3-D spatial axis to the axis shape, as
+  `Dfs2File` and `Dfs3File` do. A file opened with
+  `DfsFileFactory.DfsGenericOpen` ignored `reshape`. 0-D and 1-D items stay
+  flat.
+- A `DfsDynamicItemBuilder` can be reused after `GetDynamicItemInfo`. It
+  replaced its item with a blank one but kept its "is set" flags, so the next
+  item passed validation with no name, quantity or value type. The builder now
+  keeps its settings for the next item, and changing it no longer changes the
+  item it returned. Associated static items carry over and add up: after an
+  item with static item 1, `SetAssociatedStaticItem(2)` gives the next item
+  `[1, 2]`.
+- Changing a `DfsStaticItemBuilder` after `GetStaticItem`, or the data array
+  passed to `SetData`, no longer changes the static item it returned. Each
+  returned item has its own copy of the data.
+- `DfsuBuilder` creates `DfsuSpectral0D` files. It raised an `Exception` with
+  no message. The caller supplies the frequency-direction mesh, one element per
+  frequency and direction, and `Validate` reports a Spectral0D builder with no
+  frequencies or directions, or an element count that does not match them, so
+  the file reads back as `DfsuSpectral0D`.
+- `DfsuBuilder.SetFrequencies` and `SetDirections` accept lists and store the
+  values as doubles, as dfsu files store frequencies and directions. A list
+  passed `Validate` and then failed in `CreateFile` with `AttributeError`,
+  leaving a half-written file, and float32 arrays were written as floats.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD

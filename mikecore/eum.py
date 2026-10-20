@@ -1843,7 +1843,7 @@ class eumWrapper:
         rc = eumDLL.Wrapper.eumGetNextEqvUnit(
             baseunitKey, PrevunitKey, ctypes.byref(unitKey), ctypes.byref(lpUnitDesc)
         )
-        if rc != 0:
+        if rc == 0:
             return False, eumUnit.eumUUnitUndefined, ""
         return True, eumUnit(unitKey.value), eumWrapper.DecodeString(lpUnitDesc)
 

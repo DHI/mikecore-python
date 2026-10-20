@@ -1,3 +1,4 @@
+import copy
 from typing import Generic, TypeVar
 
 from mikecore.DfsDLL import DfsDLL
@@ -693,7 +694,11 @@ class DfsDynamicItemBuilder(DfsAbstractItemBuilder[DfsDynamicItemInfo]):
         # Create and store a clone, such that item-builder can be reused when creating more than one item
         # Otherwise updates to the new item-builder would just update the same item.
         res = self.ItemInfo
-        self.ItemInfo = DfsDynamicItemInfo()
+        self.ItemInfo = copy.copy(res)
+        if res.AssociatedStaticItemNumbers is not None:
+            self.ItemInfo.AssociatedStaticItemNumbers = list(
+                res.AssociatedStaticItemNumbers
+            )
         return res
 
 
@@ -747,4 +752,8 @@ class DfsStaticItemBuilder(DfsAbstractItemBuilder[DfsStaticItem]):
             msgs = DfsBuilder.ErrorMessage(errors)
             raise Exception(msgs)
 
-        return self.ItemInfo
+        # Return a clone with its own data, so neither reusing the builder nor
+        # changing the array given to SetData changes the item returned here.
+        res = copy.copy(self.ItemInfo)
+        res.Data = copy.copy(self.ItemInfo.Data)
+        return res
