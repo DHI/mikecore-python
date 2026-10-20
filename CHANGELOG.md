@@ -94,6 +94,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   raising `TypeError` after `SetElements`, and ids that do not fit in int32
   raise `ValueError`. They were written to a mesh file that `MeshFile.ReadMesh`
   could not read.
+- The id setters of `DfsuBuilder` and `MeshBuilder` raise `ValueError` for ids
+  that are not a 1-D array, or are booleans. A 2-D array whose size matched
+  the number of nodes or elements, and booleans as 0 and 1, were accepted.
 - `MeshBuilder.SetNodes` keeps z as doubles, as mesh files store it, instead of
   rounding it to float32. Float32 z passed to `SetNodes`, such as
   `DfsuFile.Z`, is now written with the double text of those float32 values

@@ -24,6 +24,10 @@ def _Int32Ids(ids, name):
     Shared by MeshBuilder and DfsuBuilder; name starts the error message.
     """
     ids = np.asarray(ids)
+    if ids.ndim != 1:
+        raise ValueError(f"{name} ids must be a 1-D array, got {ids.ndim}-D")
+    if ids.dtype == np.bool_:
+        raise ValueError(f"{name} ids must be integers, not booleans")
     try:
         int32Ids = ids.astype(np.int32)
     except OverflowError:
