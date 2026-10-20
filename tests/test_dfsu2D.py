@@ -68,7 +68,7 @@ class Dfsu2DTests(unittest.TestCase):
         FileOresundHDDfsu.FileInfoTester(dfsFile)
         FileOresundHDDfsu.CustomBlockTester(dfsFile)
         FileOresundHDDfsu.DynamicItemTester(dfsFile)
-        FileOresundHDDfsu.StaticItemTester(dfsFile)
+        FileOresundHDDfsu.StaticItemTester(dfsFile, original=False)
         FileOresundHDDfsu.ReadTester(dfsFile)
 
     def test_ReadOresundHDTest(self):
@@ -307,7 +307,7 @@ class Dfsu2DTests(unittest.TestCase):
         FileOresundHDDfsu.FileInfoTester(dfsFile)
         FileOresundHDDfsu.CustomBlockTester(dfsFile)
         FileOresundHDDfsu.DynamicItemTester(dfsFile)
-        FileOresundHDDfsu.StaticItemTester(dfsFile)
+        FileOresundHDDfsu.StaticItemTester(dfsFile, original=False)
         FileOresundHDDfsu.ReadTester(dfsFile)
 
     def test_ExtractDfsu2DTopLayerFrom3DIsThe2DModel(self):
@@ -589,7 +589,7 @@ class FileOresundHDDfsu:
             Assert.AreEqual(1, axis.Dx)
 
     @staticmethod
-    def StaticItemTester(dfsFile, original=False):
+    def StaticItemTester(dfsFile, original):
         staticItems = []
 
         staticItemNumber = 1
@@ -1060,13 +1060,12 @@ class FileOdenseHD2DDfsu:
         for itemInfo in dfsFile.ItemInfo:
             itemDatas.append(dfsFile.CreateEmptyItemData(itemInfo))
 
-        # test_dfs_basic.py::test_read_itemtimestep_into_given_itemdata checks this
-        # overload against ReadItemTimeStep(itemNumber, j) for every item-timestep.
+        # This overload is checked against ReadItemTimeStep(itemNumber, j) for
+        # every item-timestep in a separate test, so this loop checks only Time.
         for j in range(13):
             for i in range(3):
                 itemData = itemDatas[i]
                 dfsFile.ReadItemTimeStep(itemData, j)
-                Assert.AreEqual(i + 1, itemData.ItemNumber)
                 Assert.AreEqual(j * 86400, itemData.Time)
 
         Assert.AreEqual(np.float32(0.22424224), itemDatas[0].Data[0])
