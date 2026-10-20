@@ -207,8 +207,7 @@ def test_node_ids_are_written(tmp_path, dtype):
     assert_array_equal(nodeIds, readNodeIds)
 
 
-# MeshBuilder's default ids may be int64 (NumPy's default int), and a mesh
-# with no ids gets the defaults
+# A mesh with no ids gets the defaults
 @pytest.mark.parametrize("withIds", [True, False])
 def test_ids_from_a_built_mesh_are_written(tmp_path, withIds):
     filename = str(tmp_path / "from_mesh_builder.dfsu")
@@ -230,6 +229,33 @@ def test_ids_from_a_built_mesh_are_written(tmp_path, withIds):
 
     assert_array_equal([1, 2, 3, 4], nodeIds)
     assert_array_equal([1, 2], elementIds)
+
+
+# MeshFile.Create keeps the ids it is given, here int64 as np.array gives on Linux
+def test_int64_ids_from_a_created_mesh_are_written(tmp_path):
+    filename = str(tmp_path / "from_mesh_create.dfsu")
+    mesh = MeshFile.Create(
+        eumQuantity(eumItem.eumIBathymetry, eumUnit.eumUmeter),
+        "NON-UTM",
+        np.array([11, 12, 13, 14], dtype=np.int64),
+        X,
+        Y,
+        Z,
+        CODE.astype(np.int32),
+        np.array([21, 22], dtype=np.int64),
+        np.array([21, 21], dtype=np.int32),
+        ELEMENTS,
+    )
+    builder = _builder()
+    builder.SetFromMeshFile(mesh)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    nodeIds, elementIds = dfsu.NodeIds, dfsu.ElementIds
+    dfsu.Close()
+
+    assert_array_equal([11, 12, 13, 14], nodeIds)
+    assert_array_equal([21, 22], elementIds)
 
 
 def test_element_ids_set_to_none_use_the_defaults(tmp_path):

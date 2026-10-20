@@ -270,6 +270,23 @@ def test_MeshBuilder_element_ids_are_written(tmp_path, elementIds):
     assert_array_equal(elementIds, mesh.ElementIds)
 
 
+# MeshFile.ReadMesh is the oracle for the id dtype
+def test_MeshBuilder_default_ids_are_int32_like_a_read_mesh(tmp_path):
+    filename = str(tmp_path / "default_ids.mesh")
+    built = _square_mesh_builder().CreateMesh()
+    built.Write(filename)
+    read = MeshFile.ReadMesh(filename)
+    nodeIds, elementIds = built.NodeIds, built.ElementIds
+    readNodeIds, readElementIds = read.NodeIds, read.ElementIds
+    assert nodeIds is not None and elementIds is not None
+    assert readNodeIds is not None and readElementIds is not None
+
+    assert_array_equal([1, 2, 3, 4], nodeIds)
+    assert_array_equal([1, 2], elementIds)
+    assert readNodeIds.dtype == nodeIds.dtype
+    assert readElementIds.dtype == elementIds.dtype
+
+
 def test_MeshBuilder_element_ids_set_to_none_use_the_defaults(tmp_path):
     filename = str(tmp_path / "element_ids_none.mesh")
     builder = _square_mesh_builder()
