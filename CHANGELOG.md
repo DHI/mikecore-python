@@ -129,5 +129,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   frequency and direction, and `Validate` reports a Spectral0D builder with no
   frequencies or directions, or an element count that does not match them, so
   the file reads back as `DfsuSpectral0D`.
+- `DfsuBuilder.SetFrequencies` and `SetDirections` accept lists and store the
+  values as doubles, as dfsu files store frequencies and directions. A list
+  passed `Validate` and then failed in `CreateFile` with `AttributeError`,
+  leaving a half-written file, and float32 arrays were written as floats.
 
 [Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD

@@ -74,8 +74,8 @@ class DfsuBuilder:
         self.__dynamicItemData = []
 
         # spectral
-        self.__frequencies: Sequence[float] | np.ndarray | None = None
-        self.__directions: Sequence[float] | np.ndarray | None = None
+        self.__frequencies: np.ndarray | None = None
+        self.__directions: np.ndarray | None = None
 
         self.__dfsuFileType = dfsuFileType
         if dfsuFileType == DfsuFileType.Dfsu2D:
@@ -126,10 +126,15 @@ class DfsuBuilder:
             raise Exception("dfsuFileType")
 
     def SetFrequencies(self, frequencies):
-        self.__frequencies = frequencies
+        # As an array, since the static item writer needs one
+        self.__frequencies = (
+            None if frequencies is None else np.asarray(frequencies, dtype=np.float64)
+        )
 
     def SetDirections(self, directions):
-        self.__directions = directions
+        self.__directions = (
+            None if directions is None else np.asarray(directions, dtype=np.float64)
+        )
 
     # / <summary>
     # / Set a non-standard temporal axis for the dfsu file. WARNING: The dfsu file will not be valid in all contexts.
