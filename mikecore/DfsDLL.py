@@ -210,6 +210,14 @@ class DfsDLL:
             ctypes.c_void_p,
             ctypes.c_void_p,
         ]
+        lib.dfsUpdateItemInfo.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_int32,
+            ctypes.c_char_p,
+            ctypes.c_int32,
+        ]
+        lib.dfsUpdateItemInfo.restype = ctypes.c_int32
 
         lib.dfsAddCustomBlock.argtypes = [
             ctypes.c_void_p,

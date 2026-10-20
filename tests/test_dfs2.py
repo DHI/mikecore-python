@@ -243,39 +243,30 @@ class Dfs2Tests(unittest.TestCase):
     #
     #        dfs2File.Close();
 
-    #    def ModifyLanduseItemInfoTest():
-    #
-    #        originalFilename = "testdata/Landuse.dfs2";
-    #        filename = "testdata/testtmp/test_create_Landuse.dfs2";
-    #
-    #        File.Copy(originalFilename, filename, true);
-    #        File.SetAttributes(filename, FileAttributes.Normal); # remove read-only flag
-    #
-    #        # Check the new file
-    #
-    #        file = DfsFileFactory.Dfs2FileOpen(filename);
-    #
-    #        # Check existing data
-    #        itemInfo = file.ItemInfo[0];
-    #        assert_equal("Landuse", itemInfo.Name);
-    #        assert_equal(eumItem.eumIIntegerCode, itemInfo.Quantity.Item);
-    #        assert_equal(eumUnit.eumUintCode, itemInfo.Quantity.Unit);
-    #
-    #        file.Close();
-    #
-    #        # Method that modifies the Landuse.dfs2 file
-    #        ExamplesDfs2.ModifyDfs2ItemInfo(filename);
-    #
-    #        # Check the new file
-    #        file = DfsFileFactory.Dfs2FileOpen(filename);
-    #
-    #        # Check existing data
-    #        itemInfo = file.ItemInfo[0];
-    #        assert_equal("GroundU", itemInfo.Name);
-    #        assert_equal(eumItem.eumIAreaFraction, itemInfo.Quantity.Item);
-    #        assert_equal(eumUnit.eumUPerCent, itemInfo.Quantity.Unit);
-    #
-    #        file.Close();
+    def test_ModifyLanduseItemInfoTest(self):
+        originalFilename = "testdata/Landuse.dfs2"
+        filename = "testdata/testtmp/test_modifyItemInfo_Landuse.dfs2"
+
+        testUtil.copy_file(originalFilename, filename)
+
+        # Check existing data
+        file = DfsFileFactory.Dfs2FileOpen(filename)
+        itemInfo = file.ItemInfo[0]
+        assert_equal("Landuse", itemInfo.Name)
+        assert_equal(eumItem.eumIIntegerCode, itemInfo.Quantity.Item)
+        assert_equal(eumUnit.eumUintCode, itemInfo.Quantity.Unit)
+        file.Close()
+
+        # Method that modifies the Landuse.dfs2 file
+        ExamplesDfs2.ModifyDfs2ItemInfo(filename)
+
+        # Check the new file
+        file = DfsFileFactory.Dfs2FileOpen(filename)
+        itemInfo = file.ItemInfo[0]
+        assert_equal("GroundU", itemInfo.Name)
+        assert_equal(eumItem.eumIAreaFraction, itemInfo.Quantity.Item)
+        assert_equal(eumUnit.eumUPerCent, itemInfo.Quantity.Unit)
+        file.Close()
 
     def test_ReadReshapedPastEndReturnsNone(self):
         dfsFile = DfsFileFactory.Dfs2FileOpen("testdata/OresundHD.dfs2")
