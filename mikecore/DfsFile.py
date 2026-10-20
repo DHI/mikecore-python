@@ -954,6 +954,9 @@ class DfsFile:
             raise ValueError(
                 f"Static item number must be 1 or more, got {staticItemNo}"
             )
+        # dfsFindItemStatic takes an int32, and a larger number is past the last item
+        if staticItemNo > np.iinfo(np.int32).max:
+            return None
 
         if (
             self.fpState != DfsFilePointerState.StaticItem

@@ -109,7 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   timestamps. A 10 minute step was written as 10 seconds.
 - `DfsFile.ReadStaticItem` raises `ValueError` for an item number below 1. It
   returned the first static item, numbered 0 or below. A number past the last
-  item still returns `None`.
+  item still returns `None`, and so does a number too large for int32, which
+  returned another item or raised `ctypes.ArgumentError`.
 - `DfsFile.ReadItemTimeStepNext` and `ReadItemTimeStep` with `reshape=True`
   reshape an item with a 2-D or 3-D spatial axis to the axis shape, as
   `Dfs2File` and `Dfs3File` do. A file opened with
