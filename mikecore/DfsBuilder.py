@@ -752,9 +752,8 @@ class DfsStaticItemBuilder(DfsAbstractItemBuilder[DfsStaticItem]):
             msgs = DfsBuilder.ErrorMessage(errors)
             raise Exception(msgs)
 
-        # Store a clone, as GetDynamicItemInfo does, so reusing the builder
-        # does not change the item returned here.
-        res = self.ItemInfo
-        self.ItemInfo = copy.copy(res)
-        self.ItemInfo.Data = copy.copy(res.Data)
+        # Return a clone with its own data, so neither reusing the builder nor
+        # changing the array given to SetData changes the item returned here.
+        res = copy.copy(self.ItemInfo)
+        res.Data = copy.copy(self.ItemInfo.Data)
         return res

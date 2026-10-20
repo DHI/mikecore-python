@@ -123,8 +123,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   item it returned. Associated static items carry over and add up: after an
   item with static item 1, `SetAssociatedStaticItem(2)` gives the next item
   `[1, 2]`.
-- Changing a `DfsStaticItemBuilder` after `GetStaticItem`, or the data array it
-  holds, no longer changes the static item it returned.
+- Changing a `DfsStaticItemBuilder` after `GetStaticItem`, or the data array
+  passed to `SetData`, no longer changes the static item it returned. Each
+  returned item has its own copy of the data.
 - `DfsuBuilder` creates `DfsuSpectral0D` files. It raised an `Exception` with
   no message. The caller supplies the frequency-direction mesh, one element per
   frequency and direction, and `Validate` reports a Spectral0D builder with no
