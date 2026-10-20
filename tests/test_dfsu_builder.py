@@ -571,6 +571,32 @@ def test_spectral_0d_file_with_only_directions(tmp_path):
     dfsu.Close()
 
 
+# Lists pass Validate, so CreateFile must write them too
+@pytest.mark.parametrize(
+    "frequencies, directions", [([0.1, 0.2, 0.3], None), (None, [0.0, 1.0, 2.0])]
+)
+def test_spectral_0d_file_from_lists(tmp_path, frequencies, directions):
+    filename = str(tmp_path / "spectral0d_lists.dfsu")
+    builder = _spectral_0d_builder()
+    if frequencies is not None:
+        builder.SetFrequencies(frequencies)
+    if directions is not None:
+        builder.SetDirections(directions)
+    assert [] == builder.Validate()
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    readFrequencies, readDirections = dfsu.Frequencies, dfsu.Directions
+    fileType = dfsu.DfsuFileType
+    dfsu.Close()
+
+    assert DfsuFileType.DfsuSpectral0D is fileType
+    if frequencies is not None:
+        assert_array_equal(frequencies, readFrequencies)
+    if directions is not None:
+        assert_array_equal(directions, readDirections)
+
+
 def test_validate_spectral_0d_needs_frequencies_or_directions():
     builder = _spectral_0d_builder()
 
