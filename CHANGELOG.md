@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- In a dfs file opened for editing, a dynamic item's changed `Name` or newly
+  assigned `Quantity` is written to the file on `Close`, and in Edit mode
+  also on `Flush`. As in the
+  C# library, a new name is truncated or padded with spaces to the length of
+  the old one, and changing `Quantity.Item` or `Quantity.Unit` in place is not
+  written. A name that cp1252 cannot encode raises `UnicodeEncodeError`, and
+  a name containing a NUL character or a unit that is not a unit of the item
+  raises `ValueError`, before any item is written
+  ([#38](https://github.com/DHI/mikecore-python/issues/38)).
 - `DfsuFile.Flush()` flushes the file instead of raising `TypeError`, and
   `DfsFileFactory.DfsuFileOpenAppend` no longer requires `parameters`, like the
   other `Open` methods.

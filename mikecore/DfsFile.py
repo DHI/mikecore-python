@@ -779,6 +779,9 @@ class DfsFile:
         self.fpTimeStepIndex = 0
         self.headPointer = ctypes.c_void_p(0)
         self.filePointer = ctypes.c_void_p(0)
+        # The dynamic items of an editable file, each with the Quantity it was
+        # read with. Flush and Close write their changes.
+        self.__itemsRead = []
 
     def __del__(self):
         self.Close()
@@ -855,6 +858,8 @@ class DfsFile:
         self.ItemInfo = []
         for i in range(noOfItems):
             self.ItemInfo.append(self.__DynamicItemInfoReadAndCreate(i + 1, noOfItems))
+        if mode != DfsFileMode.Read:
+            self.__itemsRead = [(item, item.Quantity) for item in self.ItemInfo]
 
         if mode == DfsFileMode.Read:
             # file pointer is after header part
@@ -894,13 +899,68 @@ class DfsFile:
         """
         Close the file and release all ressources associated with it. The header information
         is still valid (for reading) even though the file has been closed.
+
+        In a file opened for editing, a changed item Name or Quantity is
+        written first, see Flush. If a value is rejected, no item is written,
+        and the file is still closed.
         """
-        if self.filePointer.value is not None:
-            DfsDLL.Wrapper.dfsFileClose(
-                self.headPointer, ctypes.byref(self.filePointer)
+        try:
+            self.__WriteItemInfo()
+        finally:
+            self.__itemsRead = []
+            if self.filePointer.value is not None:
+                DfsDLL.Wrapper.dfsFileClose(
+                    self.headPointer, ctypes.byref(self.filePointer)
+                )
+            if self.headPointer.value is not None:
+                DfsDLL.Wrapper.dfsHeaderDestroy(ctypes.byref(self.headPointer))
+
+    def __WriteItemInfo(self):
+        """
+        Write the Name and Quantity of the dynamic items that changed since
+        the file was opened. As in the C# library, assigning a new Quantity
+        writes it, changing its Item or Unit in place does not, and a new name
+        is truncated or padded with spaces to the length of the name in the
+        file. Every change is checked before any is written.
+        """
+        changes = []
+        for item, quantityRead in self.__itemsRead:
+            nameBytes = DfsDLLUtil.GetItemNameBytes(item.ItemPointer)
+            nameChanged = item.Name != nameBytes.decode("cp1252", "replace")
+            if not nameChanged and item.Quantity is quantityRead:
+                continue
+            if nameChanged:
+                # The native library reads the name up to the first NUL
+                if "\0" in item.Name:
+                    raise ValueError(
+                        f"Name of item {item.ItemNumber} contains a NUL character: "
+                        f"{item.Name!r}"
+                    )
+                try:
+                    newNameBytes = item.Name.encode("cp1252")
+                except UnicodeEncodeError as error:
+                    error.add_note(f"Name of item {item.ItemNumber}: {item.Name!r}")
+                    raise
+                length = len(nameBytes)
+                nameBytes = newNameBytes[:length].ljust(length, b" ")
+            quantity = item.Quantity
+            if not eumWrapper.eumItemUnitEqv(quantity.Item, quantity.Unit):
+                raise ValueError(
+                    f"Item {item.ItemNumber} has a Quantity whose unit "
+                    f"{quantity.Unit!r} is not a unit of {quantity.Item!r}"
+                )
+            changes.append((item, nameBytes, quantity))
+        for item, nameBytes, quantity in changes:
+            rok = DfsDLL.Wrapper.dfsUpdateItemInfo(
+                self.headPointer,
+                item.ItemPointer,
+                ctypes.c_int32(quantity.Item),
+                nameBytes,
+                ctypes.c_int32(quantity.Unit),
             )
-        if self.headPointer.value is not None:
-            DfsDLL.Wrapper.dfsHeaderDestroy(ctypes.byref(self.headPointer))
+            DfsDLL.CheckReturnCode(rok)
+            item.Name = nameBytes.decode("cp1252", "replace")
+        self.__itemsRead = [(item, item.Quantity) for item, _ in self.__itemsRead]
 
     def GetNextItemNumber(self):
         return self.fpItemNumber
@@ -1296,8 +1356,14 @@ class DfsFile:
         Flush cached data to the file. This will especially update the header information,
         such that if another process is reading the file while it is being read, the new
         header information can be retrieved.
+
+        In a file opened for editing, a dynamic item's changed Name or newly
+        assigned Quantity is written to the header first. If a value is
+        rejected, this raises without writing any item. In Append mode, the
+        native library writes the header to the file only on Close.
         """
         self.__CheckIfOpen()
+        self.__WriteItemInfo()
         DfsDLL.Wrapper.dfsFileFlush(self.headPointer, self.filePointer)
 
     def FlushTimeStep(self):
@@ -1571,6 +1637,23 @@ class DfsFile:
 class DfsDLLUtil:
     """Utilities class, marshalling values to and from the DFS native library,
     and creating various Dfs classes based on pointers to DFS native data"""
+
+    @staticmethod
+    def GetItemNameBytes(itemPointer) -> bytes:
+        """The name of an item as stored in the header, without decoding."""
+        itemNameP = ctypes.c_char_p()
+        DfsDLL.Wrapper.dfsGetItemInfo(
+            itemPointer,
+            ctypes.byref(ctypes.c_int32()),
+            ctypes.byref(ctypes.c_char_p()),
+            ctypes.byref(itemNameP),
+            ctypes.byref(ctypes.c_int32()),
+            ctypes.byref(ctypes.c_char_p()),
+            ctypes.byref(ctypes.c_int()),
+        )
+        if itemNameP.value is None:
+            raise ValueError("Native library returned a null string")
+        return itemNameP.value
 
     @staticmethod
     def EncodeFileName(filename: str | os.PathLike[str]) -> bytes:
