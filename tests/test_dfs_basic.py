@@ -221,15 +221,3 @@ def test_generic_read_stays_flat_without_reshape(filename):
     assert (size,) == nextItemData.Data.shape
     assert itemData is not None
     assert (size,) == itemData.Data.shape
-
-
-# Some axis types, such as EqD4, are read as None; testdata/ has no such file
-def test_generic_read_stays_flat_without_an_axis():
-    dfs = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfs2")
-    size = dfs.ItemInfo[0].ElementCount
-    dfs.ItemInfo[0].SpatialAxis = None
-    itemData = dfs.ReadItemTimeStepNext(reshape=True)
-    dfs.Close()
-
-    assert itemData is not None
-    assert (size,) == itemData.Data.shape

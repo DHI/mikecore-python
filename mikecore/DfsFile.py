@@ -1070,7 +1070,8 @@ class DfsFile:
             res.Time = time
             res.TimeStepIndex = self.fpTimeStepIndex
         # A 0-D axis has shape (0,) while holding one value, so only reshape 2-D and
-        # 3-D. Some axis types, such as EqD4, are read as None, so stay flat.
+        # 3-D. GetItemSpatialAxis can return None by its type, though a file with an
+        # axis it does not read, such as EqD4, already fails to open; stay flat then.
         axis = item.SpatialAxis
         if reshape and axis is not None and len(shape := axis.Shape) >= 2:
             res.Data = res.Data.reshape(shape, order="F")
