@@ -127,6 +127,20 @@ def test_read_static_item_past_the_last_item():
     assert item is None
 
 
+# Numbers that do not fit in the native int32 are past the last item too
+@pytest.mark.parametrize("staticItemNo", [2**31 - 1, 2**31, 2**32 + 1, 2**64])
+def test_read_static_item_past_int32(staticItemNo):
+    dfs = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfsu")
+
+    item = dfs.ReadStaticItem(staticItemNo)
+    first = dfs.ReadStaticItem(1)
+    dfs.Close()
+
+    assert item is None
+    assert first is not None
+    assert "Node id" == first.Name
+
+
 @pytest.mark.parametrize("staticItemNo", [0, -1])
 def test_read_static_item_below_one(staticItemNo):
     dfs = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfsu")
