@@ -172,13 +172,13 @@ class MeshBuilder:
         if self.__eumQuantity is None:
             self.__eumQuantity = eumQuantity(eumItem.eumIBathymetry, eumUnit.eumUmeter)
 
-        # Creating default node id's, if empty
+        # Creating default node id's, if empty, as int32 like MeshFile.ReadMesh
         if self.__nodeIds is None:
-            self.__nodeIds = np.arange(len(nodes.x)) + 1
+            self.__nodeIds = np.arange(1, len(nodes.x) + 1, dtype=np.int32)
 
         # Creating default element id's, if empty
         if self.__elementIds is None:
-            self.__elementIds = np.arange(len(connectivity)) + 1
+            self.__elementIds = np.arange(1, len(connectivity) + 1, dtype=np.int32)
 
         # Creating additional element information
         elementType = np.zeros(len(connectivity), dtype=np.int32)
