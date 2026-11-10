@@ -47,7 +47,6 @@ class DfsDLL:
     libfilepath: str
     _loaded = False
     MCCUWrapper = None
-    # Bundled name; mikecore/__init__.py removes the tag for MIKECORE_PYTHON_BIN
     libfilename = "ufs.dll" if os.name == "nt" else "libufs-mikecore-python.so"
 
     @staticmethod

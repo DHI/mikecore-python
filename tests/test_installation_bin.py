@@ -1,5 +1,3 @@
-"""MIKECORE_PYTHON_BIN: mikecore uses a MIKE installation's native libraries."""
-
 import os
 import shutil
 import subprocess
@@ -11,7 +9,7 @@ import pytest
 PACKAGES = Path(__file__).parents[1] / "packages"
 RUNTIME = "win-x64" if os.name == "nt" else "linux-x64"
 
-# Each run is a new process: mikecore loads its native libraries once, at import.
+# A new process per run: mikecore loads its libraries once, at import.
 READ_ORESUND = """
 import mikecore
 from mikecore.DfsFileFactory import DfsFileFactory
@@ -45,8 +43,7 @@ def run_read(installation_bin: Path | None) -> list[str]:
 
 @pytest.fixture
 def installation_bin(tmp_path: Path) -> Path:
-    """A folder of MIKE Core's libraries under their own names, laid out like a
-    MIKE installation's bin, from the NuGet packages the build downloads."""
+    """Like an installation's bin: the NuGet packages' untagged libraries."""
     natives = list(PACKAGES.glob(f"*/runtimes/{RUNTIME}/native"))
     if not natives:
         pytest.skip("needs the NuGet packages that building a checkout downloads")

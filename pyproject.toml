@@ -5,8 +5,7 @@ build-backend = "hatchling.build"
 [tool.hatch.build.hooks.custom]
 path = "buildUtil/build.py"
 
-# The build hook writes the native libraries to mikecore/bin, which is
-# gitignored. Artifacts are included despite that, in the sdist and the wheel.
+# Built by the hook and gitignored.
 [tool.hatch.build]
 artifacts = ["/mikecore/bin"]
 

@@ -27,15 +27,9 @@ from mikecore.DfsDLL import DfsDLL
 from mikecore.eum import eumDLL
 from mikecore.Projections import MzCartDLL
 
-# The build adds this tag to the bundled Linux libraries' names (see
-# buildUtil/build.py, which has the same constant), so they never collide with
-# same-named libraries a MIKE engine in the same process has loaded. The
-# Windows DLLs keep their names, so they stay signed (ADR 0002).
+# Must match LIB_TAG in buildUtil/build.py.
 LIB_TAG = "-mikecore-python"
 
-# Opt-in, at the user's own risk: load a MIKE installation's libraries instead
-# of the bundled ones (see README), under their own names, so an engine in the
-# same process shares them.
 installation_bin = os.environ.get("MIKECORE_PYTHON_BIN")
 if installation_bin:
     mikebin = os.path.abspath(installation_bin)
@@ -46,12 +40,8 @@ if installation_bin:
 DfsDLL.libfilepath = mikebin
 eumDLL.libfilepath = mikebin
 
-# On Windows, add mikebin to the process-wide DLL search path only while
-# mikecore loads its DLLs, so it doesn't affect other DLLs loaded later. PATH
-# isn't searched, so an installation's bin on PATH can't take over. A
-# same-named DLL already loaded in the process is reused, though.
-# That is enough: the DLLs import each other statically, resolved while they
-# load here, and none of them loads another bundled DLL by name later on.
+# Only while loading: the DLLs resolve their imports here and load nothing by
+# name later.
 _dll_dir = (
     os.add_dll_directory(mikebin)
     if platform.system() == "Windows"
@@ -59,8 +49,7 @@ _dll_dir = (
 )
 with _dll_dir:
     if installation_bin and platform.system() == "Linux":
-        # Recent libeum imports fnGetLanguage from libufs without linking to
-        # it, so load libufs, which pulls in libeum, first.
+        # libeum uses fnGetLanguage from libufs without linking to it.
         ctypes.CDLL(os.path.join(mikebin, DfsDLL.libfilename))
     eumDLL.Init()
     MzCartDLL.Init(mikebin)

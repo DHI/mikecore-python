@@ -48,7 +48,6 @@ class MzCartDLL:
     # Set by Init(), which mikecore/__init__.py calls on import
     Wrapper: ctypes.CDLL
     _loaded = False
-    # Bundled name; mikecore/__init__.py removes the tag for MIKECORE_PYTHON_BIN
     libfilename = "MzCart.dll" if os.name == "nt" else "libMzCart-mikecore-python.so"
 
     _cartCreateCount = 0

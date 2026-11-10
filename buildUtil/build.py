@@ -45,8 +45,7 @@ def copy_native_libs_to_bin(packages_dir: str | Path, bin_dir: str | Path) -> No
     packages_dir = Path(packages_dir)
     bin_windows = Path(bin_dir) / "windows"
     bin_linux = Path(bin_dir) / "linux"
-    # Start from empty folders: the libraries are renamed after copying, so
-    # a rebuild would otherwise keep the previous build's renamed copies.
+    # Otherwise a rebuild keeps the previous build's renamed copies.
     for folder in (bin_windows, bin_linux):
         shutil.rmtree(folder, ignore_errors=True)
         folder.mkdir(parents=True)
@@ -79,28 +78,19 @@ def read_packages_config(filepath: str | Path) -> list[tuple[str, str]]:
     ]
 
 
-# Added to every bundled Linux library's name, for example libufs.so ->
-# libufs-mikecore-python.so. mikecore/__init__.py has the same constant and
-# removes it when MIKECORE_PYTHON_BIN points at a MIKE installation.
-# The Windows DLLs keep their names: renaming them would mean patching their
-# imports, which invalidates DHI's Authenticode signature (ADR 0002).
+# Must match LIB_TAG in mikecore/__init__.py. The Windows DLLs aren't renamed:
+# patching their imports would invalidate DHI's signature (ADR 0002).
 LIB_TAG = "-mikecore-python"
 
 
 def tagged(name: str) -> str:
-    """libufs.so -> libufs-mikecore-python.so, libintlc.so.5 -> libintlc-mikecore-python.so.5"""
+    """libintlc.so.5 -> libintlc-mikecore-python.so.5"""
     return name.replace(".so", LIB_TAG + ".so", 1)
 
 
 def isolate_linux_libs(bin_folder: str | Path):
-    """Keep the bundled libraries from colliding with same-named ones from a
-    MIKE installation (issue #45):
-
-    - Unique file names, SONAMEs and NEEDED entries, so the loader never
-      shares a library with an engine that loaded its own copy by name.
-    - DT_RPATH $ORIGIN instead of DT_RUNPATH, so dependencies resolve to this
-      folder before LD_LIBRARY_PATH.
-    """
+    """Unique names (#45), and DT_RPATH rather than DT_RUNPATH so
+    LD_LIBRARY_PATH can't override $ORIGIN."""
     patchelf_path = shutil.which("patchelf")
     libs = list(Path(bin_folder).glob("*.so*"))
     renames = {so.name: tagged(so.name) for so in libs}
@@ -122,8 +112,6 @@ def isolate_linux_libs(bin_folder: str | Path):
 
 
 def check_isolated(bin_folder: str | Path) -> None:
-    """Fail the build if a bundled Linux library still refers to another
-    bundled one by its untagged name, or its SONAME or RPATH is wrong."""
     libs = [lib for lib in Path(bin_folder).iterdir() if ".so" in lib.name]
     untagged = {lib.name.replace(LIB_TAG, "") for lib in libs}
     problems = []
@@ -142,17 +130,13 @@ def check_isolated(bin_folder: str | Path) -> None:
 
 
 def check_signed(bin_folder: str | Path) -> None:
-    """Fail the build if a bundled DLL has lost its Authenticode signature,
-    so WDAC and AppLocker policies that require DHI's signature still load
-    them. This checks the signature is there, not that it is valid."""
+    """Checks a signature is present, not that it's valid."""
     unsigned = [dll.name for dll in Path(bin_folder).glob("*.dll") if not signed(dll)]
     if unsigned:
         raise RuntimeError("Bundled DLLs aren't signed: " + ", ".join(unsigned))
 
 
 def signed(dll: Path) -> bool:
-    """Whether the DLL's certificate table, where its signature is, is
-    non-empty."""
     data = dll.read_bytes()
     optional_header = struct.unpack_from("<I", data, 0x3C)[0] + 24
     pe32_plus = struct.unpack_from("<H", data, optional_header)[0] == 0x20B
@@ -162,7 +146,6 @@ def signed(dll: Path) -> bool:
 
 
 def print_elf(lib: Path, flag: str) -> list[str]:
-    """Run a patchelf --print-* query on lib."""
     query = [shutil.which("patchelf"), flag, str(lib)]
     return subprocess.run(
         query, check=True, capture_output=True, text=True

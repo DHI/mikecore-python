@@ -1419,7 +1419,6 @@ class eumDLL:
     # Set by Init(), which mikecore/__init__.py calls on import
     Wrapper: ctypes.CDLL
     _loaded = False
-    # Bundled name; mikecore/__init__.py removes the tag for MIKECORE_PYTHON_BIN
     libfilename = "eum.dll" if os.name == "nt" else "libeum-mikecore-python.so"
     # Directory of the native libraries; set before Init() or passed to it
     libfilepath: str | None = None
