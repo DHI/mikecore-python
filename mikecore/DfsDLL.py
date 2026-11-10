@@ -47,7 +47,10 @@ class DfsDLL:
     libfilepath: str
     _loaded = False
     MCCUWrapper = None
-    libfilename = "libufs-mikecore.so"
+    # Bundled name; mikecore/__init__.py removes the tag for MIKECORE_PYTHON_BIN
+    libfilename = (
+        "ufs-mikecore-python.dll" if os.name == "nt" else "libufs-mikecore-python.so"
+    )
 
     @staticmethod
     def Init(libfilepath: str | None = None):
@@ -59,11 +62,7 @@ class DfsDLL:
             raise ValueError("DfsDLL.Init needs the directory of the native libraries")
         DfsDLL.libfilepath = libfilepath
 
-        # TODO: On linux, this looks different!
-        if os.name == "nt":
-            lib = ctypes.CDLL(os.path.join(DfsDLL.libfilepath, "ufs.dll"))
-        else:
-            lib = ctypes.CDLL(os.path.join(DfsDLL.libfilepath, DfsDLL.libfilename))
+        lib = ctypes.CDLL(os.path.join(DfsDLL.libfilepath, DfsDLL.libfilename))
         lib.dfsInitSystem()
 
         lib.dfsGetAppTitle.argtypes = [ctypes.c_void_p]

@@ -1419,9 +1419,10 @@ class eumDLL:
     # Set by Init(), which mikecore/__init__.py calls on import
     Wrapper: ctypes.CDLL
     _loaded = False
-    # Leaving out extension should make it work for both Windows and Linux
-    libfilename = "libeum-mikecore.so"
-    # libfilename = "eum";
+    # Bundled name; mikecore/__init__.py removes the tag for MIKECORE_PYTHON_BIN
+    libfilename = (
+        "eum-mikecore-python.dll" if os.name == "nt" else "libeum-mikecore-python.so"
+    )
     # Directory of the native libraries; set before Init() or passed to it
     libfilepath: str | None = None
 
@@ -1443,11 +1444,8 @@ class eumDLL:
         if path is None:
             raise ValueError("eumDLL.Init needs the directory of the native libraries")
         # TODO: Is there a smarter way to have the eum library loaded (especially when xcopy-deployed)
-        if os.name == "nt":
-            lib = ctypes.CDLL(os.path.join(path, "eum"))
-        else:
-            lib = ctypes.CDLL(os.path.join(path, eumDLL.libfilename))
-
+        lib = ctypes.CDLL(os.path.join(path, eumDLL.libfilename))
+        if os.name != "nt":
             lib.eumSetupLoadLinux.argtypes = [ctypes.c_char_p]
             # TODO: Should this not be simpler?
             eumFilePath = path + "/EUM.xml"
