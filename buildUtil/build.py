@@ -212,6 +212,47 @@ def replace_dll_imports(dll: Path, renames: dict[str, str]) -> None:
     dll.write_bytes(patched.write())
 
 
+def check_isolated(bin_folder: str | Path, linux: bool) -> None:
+    """Fail the build if a bundled library still refers to another bundled
+    one by its untagged name, or, on Linux, its SONAME or RPATH is wrong."""
+    libs = [
+        lib
+        for lib in Path(bin_folder).iterdir()
+        if lib.suffix == ".dll" or ".so" in lib.name
+    ]
+    untagged = {lib.name.replace(LIB_TAG, "").lower() for lib in libs}
+    problems = []
+    for lib in libs:
+        if linux:
+            needed = print_elf(lib, "--print-needed")
+            if print_elf(lib, "--print-soname") != [lib.name]:
+                problems.append(f"{lib.name}: SONAME isn't the file name")
+            if print_elf(lib, "--print-rpath") != ["$ORIGIN"]:
+                problems.append(f"{lib.name}: RPATH isn't $ORIGIN")
+        else:
+            pe = pefile.PE(str(lib))
+            needed = [
+                entry.dll.decode()
+                for entry in getattr(pe, "DIRECTORY_ENTRY_IMPORT", [])
+            ]
+            pe.close()
+        problems += [
+            f"{lib.name}: needs untagged {name}"
+            for name in needed
+            if name.lower() in untagged
+        ]
+    if problems:
+        raise RuntimeError("Bundled libraries aren't isolated:\n" + "\n".join(problems))
+
+
+def print_elf(lib: Path, flag: str) -> list[str]:
+    """Run a patchelf --print-* query on lib."""
+    query = [shutil.which("patchelf"), flag, str(lib)]
+    return subprocess.run(
+        query, check=True, capture_output=True, text=True
+    ).stdout.split()
+
+
 def is_read_only_data(section) -> bool:
     return bool(
         section.IMAGE_SCN_CNT_INITIALIZED_DATA
@@ -238,8 +279,10 @@ def setup():
     # pefile is pure Python, so the DLLs are patched on every platform;
     # patchelf only runs on Linux.
     isolate_windows_dlls("mikecore/bin/windows")
+    check_isolated("mikecore/bin/windows", linux=False)
     if platform.system().lower() == "linux":
         isolate_linux_libs("mikecore/bin/linux")
+        check_isolated("mikecore/bin/linux", linux=True)
 
 
 class BuildHook(BuildHookInterface):
