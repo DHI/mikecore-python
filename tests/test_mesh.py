@@ -306,13 +306,16 @@ def test_MeshBuilder_element_ids_outside_int32_are_rejected(outside):
         builder.SetElementIds([1, outside])
 
 
-# One id per element, so a 2-D array or a scalar is rejected even when its size fits
+# One integer id per element, so a 2-D array or a scalar is rejected even when its
+# size fits, and so are booleans and floats, even whole ones
 @pytest.mark.parametrize(
     "elementIds, match",
     [
         (np.array([[10], [20]]), "1-D"),
         (7, "1-D"),
-        ([True, False], "not booleans"),
+        ([True, False], "integers, got bool"),
+        ([10.0, 20.0], "integers, got float64"),
+        ([10.5, 20.0], "integers, got float64"),
     ],
 )
 def test_MeshBuilder_element_ids_must_be_a_1d_integer_array(elementIds, match):

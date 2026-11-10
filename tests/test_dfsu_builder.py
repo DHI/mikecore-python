@@ -309,14 +309,16 @@ def test_ids_outside_int32_are_rejected(outside):
         builder.SetElementIds([1, outside])
 
 
-# One id per node or element, so a 2-D array or a scalar is rejected even when its
-# size fits
+# One integer id per node or element, so a 2-D array or a scalar is rejected even
+# when its size fits, and so are booleans and floats, even whole ones
 @pytest.mark.parametrize(
     "nodeIds, elementIds, match",
     [
         (np.array([[1, 2], [3, 4]]), np.array([[10], [20]]), "1-D"),
         (7, 7, "1-D"),
-        ([True, False, True, False], [True, False], "not booleans"),
+        ([True, False, True, False], [True, False], "integers, got bool"),
+        ([1.0, 2.0, 3.0, 4.0], [10.0, 20.0], "integers, got float64"),
+        ([1.5, 2.0, 3.0, 4.0], [10.5, 20.0], "integers, got float64"),
     ],
 )
 def test_ids_must_be_a_1d_integer_array(nodeIds, elementIds, match):
