@@ -49,8 +49,8 @@ _dll_dir = (
 )
 with _dll_dir:
     if installation_bin and platform.system() == "Linux":
-        # A MIKE installation's libeum (2025 and later) uses fnGetLanguage from
-        # libufs without linking to it. The bundled libeum doesn't.
+        # Some MIKE installations' libeum uses fnGetLanguage from libufs
+        # without linking to it.
         ctypes.CDLL(os.path.join(mikebin, DfsDLL.libfilename))
     eumDLL.Init()
     MzCartDLL.Init(mikebin)
