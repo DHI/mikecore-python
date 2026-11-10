@@ -1,0 +1,10 @@
+# Normalize text files to LF in the repository and in every checkout.
+* text=auto eol=lf
+
+# Windows tooling expects CRLF.
+*.bat text eol=crlf
+*.sln text eol=crlf
+*.pyproj text eol=crlf
+
+# Test inputs stay byte-exact.
+testdata/** -text
