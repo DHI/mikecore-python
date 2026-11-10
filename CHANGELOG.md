@@ -116,16 +116,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Dfs2File` and `Dfs3File` do. A file opened with
   `DfsFileFactory.DfsGenericOpen` ignored `reshape`. 0-D and 1-D items stay
   flat.
-- A `DfsDynamicItemBuilder` can be reused after `GetDynamicItemInfo`. It
-  replaced its item with a blank one but kept its "is set" flags, so the next
-  item passed validation with no name, quantity or value type. The builder now
-  keeps its settings for the next item, and changing it no longer changes the
-  item it returned. Associated static items carry over and add up: after an
-  item with static item 1, `SetAssociatedStaticItem(2)` gives the next item
-  `[1, 2]`.
-- Changing a `DfsStaticItemBuilder` after `GetStaticItem`, or the data array
-  passed to `SetData`, no longer changes the static item it returned. Each
-  returned item has its own copy of the data.
+- `DfsDynamicItemBuilder` and `DfsStaticItemBuilder` reset after
+  `GetDynamicItemInfo` and `GetStaticItem`. A reused dynamic builder used to
+  return a blank item that passed validation and failed only when added to a
+  file. Each builder now starts empty for the next item, and validation reports
+  any setting that is not set again. Changing a builder no longer changes the
+  item it returned.
 - `DfsuBuilder` creates `DfsuSpectral0D` files. It raised an `Exception` with
   no message. The caller supplies the frequency-direction mesh, one element per
   frequency and direction, and `Validate` reports a Spectral0D builder with no
