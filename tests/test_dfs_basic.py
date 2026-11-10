@@ -118,13 +118,21 @@ def test_read_static_item_after_read_static_item_next():
     assert "Node id" == item.Name
 
 
-def test_read_static_item_past_the_last_item():
+# OresundHD.dfsu has 9 static items. dfsFindItemStatic succeeds for 10 and
+# fails from 11, so both are checked.
+@pytest.mark.parametrize("staticItemNo", [10, 11, 100])
+def test_read_static_item_past_the_last_item(staticItemNo):
     dfs = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfsu")
 
-    item = dfs.ReadStaticItem(10)
-    dfs.Close()
+    try:
+        with pytest.raises(ValueError, match="past the last static item"):
+            dfs.ReadStaticItem(staticItemNo)
+        first = dfs.ReadStaticItem(1)
+    finally:
+        dfs.Close()
 
-    assert item is None
+    assert first is not None
+    assert "Node id" == first.Name
 
 
 # Numbers that do not fit in the native int32 are past the last item too
@@ -132,11 +140,13 @@ def test_read_static_item_past_the_last_item():
 def test_read_static_item_past_int32(staticItemNo):
     dfs = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfsu")
 
-    item = dfs.ReadStaticItem(staticItemNo)
-    first = dfs.ReadStaticItem(1)
-    dfs.Close()
+    try:
+        with pytest.raises(ValueError, match="past the last static item"):
+            dfs.ReadStaticItem(staticItemNo)
+        first = dfs.ReadStaticItem(1)
+    finally:
+        dfs.Close()
 
-    assert item is None
     assert first is not None
     assert "Node id" == first.Name
 

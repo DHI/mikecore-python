@@ -264,13 +264,8 @@ class FileOresund3DSigmaZ:
     def StaticItemTester(dfsFile, original):
         staticItems = []
 
-        staticItemNumber = 1
-        while True:
-            varstaticItem = dfsFile.ReadStaticItem(staticItemNumber)
-            if varstaticItem is None:
-                break
+        while (varstaticItem := dfsFile.ReadStaticItemNext()) is not None:
             staticItems.append(varstaticItem)
-            staticItemNumber += 1
 
         Assert.IsNotNull(staticItems)
         Assert.AreEqual(9, len(staticItems))
@@ -500,13 +495,8 @@ class FileOdenseHD3DDfsu:
     def StaticItemTester(dfsFile, original):
         staticItems = []
 
-        staticItemNumber = 1
-        while True:
-            varstaticItem = dfsFile.ReadStaticItem(staticItemNumber)
-            if varstaticItem is None:
-                break
+        while (varstaticItem := dfsFile.ReadStaticItemNext()) is not None:
             staticItems.append(varstaticItem)
-            staticItemNumber += 1
 
         Assert.IsNotNull(staticItems)
         Assert.AreEqual(9, len(staticItems))
@@ -685,13 +675,8 @@ class FileVerticalProfileSigmaDfsu:
     def StaticItemTester(dfsFile, datamanager):
         staticItems = []
 
-        staticItemNumber = 1
-        while True:
-            varstaticItem = dfsFile.ReadStaticItem(staticItemNumber)
-            if varstaticItem is None:
-                break
+        while (varstaticItem := dfsFile.ReadStaticItemNext()) is not None:
             staticItems.append(varstaticItem)
-            staticItemNumber += 1
 
         Assert.IsNotNull(staticItems)
         Assert.AreEqual(9, len(staticItems))
@@ -952,13 +937,8 @@ class FileVerticalProfileSigmaZDfsu:
     def StaticItemTester(dfsFile, datamanager):
         staticItems = []
 
-        staticItemNumber = 1
-        while True:
-            varstaticItem = dfsFile.ReadStaticItem(staticItemNumber)
-            if varstaticItem is None:
-                break
+        while (varstaticItem := dfsFile.ReadStaticItemNext()) is not None:
             staticItems.append(varstaticItem)
-            staticItemNumber += 1
 
         Assert.IsNotNull(staticItems)
         Assert.AreEqual(9, len(staticItems))
@@ -1268,13 +1248,8 @@ class FileVerticalColumnDfsu:
     def StaticItemTester(dfsFile, datamanager):
         staticItems = []
 
-        staticItemNumber = 1
-        while True:
-            varstaticItem = dfsFile.ReadStaticItem(staticItemNumber)
-            if varstaticItem is None:
-                break
+        while (varstaticItem := dfsFile.ReadStaticItemNext()) is not None:
             staticItems.append(varstaticItem)
-            staticItemNumber += 1
 
         Assert.IsNotNull(staticItems)
         Assert.AreEqual(9, len(staticItems))
