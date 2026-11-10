@@ -943,9 +943,12 @@ class DfsFile:
         """
         Read the number <paramref name="staticItemNo"/> static item from the file.
 
+        To read every static item, use `ReadStaticItemNext`, which returns None
+        after the last one.
+
         :param staticItemNo: Number of static item in the file to read. First static item has number 1
-        :returns: The static item number <paramref name="staticItemNo"/>, null if there are not that many static items.
-        :raises ValueError: If <paramref name="staticItemNo"/> is below 1.
+        :returns: The static item number <paramref name="staticItemNo"/>.
+        :raises ValueError: If <paramref name="staticItemNo"/> is below 1 or past the last static item.
         """
         self.__CheckIfOpen()
         if self.fpState == DfsFilePointerState.CreatingItems:
@@ -954,21 +957,30 @@ class DfsFile:
             raise ValueError(
                 f"Static item number must be 1 or more, got {staticItemNo}"
             )
+        pastTheEnd = ValueError(
+            f"Static item number {staticItemNo} is past the last static item"
+        )
         # dfsFindItemStatic takes an int32, and a larger number is past the last item
         if staticItemNo > np.iinfo(np.int32).max:
-            return None
+            raise pastTheEnd
 
         if (
             self.fpState != DfsFilePointerState.StaticItem
             or self.fpItemNumber != staticItemNo
         ):
-            DfsDLL.Wrapper.dfsFindItemStatic(
+            rc = DfsDLL.Wrapper.dfsFindItemStatic(
                 self.headPointer, self.filePointer, staticItemNo
             )
             self.fpState = DfsFilePointerState.StaticItem
             self.fpItemNumber = staticItemNo
             self.fpTimeStepIndex = -1
-        return self.ReadStaticItemNext()
+            if rc != 0:
+                raise pastTheEnd
+        # dfsFindItemStatic also succeeds one past the last item
+        staticItem = self.ReadStaticItemNext()
+        if staticItem is None:
+            raise pastTheEnd
+        return staticItem
 
     def WriteStaticItemData(self, staticItem, data: np.ndarray):
         """

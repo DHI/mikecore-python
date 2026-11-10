@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with `subprocess`, no longer inherit it.
 - The architecture check at import requires an x86-64 CPU as well as a 64-bit
   Python.
+- **Breaking:** `DfsFile.ReadStaticItem` raises `ValueError` for a number past
+  the last static item instead of returning `None`, as reading a dynamic item
+  past the last one does. To read every static item, call `ReadStaticItemNext`
+  until it returns `None`.
 
 ### Fixed
 
@@ -137,9 +141,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   seconds, so a file with a time unit other than seconds gets the right
   timestamps. A 10 minute step was written as 10 seconds.
 - `DfsFile.ReadStaticItem` raises `ValueError` for an item number below 1. It
-  returned the first static item, numbered 0 or below. A number past the last
-  item still returns `None`, and so does a number too large for int32, which
-  returned another item or raised `ctypes.ArgumentError`.
+  returned the first static item, numbered 0 or below. A number too large for
+  int32, which returned another item or raised `ctypes.ArgumentError`, now
+  raises `ValueError` as any number past the last item does (see Changed).
 - `DfsFile.ReadItemTimeStepNext` and `ReadItemTimeStep` with `reshape=True`
   reshape an item with a 2-D or 3-D spatial axis to the axis shape, as
   `Dfs2File` and `Dfs3File` do. A file opened with
