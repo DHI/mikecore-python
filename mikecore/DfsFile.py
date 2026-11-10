@@ -1026,7 +1026,7 @@ class DfsFile:
         self.fpItemNumber += 1
 
     def ReadItemTimeStepNext(
-        self, itemData: DfsItemData | None = None, reshape: bool = False
+        self, itemData: DfsItemData | None = None
     ) -> DfsItemData | None:
         """
         Reads the next dynamic item-timestep. First time called it returns the first
@@ -1046,7 +1046,6 @@ class DfsFile:
         since it iterates exactly as the data is stored on the disk.
 
         :param itemData DfsItemData: DfsItemData for item to store timestep values in, for reuse of memory.
-        :param reshape bool: Reshape data array to dimension of data, 2D or 3D depending on spatial axis.
         :returns DfsIemData: The next dynamic item-timestep, None if no more items are present.
         """
         self.__CheckIfOpen()
@@ -1084,12 +1083,6 @@ class DfsFile:
             res = itemData
             res.Time = time
             res.TimeStepIndex = self.fpTimeStepIndex
-        # A 0-D axis has shape (0,) while holding one value, so only reshape 2-D and
-        # 3-D. GetItemSpatialAxis can return None by its type, though a file with an
-        # axis it does not read, such as EqD4, already fails to open; stay flat then.
-        axis = item.SpatialAxis
-        if reshape and axis is not None and len(shape := axis.Shape) >= 2:
-            res.Data = res.Data.reshape(shape, order="F")
         self.__FpDynamicIncrement()
         return res
 
@@ -1097,7 +1090,6 @@ class DfsFile:
         self,
         itemNumber: int | DfsItemData,
         timestepIndex: int,
-        reshape: bool = False,
     ) -> DfsItemData | None:
         """
         Reads the dynamic item-timestep as specified from the file. It throws an
@@ -1106,7 +1098,6 @@ class DfsFile:
 
         :param itemNumber Union[int,DfsItemData]: Item number (1-based), or DfsItemData for item
         :param timestepIndex int: Time step index (0-based)
-        :param reshape bool: Reshape data array to dimension of data, 2D or 3D depending on spatial axis.
         :return DfsItemData: The dynamic item-timestep as specified
         """
         self.__CheckIfOpen()
@@ -1141,7 +1132,7 @@ class DfsFile:
 
         # Position file pointer
         self.__FpFindItemTimeStep(itemNumber, timestepIndex)
-        return self.ReadItemTimeStepNext(itemData, reshape)
+        return self.ReadItemTimeStepNext(itemData)
 
     def __GetTime(self, time, timestepIndex):
         # TODO: This assumes time in seconds?

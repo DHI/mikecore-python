@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the last static item instead of returning `None`, as reading a dynamic item
   past the last one does. To read every static item, call `ReadStaticItemNext`
   until it returns `None`.
+- **Breaking:** `DfsFile.ReadItemTimeStepNext` and `ReadItemTimeStep` no longer
+  take `reshape`, which a file opened with `DfsFileFactory.DfsGenericOpen`
+  ignored. Open dfs1, dfs2 and dfs3 files with `Dfs1FileOpen`, `Dfs2FileOpen`
+  or `Dfs3FileOpen` to reshape their data.
 
 ### Fixed
 
@@ -144,11 +148,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   returned the first static item, numbered 0 or below. A number too large for
   int32, which returned another item or raised `ctypes.ArgumentError`, now
   raises `ValueError` as any number past the last item does (see Changed).
-- `DfsFile.ReadItemTimeStepNext` and `ReadItemTimeStep` with `reshape=True`
-  reshape an item with a 2-D or 3-D spatial axis to the axis shape, as
-  `Dfs2File` and `Dfs3File` do. A file opened with
-  `DfsFileFactory.DfsGenericOpen` ignored `reshape`. 0-D and 1-D items stay
-  flat.
 - `DfsDynamicItemBuilder` and `DfsStaticItemBuilder` reset after
   `GetDynamicItemInfo` and `GetStaticItem`. A reused dynamic builder used to
   return a blank item that passed validation and failed only when added to a

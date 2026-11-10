@@ -1,7 +1,6 @@
 import ctypes
 
 import pytest
-from numpy.testing import assert_array_equal
 
 from mikecore.DfsDLL import DfsDLL
 from mikecore.DfsFile import DfsDLLUtil, DfsFile, DfsFileMode, TimeAxisType
@@ -189,59 +188,3 @@ def test_item_quantity_descriptions():
 
     assert ["Water Level", "Water Depth"] == [q.ItemDescription for q in quantities]
     assert ["meter", "meter"] == [q.UnitDescription for q in quantities]
-
-
-@pytest.mark.parametrize(
-    "filename, openTyped",
-    [
-        ("testdata/OresundHD.dfs2", DfsFileFactory.Dfs2FileOpen),
-        ("testdata/OresundHD.dfs3", DfsFileFactory.Dfs3FileOpen),
-    ],
-)
-def test_generic_read_reshapes_like_dfs123(filename, openTyped):
-    typed = openTyped(filename)
-    expected = typed.ReadItemTimeStep(1, 0, reshape=True).Data
-    typed.Close()
-
-    dfs = DfsFileFactory.DfsGenericOpen(filename)
-    shape = dfs.ItemInfo[0].SpatialAxis.Shape
-    nextItemData = dfs.ReadItemTimeStepNext(reshape=True)
-    itemData = dfs.ReadItemTimeStep(1, 0, reshape=True)
-    dfs.Close()
-
-    assert len(shape) >= 2
-    assert shape == expected.shape
-    assert nextItemData is not None
-    assert_array_equal(expected, nextItemData.Data)
-    assert itemData is not None
-    assert_array_equal(expected, itemData.Data)
-
-
-# A 0-D axis has Shape (0,) but holds one value, and a 1-D axis is already flat
-@pytest.mark.parametrize(
-    "filename, size",
-    [("testdata/TemporalEqCal.dfs0", 1), ("testdata/OresundHD.dfsu", 3636)],
-)
-def test_generic_read_does_not_reshape_0d_or_1d(filename, size):
-    dfs = DfsFileFactory.DfsGenericOpen(filename)
-    itemData = dfs.ReadItemTimeStep(1, 0, reshape=True)
-    dfs.Close()
-
-    assert itemData is not None
-    assert (size,) == itemData.Data.shape
-
-
-@pytest.mark.parametrize(
-    "filename", ["testdata/OresundHD.dfs2", "testdata/OresundHD.dfs3"]
-)
-def test_generic_read_stays_flat_without_reshape(filename):
-    dfs = DfsFileFactory.DfsGenericOpen(filename)
-    size = dfs.ItemInfo[0].ElementCount
-    nextItemData = dfs.ReadItemTimeStepNext()
-    itemData = dfs.ReadItemTimeStep(1, 0)
-    dfs.Close()
-
-    assert nextItemData is not None
-    assert (size,) == nextItemData.Data.shape
-    assert itemData is not None
-    assert (size,) == itemData.Data.shape
