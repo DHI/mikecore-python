@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     # Builds a single py3-none-any wheel bundling both Windows and Linux binaries.
-    # Must run on Linux: the build hook only patches the .so RPATHs there.
+    # Must run on Linux: the build hook only patches the .so files there.
     runs-on: ubuntu-latest
 
     steps:

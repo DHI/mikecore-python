@@ -48,6 +48,7 @@ class MzCartDLL:
     # Set by Init(), which mikecore/__init__.py calls on import
     Wrapper: ctypes.CDLL
     _loaded = False
+    libfilename = "MzCart.dll" if os.name == "nt" else "libMzCart-mikecore-python.so"
 
     _cartCreateCount = 0
     _cartDestroyCount = 0
@@ -70,11 +71,8 @@ class MzCartDLL:
             )
         MzCartDLL.libfilepath = libfilepath
 
-        # TODO: On linux, this looks different!
-        if os.name == "nt":
-            lib = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, "MzCart.dll"))
-        else:
-            lib = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, "libMzCart.so"))
+        lib = ctypes.CDLL(os.path.join(MzCartDLL.libfilepath, MzCartDLL.libfilename))
+        if os.name != "nt":
             libfilepathe = MzCartDLL.libfilepath + "/"
             libfilepatheP = ctypes.c_char_p(os.fsencode(libfilepathe))
             lib.CARTSETUPLINUX(libfilepatheP, libfilepatheP)

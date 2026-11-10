@@ -5,14 +5,12 @@ build-backend = "hatchling.build"
 [tool.hatch.build.hooks.custom]
 path = "buildUtil/build.py"
 
-[tool.hatch.build.targets.sdist.force-include]
-"mikecore/bin" = "mikecore/bin"
+# Built by the hook and gitignored.
+[tool.hatch.build]
+artifacts = ["/mikecore/bin"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["mikecore", "miketools"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"mikecore/bin" = "mikecore/bin"
 
 [project]
 name = "mikecore"
