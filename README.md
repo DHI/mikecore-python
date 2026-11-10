@@ -17,14 +17,27 @@ This library is the foundation for [MIKE IO](https://github.com/DHI/mikeio).
 
 ```pip install mikecore```
 
-### Using a MIKE installation's libraries
+### Using mikecore with other MIKE software in one process
 
-mikecore uses its own bundled MIKE Core libraries, even when MIKE is installed.
-To use an installation's libraries instead, for example to share them with a
-MIKE engine in the same Python process, set `MIKECORE_PYTHON_BIN` to the
-installation's `bin` folder before importing mikecore. This is at your own risk:
-mikecore is only tested with its bundled libraries, although the MIKE Core API is
-generally stable across releases.
+mikecore loads its bundled MIKE Core libraries (23.0.3) by default, even with
+MIKE installed. With another library in the process that loads MIKE Core
+(a MIKE engine, for example):
+
+- **Linux:** the two keep separate libraries, unless the other library is
+  loaded with `RTLD_GLOBAL` before mikecore.
+- **Windows:** each MIKE Core DLL is loaded once per process, by whichever
+  library comes first, so the two can end up on a mix of versions.
+
+To share one set instead, set `MIKECORE_PYTHON_BIN` to the installation's `bin`
+folder (on Windows, the 64-bit `bin\x64`) before mikecore is first imported. On
+Linux, you may also need that folder on `LD_LIBRARY_PATH`. mikecore is only
+tested with its bundled libraries.
+
+Either way, mikecore's EUM items and units match the bundled version. With
+MIKE Core from a newer version, EUM lookups can raise `ValueError`
+([#84](https://github.com/DHI/mikecore-python/issues/84)), and data from it can
+use items and units mikecore doesn't know. With an older version, newer items
+and units are rejected.
 
 ## Development
 
