@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "pefile", "patchelf; sys_platform == 'linux'"]
+requires = ["hatchling", "patchelf; sys_platform == 'linux'"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.hooks.custom]

@@ -27,9 +27,10 @@ from mikecore.DfsDLL import DfsDLL
 from mikecore.eum import eumDLL
 from mikecore.Projections import MzCartDLL
 
-# The build adds this tag to the bundled libraries' names (see
+# The build adds this tag to the bundled Linux libraries' names (see
 # buildUtil/build.py, which has the same constant), so they never collide with
-# same-named libraries a MIKE engine in the same process has loaded.
+# same-named libraries a MIKE engine in the same process has loaded. The
+# Windows DLLs keep their names, so they stay signed (ADR 0002).
 LIB_TAG = "-mikecore-python"
 
 # Opt-in, at the user's own risk: load a MIKE installation's libraries instead
@@ -46,7 +47,9 @@ DfsDLL.libfilepath = mikebin
 eumDLL.libfilepath = mikebin
 
 # On Windows, add mikebin to the process-wide DLL search path only while
-# mikecore loads its DLLs, so it doesn't affect other DLLs loaded later.
+# mikecore loads its DLLs, so it doesn't affect other DLLs loaded later. PATH
+# isn't searched, so an installation's bin on PATH can't take over. A
+# same-named DLL already loaded in the process is reused, though.
 # That is enough: the DLLs import each other statically, resolved while they
 # load here, and none of them loads another bundled DLL by name later on.
 _dll_dir = (

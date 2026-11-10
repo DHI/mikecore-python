@@ -15,17 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The bundled native libraries are renamed with a `-mikecore-python` tag, for
-  example `libeum-mikecore-python.so` and `eum-mikecore-python.dll`, so they
-  don't collide with a MIKE installation's (see
+- The bundled Linux libraries are renamed with a `-mikecore-python` tag, for
+  example `libeum-mikecore-python.so`, so they don't collide with a MIKE
+  installation's (see
   [ADR 0002](docs/adr/0002-isolate-bundled-native-libraries.md)). Code that
-  loads them by name needs the new names.
+  loads them by name needs the new names. The Windows DLLs keep their names
+  and DHI's signatures.
 - **Possibly breaking:** importing mikecore no longer adds its library folder
   to `PATH` or `LD_LIBRARY_PATH`. Child processes, such as an engine started
   with `subprocess`, no longer inherit it.
-- The Windows DLLs that import other bundled DLLs are no longer
-  Authenticode-signed: the build patches their imports, which invalidates
-  DHI's signature, so it is removed.
 - The architecture check at import requires an x86-64 CPU as well as a 64-bit
   Python.
 
@@ -36,8 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `undefined symbol: _Z13fnGetLanguagev`, because the bundled libraries
   resolved their dependencies to the installation's
   ([#45](https://github.com/DHI/mikecore-python/issues/45)).
-- mikecore no longer binds to a same-named library that a MIKE engine in the
-  same process loaded first, on Linux and Windows (#45).
+- On Linux, mikecore no longer binds to a same-named library that a MIKE
+  engine in the same process loaded first (#45).
 - `uv build --wheel` works with hatchling 1.31 and later, and the wheel holds
   each native library once. It held each one twice before.
 - Items read from a dfs file have the reference coordinates and orientation

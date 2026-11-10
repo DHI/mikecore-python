@@ -34,11 +34,17 @@ Core would serve both; until then, this is an interim decision.
 mikecore uses its bundled libraries, isolated, by default. A user can opt in to
 an installation's libraries instead.
 
-- **Unique names.** The build adds `-mikecore-python` to every bundled
-  library's name (`ufs.dll` -> `ufs-mikecore-python.dll`, `libeum.so` ->
-  `libeum-mikecore-python.so`), and rewrites the libraries' references to each
-  other to match: SONAMEs and NEEDED entries with patchelf on Linux, import
-  tables with pefile on Windows.
+- **Unique names on Linux.** The build adds `-mikecore-python` to every
+  bundled `.so` name (`libeum.so` -> `libeum-mikecore-python.so`), and rewrites
+  the SONAMEs and NEEDED entries to match with patchelf.
+- **Windows DLLs as DHI ships them.** Renaming them would mean rewriting
+  their import tables, which invalidates DHI's Authenticode signature. Shipped
+  releases must not trip WDAC, AppLocker or antivirus policies that require
+  that signature, so the build leaves the DLLs alone and fails if one is
+  unsigned. An installation's `bin` on `PATH` can't take over anyway: ctypes
+  loads mikecore's DLLs by full path with `LOAD_LIBRARY_SEARCH_DEFAULT_DIRS`
+  and `LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR`, so their dependencies resolve to
+  mikecore's folder, and `PATH` isn't searched.
 - **DT_RPATH `$ORIGIN` on Linux**, which the loader searches before
   `LD_LIBRARY_PATH`, so dependencies always resolve to the bundled folder.
 - **No environment edits at import.** mikecore no longer changes `PATH` or
@@ -58,23 +64,26 @@ an installation's libraries instead.
 
 ## Consequences
 
-- mikecore imports and works next to any MIKE installation, on either
-  platform, in either import order, as long as the engine doesn't load its
+- mikecore imports and works next to any MIKE installation. On Linux that
+  holds in either import order, as long as the engine doesn't load its
   libraries with `RTLD_GLOBAL`.
+- On Windows, the loader reuses a DLL that is already loaded under the same
+  name before searching any folder. If a MIKE engine in the same process
+  loaded its own `eum.dll` or `pfs2004.dll` first, mikecore binds to it, and
+  if mikecore loads first, the engine binds to mikecore's. Nobody has
+  reported this. If someone does, the fix is to rename the DLLs and have DHI
+  re-sign them in the release workflow, or to get the MIKE Core NuGet
+  packages to ship signed DLLs under tagged names.
 - An engine whose library is loaded with `RTLD_GLOBAL` before `import
   mikecore` can still take over mikecore's symbols, because
   `libFemInterface.so` contains its own copy of MIKE Core. Callers load such
   libraries with `RTLD_LOCAL`, or import mikecore first. This is documented in
   #45, not worked around.
-- Patching invalidates DHI's Authenticode signature on the Windows DLLs that
-  import other bundled DLLs, so the build removes it. Those DLLs are unsigned
-  in the wheel; this matters only where a policy (WDAC, AppLocker, antivirus)
-  requires DHI's signature.
 - The bundled libraries' version can drift from the installation's without
   anyone noticing. `MIKECORE_PYTHON_BIN` is the way to check mikecore against
   an installation's libraries.
-- Code that names a bundled library must use the tagged name, which each
-  wrapper's `libfilename` holds. If it doesn't match the built files, `import
-  mikecore` fails, so the whole test suite does. The build checks its own
-  output: it fails if a bundled library still refers to another by its
+- Code that names a bundled Linux library must use the tagged name, which
+  each wrapper's `libfilename` holds. If it doesn't match the built files,
+  `import mikecore` fails, so the whole test suite does. The build checks its
+  own output: it fails if a bundled library still refers to another by its
   untagged name.

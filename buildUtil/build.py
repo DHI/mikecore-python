@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any
 import subprocess
 import platform
+import struct
 
-import pefile
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
 
@@ -79,16 +79,17 @@ def read_packages_config(filepath: str | Path) -> list[tuple[str, str]]:
     ]
 
 
-# Added to every bundled library's name, for example ufs.dll ->
-# ufs-mikecore-python.dll. mikecore/__init__.py has the same constant and
+# Added to every bundled Linux library's name, for example libufs.so ->
+# libufs-mikecore-python.so. mikecore/__init__.py has the same constant and
 # removes it when MIKECORE_PYTHON_BIN points at a MIKE installation.
+# The Windows DLLs keep their names: renaming them would mean patching their
+# imports, which invalidates DHI's Authenticode signature (ADR 0002).
 LIB_TAG = "-mikecore-python"
 
 
 def tagged(name: str) -> str:
-    """ufs.dll -> ufs-mikecore-python.dll, libintlc.so.5 -> libintlc-mikecore-python.so.5"""
-    ext = ".dll" if name.lower().endswith(".dll") else ".so"
-    return name.replace(ext, LIB_TAG + ext, 1)
+    """libufs.so -> libufs-mikecore-python.so, libintlc.so.5 -> libintlc-mikecore-python.so.5"""
+    return name.replace(".so", LIB_TAG + ".so", 1)
 
 
 def isolate_linux_libs(bin_folder: str | Path):
@@ -120,129 +121,44 @@ def isolate_linux_libs(bin_folder: str | Path):
         so.replace(so.with_name(new_name))
 
 
-def isolate_windows_dlls(bin_folder: str | Path):
-    """Give the bundled DLLs unique names, so Windows doesn't reuse a
-    same-named DLL that a MIKE engine has already loaded, and rewrite their
-    imports of each other to match (issue #45). Only static imports need
-    rewriting: none of the DLLs loads a bundled DLL by name at runtime.
-
-    Patching invalidates DHI's Authenticode signature, so it is removed.
-    """
-    dlls = list(Path(bin_folder).glob("*.dll"))
-    renames = {dll.name.lower(): tagged(dll.name) for dll in dlls}
-    for dll in dlls:
-        new_name = renames[dll.name.lower()]
-        print(f"Isolating {dll.name} as {new_name}")
-        replace_dll_imports(dll, renames)
-        dll.replace(dll.with_name(new_name))
-
-
-def replace_dll_imports(dll: Path, renames: dict[str, str]) -> None:
-    """Point dll's imports of the DLLs in renames (keyed by lowercase name) at
-    their new names, as delvewheel does: the longer names can't overwrite the
-    old ones, so they go into unused padding at the end of read-only data
-    sections, and each import descriptor's Name is repointed at its new name.
-    """
-    pe = pefile.PE(data=dll.read_bytes())
-    for entry in getattr(pe, "DIRECTORY_ENTRY_DELAY_IMPORT", []):
-        if entry.dll.decode().lower() in renames:
-            raise RuntimeError(f"{dll.name}: delay-load imports are not supported")
-    imports = [
-        entry
-        for entry in getattr(pe, "DIRECTORY_ENTRY_IMPORT", [])
-        if entry.dll.decode().lower() in renames
-    ]
-    if not imports:
-        return
-
-    sections = sorted(pe.sections, key=lambda section: section.VirtualAddress)
-    pending = list(imports)
-    for i, section in enumerate(sections):
-        if not is_read_only_data(section):
-            continue
-        # Padding: raw data past the section's in-memory size, but not past
-        # the start of the next section in memory.
-        end_rva = section.VirtualAddress + section.SizeOfRawData
-        if i + 1 < len(sections):
-            end_rva = min(end_rva, sections[i + 1].VirtualAddress)
-        while pending:
-            new_name = renames[pending[0].dll.decode().lower()].encode() + b"\0"
-            rva = section.VirtualAddress + section.Misc_VirtualSize
-            if rva + len(new_name) > end_rva:
-                break
-            pe.set_bytes_at_rva(rva, new_name)
-            pending.pop(0).struct.Name = rva
-            section.Misc_VirtualSize += len(new_name)
-    if pending:
-        raise RuntimeError(f"{dll.name}: no room for the new import names")
-
-    pe.OPTIONAL_HEADER.SizeOfImage = round_up(
-        sections[-1].VirtualAddress + sections[-1].Misc_VirtualSize,
-        pe.OPTIONAL_HEADER.SectionAlignment,
-    )
-    pe.OPTIONAL_HEADER.SizeOfInitializedData = sum(
-        max(
-            section.SizeOfRawData,
-            round_up(section.Misc_VirtualSize, pe.OPTIONAL_HEADER.FileAlignment),
-        )
-        for section in sections
-        if section.IMAGE_SCN_CNT_INITIALIZED_DATA
-    )
-
-    # Remove the signature. It must be the only data after the image, so
-    # removing it doesn't cut anything else off.
-    size = len(pe.__data__)
-    certificate = pe.OPTIONAL_HEADER.DATA_DIRECTORY[
-        pefile.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_SECURITY"]
-    ]
-    if certificate.Size:
-        image_end = max(s.PointerToRawData + s.SizeOfRawData for s in sections)
-        if (
-            certificate.VirtualAddress != round_up(image_end, 8)
-            or certificate.VirtualAddress + certificate.Size != size
-        ):
-            raise RuntimeError(
-                f"{dll.name}: data besides the signature after the image"
-            )
-        size = image_end
-        certificate.VirtualAddress = certificate.Size = 0
-
-    patched = pefile.PE(data=pe.write()[:size])
-    patched.OPTIONAL_HEADER.CheckSum = patched.generate_checksum()
-    dll.write_bytes(patched.write())
-
-
-def check_isolated(bin_folder: str | Path, linux: bool) -> None:
-    """Fail the build if a bundled library still refers to another bundled
-    one by its untagged name, or, on Linux, its SONAME or RPATH is wrong."""
-    libs = [
-        lib
-        for lib in Path(bin_folder).iterdir()
-        if lib.suffix == ".dll" or ".so" in lib.name
-    ]
-    untagged = {lib.name.replace(LIB_TAG, "").lower() for lib in libs}
+def check_isolated(bin_folder: str | Path) -> None:
+    """Fail the build if a bundled Linux library still refers to another
+    bundled one by its untagged name, or its SONAME or RPATH is wrong."""
+    libs = [lib for lib in Path(bin_folder).iterdir() if ".so" in lib.name]
+    untagged = {lib.name.replace(LIB_TAG, "") for lib in libs}
     problems = []
     for lib in libs:
-        if linux:
-            needed = print_elf(lib, "--print-needed")
-            if print_elf(lib, "--print-soname") != [lib.name]:
-                problems.append(f"{lib.name}: SONAME isn't the file name")
-            if print_elf(lib, "--print-rpath") != ["$ORIGIN"]:
-                problems.append(f"{lib.name}: RPATH isn't $ORIGIN")
-        else:
-            pe = pefile.PE(str(lib))
-            needed = [
-                entry.dll.decode()
-                for entry in getattr(pe, "DIRECTORY_ENTRY_IMPORT", [])
-            ]
-            pe.close()
+        if print_elf(lib, "--print-soname") != [lib.name]:
+            problems.append(f"{lib.name}: SONAME isn't the file name")
+        if print_elf(lib, "--print-rpath") != ["$ORIGIN"]:
+            problems.append(f"{lib.name}: RPATH isn't $ORIGIN")
         problems += [
             f"{lib.name}: needs untagged {name}"
-            for name in needed
-            if name.lower() in untagged
+            for name in print_elf(lib, "--print-needed")
+            if name in untagged
         ]
     if problems:
         raise RuntimeError("Bundled libraries aren't isolated:\n" + "\n".join(problems))
+
+
+def check_signed(bin_folder: str | Path) -> None:
+    """Fail the build if a bundled DLL has lost its Authenticode signature,
+    so WDAC and AppLocker policies that require DHI's signature still load
+    them. This checks the signature is there, not that it is valid."""
+    unsigned = [dll.name for dll in Path(bin_folder).glob("*.dll") if not signed(dll)]
+    if unsigned:
+        raise RuntimeError("Bundled DLLs aren't signed: " + ", ".join(unsigned))
+
+
+def signed(dll: Path) -> bool:
+    """Whether the DLL's certificate table, where its signature is, is
+    non-empty."""
+    data = dll.read_bytes()
+    optional_header = struct.unpack_from("<I", data, 0x3C)[0] + 24
+    pe32_plus = struct.unpack_from("<H", data, optional_header)[0] == 0x20B
+    # Data directory 4 is the certificate table; each entry is 8 bytes.
+    data_directories = optional_header + (112 if pe32_plus else 96)
+    return struct.unpack_from("<I", data, data_directories + 4 * 8 + 4)[0] > 0
 
 
 def print_elf(lib: Path, flag: str) -> list[str]:
@@ -253,22 +169,6 @@ def print_elf(lib: Path, flag: str) -> list[str]:
     ).stdout.split()
 
 
-def is_read_only_data(section) -> bool:
-    return bool(
-        section.IMAGE_SCN_CNT_INITIALIZED_DATA
-        and section.IMAGE_SCN_MEM_READ
-        and not section.IMAGE_SCN_CNT_CODE
-        and not section.IMAGE_SCN_CNT_UNINITIALIZED_DATA
-        and not section.IMAGE_SCN_MEM_EXECUTE
-        and not section.IMAGE_SCN_MEM_WRITE
-        and not section.IMAGE_SCN_MEM_DISCARDABLE
-    )
-
-
-def round_up(value: int, alignment: int) -> int:
-    return (value + alignment - 1) // alignment * alignment
-
-
 def setup():
     """Setup function to download NuGet packages and copy native libraries into bin folder."""
     packages = read_packages_config("buildUtil/packages.config")
@@ -276,13 +176,10 @@ def setup():
         download_nuget_package(name, version, output_dir="packages")
     copy_native_libs_to_bin("packages", "mikecore/bin")
 
-    # pefile is pure Python, so the DLLs are patched on every platform;
-    # patchelf only runs on Linux.
-    isolate_windows_dlls("mikecore/bin/windows")
-    check_isolated("mikecore/bin/windows", linux=False)
+    check_signed("mikecore/bin/windows")
     if platform.system().lower() == "linux":
         isolate_linux_libs("mikecore/bin/linux")
-        check_isolated("mikecore/bin/linux", linux=True)
+        check_isolated("mikecore/bin/linux")
 
 
 class BuildHook(BuildHookInterface):
