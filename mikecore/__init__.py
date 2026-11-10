@@ -41,10 +41,11 @@ DfsDLL.libfilepath = mikebin
 eumDLL.libfilepath = mikebin
 
 # Only while loading: the DLLs resolve their imports here and load nothing by
-# name later.
+# name later. sys.platform, not platform.system(), so type checkers know
+# os.add_dll_directory exists here.
 _dll_dir = (
     os.add_dll_directory(mikebin)
-    if platform.system() == "Windows"
+    if sys.platform == "win32"
     else contextlib.nullcontext()
 )
 with _dll_dir:
