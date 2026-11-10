@@ -18,11 +18,14 @@ class MeshNodes(NamedTuple):
     code: np.ndarray
 
 
-def _Int32Ids(ids, name):
+def _ToInt32Ids(ids, name):
     """Ids as the int32 array mesh and dfsu files store, rejecting ids that do not fit.
 
-    Shared by MeshBuilder and DfsuBuilder; name starts the error message.
+    None, for the default ids, is returned as is. Shared by MeshBuilder and
+    DfsuBuilder; name starts the error message.
     """
+    if ids is None:
+        return None
     ids = np.asarray(ids)
     if ids.ndim != 1:
         raise ValueError(f"{name} ids must be a 1-D array, got {ids.ndim}-D")
@@ -117,12 +120,11 @@ class MeshBuilder:
 
     def SetElementIds(self, elementIds):
         """Set the element id's. Optional. If not set, default values are used (1,2,3,...)"""
-        if elementIds is None:
-            self.__elementIds = None
-            return
-        elementIds = _Int32Ids(elementIds, "Element")
-        if (self.__connectivity is not None) and (
-            len(self.__connectivity) != len(elementIds)
+        elementIds = _ToInt32Ids(elementIds, "Element")
+        if (
+            elementIds is not None
+            and self.__connectivity is not None
+            and len(self.__connectivity) != len(elementIds)
         ):
             raise ValueError("Number of element id's does not match number of elements")
         self.__elementIds = elementIds

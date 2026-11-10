@@ -3,7 +3,7 @@ from collections.abc import Sequence
 import numpy as np
 from mikecore.DfsFile import DfsProjection, DfsTemporalAxis
 from mikecore.MeshFile import MeshFile
-from mikecore.MeshBuilder import MeshNodes, _Int32Ids
+from mikecore.MeshBuilder import MeshNodes, _ToInt32Ids
 from mikecore.DfsFactory import DfsFactory
 from mikecore.DfsBuilder import DfsBuilder
 from mikecore.DfsuFile import (
@@ -228,11 +228,12 @@ class DfsuBuilder:
 
     def SetNodeIds(self, nodeIds):
         """Set the node id's. Optional. If not set, default values are used (1,2,3,...)"""
-        if nodeIds is None:
-            self.__nodeIds = None
-            return
-        nodeIds = _Int32Ids(nodeIds, "Node")
-        if self.__nodes is not None and self.__nodes.x.size != nodeIds.size:
+        nodeIds = _ToInt32Ids(nodeIds, "Node")
+        if (
+            nodeIds is not None
+            and self.__nodes is not None
+            and self.__nodes.x.size != nodeIds.size
+        ):
             raise Exception(
                 "Number of node id's does not match number of nodes", "nodeIds"
             )
@@ -276,12 +277,11 @@ class DfsuBuilder:
 
     def SetElementIds(self, elementIds):
         """Set the element id's. Optional. If not set, default values are used (1,2,3,...)"""
-        if elementIds is None:
-            self.__elementIds = None
-            return
-        elementIds = _Int32Ids(elementIds, "Element")
-        if (self.__connectivity is not None) and (
-            len(self.__connectivity) != elementIds.size
+        elementIds = _ToInt32Ids(elementIds, "Element")
+        if (
+            elementIds is not None
+            and self.__connectivity is not None
+            and len(self.__connectivity) != elementIds.size
         ):
             raise Exception(
                 "Number of element id's does not match number of elements", "elementIds"
@@ -306,15 +306,11 @@ class DfsuBuilder:
             raise ValueError("Mesh file has no projection, nodes or quantity")
         self.__dfsProjection = DfsProjection.Create(wktString)
 
-        nodeIds = meshFile.NodeIds
-        self.__nodeIds = None if nodeIds is None else _Int32Ids(nodeIds, "Node")
+        self.__nodeIds = _ToInt32Ids(meshFile.NodeIds, "Node")
         self.__nodes = MeshNodes(x, y, z.astype(dtype=np.float32), code)
         self.__zUnit = quantity.Unit
 
-        elementIds = meshFile.ElementIds
-        self.__elementIds = (
-            None if elementIds is None else _Int32Ids(elementIds, "Element")
-        )
+        self.__elementIds = _ToInt32Ids(meshFile.ElementIds, "Element")
         self.__connectivity = meshFile.ElementTable
 
     def AddDynamicItem(self, itemName: str, quantity):
