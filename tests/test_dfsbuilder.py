@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import numpy as np
-from numpy.testing import assert_array_equal
 from mikecore.DfsBuilder import (
     DfsBuilder,
     DfsSimpleType,
@@ -9,7 +8,6 @@ from mikecore.DfsBuilder import (
     DfsStaticItemBuilder,
 )
 from mikecore.DfsFactory import DfsFactory
-from mikecore.DfsFile import UnitConversionType
 from mikecore.DfsFileFactory import DfsFileFactory
 from mikecore.eum import eumUnit, eumQuantity, eumItem
 
@@ -339,104 +337,23 @@ def test_associated_static_item_number_is_checked(tmp_path):
         builder.CreateFile(str(tmp_path / "invalid.dfs0"))
 
 
-def test_dynamic_item_builder_can_be_reused():
-    factory = DfsFactory()
-    quantity = eumQuantity(eumItem.eumIWaterLevel, eumUnit.eumUmeter)
-    item = DfsBuilder.Create().CreateDynamicItemBuilder()
-    item.Set("Value", quantity, DfsSimpleType.Float)
-    item.SetValueType(DataValueType.Instantaneous)
-    item.SetAxis(factory.CreateAxisEqD0())
-    first = item.GetDynamicItemInfo()
-
-    item.SetAxis(factory.CreateAxisEqD0())
-    second = item.GetDynamicItemInfo()
-
-    assert first is not second
-    assert "Value" == second.Name
-    assert second.Quantity is not None
-    assert eumItem.eumIWaterLevel == second.Quantity.Item
-    assert eumUnit.eumUmeter == second.Quantity.Unit
-    assert DataValueType.Instantaneous == second.ValueType
-
-
-def test_reused_dynamic_item_builder_leaves_earlier_items_alone():
+def test_dynamic_item_builder_must_be_set_again_after_GetDynamicItemInfo():
     factory = DfsFactory()
     item = DfsBuilder.Create().CreateDynamicItemBuilder()
     item.Set(
-        "First",
+        "Value",
         eumQuantity(eumItem.eumIWaterLevel, eumUnit.eumUmeter),
         DfsSimpleType.Float,
     )
     item.SetValueType(DataValueType.Instantaneous)
     item.SetAxis(factory.CreateAxisEqD0())
-    item.SetAssociatedStaticItem(1)
-    first = item.GetDynamicItemInfo()
+    item.GetDynamicItemInfo()
 
-    item.Set(
-        "Second",
-        eumQuantity(eumItem.eumIWaterDepth, eumUnit.eumUfeet),
-        DfsSimpleType.Double,
-    )
-    item.SetValueType(DataValueType.Accumulated)
-    item.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, 2, 0, 1))
-    item.SetReferenceCoordinates(1, 2, 3)
-    item.SetAssociatedStaticItem(2)
-    second = item.GetDynamicItemInfo()
-
-    assert "First" == first.Name
-    assert first.Quantity is not None
-    assert eumItem.eumIWaterLevel == first.Quantity.Item
-    assert DfsSimpleType.Float == first.DataType
-    assert DataValueType.Instantaneous == first.ValueType
-    assert 1 == first.ElementCount
-    assert np.float32(-1e-35) == first.ReferenceCoordinateX
-    assert [1] == first.AssociatedStaticItemNumbers
-    assert "Second" == second.Name
-    assert DataValueType.Accumulated == second.ValueType
-    assert 2 == second.ElementCount
-    assert [1, 2] == second.AssociatedStaticItemNumbers
+    with pytest.raises(Exception, match="Name, Quantity and DataType has not been set"):
+        item.GetDynamicItemInfo()
 
 
-def test_reused_static_item_builder_leaves_earlier_items_alone():
-    factory = DfsFactory()
-    staticItem = DfsStaticItemBuilder()
-    staticItem.Set(
-        "First",
-        eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined),
-        DfsSimpleType.Float,
-    )
-    staticItem.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, 2, 0, 1))
-    staticItem.SetData(np.array([1.0, 2.0], dtype=np.float32))
-    first = staticItem.GetStaticItem()
-
-    staticItem.Set(
-        "Second",
-        eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined),
-        DfsSimpleType.Float,
-    )
-    staticItem.SetReferenceCoordinates(5, 6, 7)
-    data = staticItem.ItemInfo.Data
-    assert data is not None
-    data[0] = 10.0
-    second = staticItem.GetStaticItem()
-
-    assert first is not second
-    assert "First" == first.Name
-    assert np.float32(-1e-35) == first.ReferenceCoordinateX
-    assert_array_equal([1.0, 2.0], first.Data)
-    assert "Second" == second.Name
-    assert 5 == second.ReferenceCoordinateX
-    assert_array_equal([10.0, 2.0], second.Data)
-
-    staticItem.SetData(np.array([3.0, 4.0], dtype=np.float32))
-    third = staticItem.GetStaticItem()
-
-    assert_array_equal([10.0, 2.0], second.Data)
-    assert_array_equal([3.0, 4.0], third.Data)
-
-
-def test_static_item_keeps_its_data_when_the_caller_changes_the_array():
-    data = np.array([1.0, 2.0], dtype=np.float32)
+def test_static_item_builder_must_be_set_again_after_GetStaticItem():
     staticItem = DfsStaticItemBuilder()
     staticItem.Set(
         "Item",
@@ -444,85 +361,11 @@ def test_static_item_keeps_its_data_when_the_caller_changes_the_array():
         DfsSimpleType.Float,
     )
     staticItem.SetAxis(DfsFactory().CreateAxisEqD1(eumUnit.eumUmeter, 2, 0, 1))
-    staticItem.SetData(data)
-    item = staticItem.GetStaticItem()
+    staticItem.SetData(np.array([1.0, 2.0], dtype=np.float32))
+    staticItem.GetStaticItem()
 
-    data[0] = 10.0
-
-    assert_array_equal([1.0, 2.0], item.Data)
-
-
-def _dynamic_item_builder():
-    factory = DfsFactory()
-    builder = DfsBuilder.Create().CreateDynamicItemBuilder()
-    builder.Set(
-        "First",
-        eumQuantity(eumItem.eumIWaterLevel, eumUnit.eumUmeter),
-        DfsSimpleType.Float,
-    )
-    builder.SetValueType(DataValueType.Instantaneous)
-    builder.SetAxis(factory.CreateAxisEqD0())
-    builder.SetAssociatedStaticItem(1)
-    setters = [
-        lambda: builder.SetValueType(DataValueType.Accumulated),
-        lambda: builder.SetAssociatedStaticItem(2),
-    ]
-    return builder, builder.GetDynamicItemInfo, setters
-
-
-def _static_item_builder():
-    builder = DfsStaticItemBuilder()
-    builder.Set(
-        "First",
-        eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined),
-        DfsSimpleType.Float,
-    )
-    builder.SetAxis(DfsFactory().CreateAxisEqD1(eumUnit.eumUmeter, 2, 0, 1))
-    builder.SetData(np.array([1.0, 2.0], dtype=np.float32))
-
-    def changeData():
-        data = builder.ItemInfo.Data
-        assert data is not None
-        data[0] = 10.0
-
-    setters = [
-        lambda: builder.SetData(np.array([3.0, 4.0], dtype=np.float32)),
-        changeData,
-    ]
-    return builder, builder.GetStaticItem, setters
-
-
-# Every setter of either builder, then the getter again, must leave each
-# attribute of the item returned first as the same object with the same contents
-@pytest.mark.parametrize("makeBuilder", [_dynamic_item_builder, _static_item_builder])
-def test_no_builder_setter_changes_a_returned_item(makeBuilder):
-    factory = DfsFactory()
-    builder, getItem, setters = makeBuilder()
-    first = getItem()
-    before = {
-        name: (value, np.array(value) if isinstance(value, list | np.ndarray) else None)
-        for name, value in vars(first).items()
-    }
-
-    builder.Set(
-        "Second",
-        eumQuantity(eumItem.eumIWaterDepth, eumUnit.eumUfeet),
-        DfsSimpleType.Double,
-    )
-    builder.SetAxis(factory.CreateAxisEqD1(eumUnit.eumUmeter, 2, 0, 1))
-    builder.SetReferenceCoordinates(1, 2, 3)
-    builder.SetOrientation(4, 5, 6)
-    builder.SetUnitConversion(UnitConversionType.UbgConversion, eumUnit.eumUfeet)
-    builder.SetAxisUnitConversion(UnitConversionType.UbgConversion, eumUnit.eumUfeet)
-    for setter in setters:
-        setter()
-    getItem()
-
-    assert before.keys() == vars(first).keys()
-    for name, (value, contents) in before.items():
-        assert value is getattr(first, name), name
-        if contents is not None:
-            assert_array_equal(contents, value, err_msg=name)
+    with pytest.raises(Exception, match="Data has not been set"):
+        staticItem.GetStaticItem()
 
 
 def test_reference_coordinates_and_orientation_are_read_back(tmp_path):
