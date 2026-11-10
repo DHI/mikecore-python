@@ -26,15 +26,13 @@ def _Int32Ids(ids, name):
     ids = np.asarray(ids)
     if ids.ndim != 1:
         raise ValueError(f"{name} ids must be a 1-D array, got {ids.ndim}-D")
-    if ids.dtype == np.bool_:
-        raise ValueError(f"{name} ids must be integers, not booleans")
-    try:
-        int32Ids = ids.astype(np.int32)
-    except OverflowError:
-        int32Ids = None
-    if int32Ids is None or np.any(int32Ids != ids):
+    # Rejects booleans, floats and Python ints too big for any numpy integer
+    if not np.issubdtype(ids.dtype, np.integer):
+        raise ValueError(f"{name} ids must be int32 integers, got {ids.dtype}")
+    int32 = np.iinfo(np.int32)
+    if np.any((ids < int32.min) | (ids > int32.max)):
         raise ValueError(f"{name} ids must be integers that fit in int32")
-    return int32Ids
+    return ids.astype(np.int32)
 
 
 class MeshBuilder:
