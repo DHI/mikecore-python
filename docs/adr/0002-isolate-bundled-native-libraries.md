@@ -64,9 +64,11 @@ an installation's libraries instead.
 
 ## Consequences
 
-- mikecore imports and works next to any MIKE installation. On Linux that
-  holds in either import order, as long as the engine doesn't load its
-  libraries with `RTLD_GLOBAL`.
+- mikecore's libraries stay separate from any MIKE installation's. On Linux
+  that holds in either import order, as long as the engine doesn't load its
+  libraries with `RTLD_GLOBAL`. The EUM items and units still match only the
+  bundled version
+  ([#84](https://github.com/DHI/mikecore-python/issues/84)).
 - On Windows, the loader reuses a DLL that is already loaded under the same
   name before searching any folder. If a MIKE engine in the same process
   loaded its own `eum.dll` or `pfs2004.dll` first, mikecore binds to it, and
