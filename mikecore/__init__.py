@@ -1,11 +1,17 @@
 import contextlib
 import ctypes
+import importlib.metadata
 import os
 import platform
 import sys
 from pathlib import Path
 
-__version__ = "0.3.0a2.dev1"
+# The version is set in pyproject.toml and read here from the installed metadata.
+try:
+    __version__ = importlib.metadata.version("mikecore")
+except importlib.metadata.PackageNotFoundError:
+    # Imported from a checkout on sys.path without being installed.
+    __version__ = "unknown"
 
 if platform.machine().lower() not in ("x86_64", "amd64") or sys.maxsize <= 2**32:
     raise Exception("This library requires 64 bit Python on an x86-64 CPU")
@@ -39,7 +45,11 @@ eumDLL.libfilepath = mikebin
 # mikecore loads its DLLs, so it doesn't affect other DLLs loaded later.
 # The DLLs' own LoadLibrary calls later on still work: the only bundled DLLs
 # they name are ones already loaded here, which Windows reuses by name.
-_dll_dir = os.add_dll_directory(mikebin) if platform.system() == "Windows" else contextlib.nullcontext()
+_dll_dir = (
+    os.add_dll_directory(mikebin)
+    if platform.system() == "Windows"
+    else contextlib.nullcontext()
+)
 with _dll_dir:
     if installation_bin and platform.system() == "Linux":
         # Recent libeum imports fnGetLanguage from libufs without linking to

@@ -13,9 +13,7 @@ from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
 
 def download_nuget_package(
-    package_id: str,
-    version: str,
-    output_dir: str | Path
+    package_id: str, version: str, output_dir: str | Path
 ) -> None:
     """
     Download a NuGet package (.nupkg) to output_dir.
@@ -37,6 +35,7 @@ def download_nuget_package(
     with zipfile.ZipFile(nupkg_path, "r") as zip_ref:
         zip_ref.extractall(extract_path)
     print("Done.")
+
 
 def copy_native_libs_to_bin(packages_dir: str | Path, bin_dir: str | Path) -> None:
     """
@@ -64,6 +63,7 @@ def copy_native_libs_to_bin(packages_dir: str | Path, bin_dir: str | Path) -> No
                 print(f"Copying {lib} to {dest}")
                 shutil.copy2(lib, dest)
 
+
 def read_packages_config(filepath: str | Path) -> list[tuple[str, str]]:
     """
     Reads NuGet packages.config and returns a list of (id, version) tuples.
@@ -71,9 +71,9 @@ def read_packages_config(filepath: str | Path) -> list[tuple[str, str]]:
     tree = ET.parse(filepath)
     root = tree.getroot()
     return [
-        (pkg.attrib["id"], pkg.attrib["version"])
-        for pkg in root.findall("package")
+        (pkg.attrib["id"], pkg.attrib["version"]) for pkg in root.findall("package")
     ]
+
 
 LINUX_LIB_TAG = "-mikecore"
 
@@ -94,15 +94,22 @@ def isolate_linux_libs(bin_folder: str | Path):
     for so in libs:
         new_name = renames[so.name]
         print(f"Isolating {so.name} as {new_name}")
-        args = [patchelf_path, "--force-rpath", "--set-rpath", "$ORIGIN", "--set-soname", new_name]
+        args = [
+            patchelf_path,
+            "--force-rpath",
+            "--set-rpath",
+            "$ORIGIN",
+            "--set-soname",
+            new_name,
+        ]
         for old, new in renames.items():
             args += ["--replace-needed", old, new]
         subprocess.run(args + [str(so.absolute())], check=True)
         so.replace(so.with_name(new_name))
 
+
 def setup():
-    """Setup function to download NuGet packages and copy native libraries into bin folder.
-    """
+    """Setup function to download NuGet packages and copy native libraries into bin folder."""
     packages = read_packages_config("buildUtil/packages.config")
     for name, version in packages:
         download_nuget_package(name, version, output_dir="packages")
@@ -114,10 +121,11 @@ def setup():
 
 class BuildHook(BuildHookInterface):
     """Custom build hook to run setup during the build process."""
-    
-    def initialize(self, version: str, build_data: dict[str : Any]) -> None:
+
+    def initialize(self, version: str, build_data: dict[str:Any]) -> None:
         """Initialize the build hook."""
         setup()
+
 
 if __name__ == "__main__":
     setup()
