@@ -436,7 +436,7 @@ def test_submesh_type_is_written(
     createdSubMeshType = created.SubMeshType
     created.Close()
 
-    # Opened as a generic dfs file, so it does not depend on DfsuFile
+    # Read as a generic dfs file, independent of DfsuFile
     dfs = DfsFileFactory.DfsGenericOpen(filename)
     assert_array_equal(
         customBlock + subMeshTypeValues, dfs.FileInfo.CustomBlocks[0].Values

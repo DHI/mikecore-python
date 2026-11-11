@@ -194,23 +194,7 @@ class DfsuFileTests(unittest.TestCase):
 
     # region Submesh files
 
-    # From version 2027, the "MIKE_FM" custom block of a dfsu 2001 file may
-    # have 6 values (previously 4 or 5), the 6th being the submesh type
-    # (1 = local refinement submesh, 0 otherwise):
-    #
-    #   [NumberOfNodes, NumberOfElements, Dimension, NumberOfLayers, NumberOfSigmaLayers, SubMesh]
-    #
-    # Data types 2002 and 2003 have always had 6 values, with their own
-    # layouts, and are unaffected. The problem is that a 6 value custom block
-    # in a 2001 file was taken to mean a legacy spectral (rose-plot) file:
-    #
-    #   [NumberOfNodes, NumberOfElements, Dimension, NumberOfLayers, NumberOfFrequencies, NumberOfDirections]
-    #
-    # See the DFSU file specification, section 4.3 "Custom Block", and
-    # https://github.com/DHI/mikecore-python/issues/54
-    #
-    # Test files in testdata/submesh, all data type 2001, named by dfsu file
-    # type, number of custom block values and submesh type:
+    # Test files in testdata/submesh, all data type 2001:
     #
     #   File                                              MIKE_FM custom block
     #   Dfsu2D_CustomBlock6_Submesh0.dfsu                 [  9,   4, 2, 0,  0,  0]
@@ -219,14 +203,8 @@ class DfsuFileTests(unittest.TestCase):
     #   Dfsu3DSigmaZ_CustomBlock6_Submesh0.dfsu           [ 30,   8, 3, 3,  1,  0]
     #   DfsuSpectral0D_CustomBlock6_Legacy.dfsu           [416, 400, 2, 0, 25, 16]
     #
-    # The Dfsu3DSigmaZ CustomBlock5 and CustomBlock6_Submesh0 files hold the
-    # same mesh, and the same dynamic data to within float32 rounding (they
-    # come from separate model runs), so compare data with assert_allclose
-    # beyond the first time step. The Legacy
-    # spectral file is a rose-plot file with 25 frequencies and 16 directions
-    # (25*16 = 400 elements), which must still read as spectral. Its static
-    # item 10 is the wave frequency in hertz and static item 11 is the wave
-    # direction in radians.
+    # The two Dfsu3DSigmaZ files hold the same mesh, and the same data to
+    # within float32 rounding (separate model runs).
 
     # / <summary>
     # / Reading a 2D dfsu file with submesh type 0.
@@ -248,8 +226,8 @@ class DfsuFileTests(unittest.TestCase):
         dfsFile.Close()
 
     # / <summary>
-    # / Reading a 3D sigma-z dfsu file with submesh type 0. It must read the
-    # / same as the old format file with a 5 value custom block.
+    # / Reading a 3D sigma-z dfsu file with submesh type 0, the same as the
+    # / 5-value file.
     # / </summary>
     def test_Read3DSubmesh0Test(self):
         self.SubmeshCustomBlockTester(
@@ -281,10 +259,8 @@ class DfsuFileTests(unittest.TestCase):
     # / <summary>
     # / Reading a locally refined 2D dfsu file, submesh type 1.
     # / </summary>
-    # TODO: This test is limited in scope to backwards compatibility: a file
-    # with submesh type 1 must open and read as an ordinary 2D mesh. It does
-    # not test full support of submesh files. The expected values come from
-    # the file's own custom block, not from an independent reference.
+    # TODO: Only checks that it reads as an ordinary 2D mesh, not full
+    # submesh support.
     def test_Read2DSubmesh1LocallyRefinedTest(self):
         self.SubmeshCustomBlockTester(
             "testdata/submesh/Dfsu2D_CustomBlock6_Submesh1_LocallyRefined.dfsu",
@@ -303,9 +279,7 @@ class DfsuFileTests(unittest.TestCase):
         dfsFile.Close()
 
     # / <summary>
-    # / Reading a legacy spectral (rose-plot) 2001 dfsu file, whose 6 value
-    # / custom block holds the number of frequencies and directions, not a
-    # / submesh type. It must not be mistaken for a submesh file.
+    # / Reading a legacy Spectral0D (rose-plot) file, not as a submesh file.
     # / </summary>
     def test_ReadLegacySpectral0DTest(self):
         self.SubmeshCustomBlockTester(
@@ -329,8 +303,7 @@ class DfsuFileTests(unittest.TestCase):
         dfsFile.Close()
 
     # / <summary>
-    # / Reading a legacy Spectral0D file with its direction static item in
-    # / degrees. The unit of the direction item does not decide the layout.
+    # / Reading a legacy Spectral0D file with directions in degrees.
     # / </summary>
     def test_ReadLegacySpectral0DDegreesTest(self):
         filename = "testdata/testtmp/test_DfsuSpectral0D_CustomBlock6_Degrees.dfsu"
@@ -350,8 +323,7 @@ class DfsuFileTests(unittest.TestCase):
         dfsFile.Close()
 
     # / <summary>
-    # / Reading a legacy Spectral0D file whose frequency and direction static
-    # / items have the generic EUM item types, not the wave item types.
+    # / Reading a legacy Spectral0D file with generic EUM item types.
     # / </summary>
     def test_ReadLegacySpectral0DGenericItemTypesTest(self):
         filename = "testdata/testtmp/test_DfsuSpectral0D_CustomBlock6_Generic.dfsu"
@@ -373,9 +345,7 @@ class DfsuFileTests(unittest.TestCase):
         dfsFile.Close()
 
     # / <summary>
-    # / Reading a legacy Spectral0D file with a 7 value custom block. The
-    # / legacy Spectral0D exception holds only for exactly 6 values, so the
-    # / file reads with the standard layout from MIKE 2027.
+    # / A legacy Spectral0D file with 7 values reads with the MIKE 2027 layout.
     # / </summary>
     def test_ReadLegacySpectral0DCustomBlock7Test(self):
         filename = "testdata/testtmp/test_DfsuSpectral0D_CustomBlock7.dfsu"
@@ -393,9 +363,7 @@ class DfsuFileTests(unittest.TestCase):
         dfsFile.Close()
 
     # / <summary>
-    # / Reading a legacy Spectral0D file with frequencies only. Such files
-    # / exist in the wild, e.g. MIKE IO's pt_freq_spectra.dfsu, with custom
-    # / block [26, 25, 1, 0, 25, 0] and 10 static items.
+    # / Reading a legacy Spectral0D file with frequencies only.
     # / </summary>
     def test_ReadLegacySpectral0DFrequencyOnlyTest(self):
         filename = "testdata/testtmp/test_DfsuSpectral0D_FrequencyOnly.dfsu"
@@ -444,9 +412,8 @@ class DfsuFileTests(unittest.TestCase):
         dfsFile.Close()
 
     # / <summary>
-    # / Reading a 6 value file with spec value 5 set and one extra static
-    # / item that is not a frequency. It is not the legacy Spectral0D
-    # / exception, so it reads with the standard layout from MIKE 2027.
+    # / A 6-value file whose 10th static item is not a frequency reads with
+    # / the MIKE 2027 layout.
     # / </summary>
     def test_ReadSingleAxisNotFrequencyTest(self):
         filename = "testdata/testtmp/test_Dfsu1D_CustomBlock6_NotFrequency.dfsu"
@@ -466,9 +433,8 @@ class DfsuFileTests(unittest.TestCase):
         dfsFile.Close()
 
     # / <summary>
-    # / Reading a 6 value file with frequencies only and one static item more
-    # / than the legacy Spectral0D layout has. It reads with the standard
-    # / layout from MIKE 2027.
+    # / A frequency-only file with an extra static item reads with the MIKE
+    # / 2027 layout.
     # / </summary>
     def test_ReadSingleAxisExtraStaticItemTest(self):
         filename = "testdata/testtmp/test_Dfsu1D_CustomBlock6_ExtraStaticItem.dfsu"
@@ -487,10 +453,8 @@ class DfsuFileTests(unittest.TestCase):
         dfsFile.Close()
 
     # / <summary>
-    # / Appending a time step to files with a 6 value custom block. Opening
-    # / a legacy spectral file for appending reads its frequency and
-    # / direction static items before moving to the end of the file. This
-    # / includes a legacy file with frequencies only.
+    # / Appending a time step to files with a 6-value custom block, including
+    # / legacy Spectral0D files, whose static items are read first.
     # / </summary>
     def test_AppendSubmeshTest(self):
         frequencyOnly = "testdata/testtmp/test_DfsuSpectral0D_FrequencyOnly_Source.dfsu"
@@ -526,10 +490,8 @@ class DfsuFileTests(unittest.TestCase):
             dfsFile.Close()
 
     # / <summary>
-    # / Reading a 3D sigma-z dfsu file with a 7 value custom block. Section 4.3
-    # / of the file specification lists at most 6 values. The format owner
-    # / intends to add more values for future features, so a 2001 file with
-    # / more than 6 values reads with the standard layout from MIKE 2027.
+    # / A 3D sigma-z file with 7 values reads with the MIKE 2027 layout;
+    # / values from 7 on are ignored.
     # / </summary>
     def test_Read3DCustomBlock7Test(self):
         filename = "testdata/testtmp/test_Dfsu3DSigmaZ_CustomBlock7.dfsu"
@@ -552,9 +514,8 @@ class DfsuFileTests(unittest.TestCase):
         dfsFile.Close()
 
     # / <summary>
-    # / Copies a dfsu file, optionally replacing the values of its "MIKE_FM"
-    # / custom block, and the quantity of some static items, given by static
-    # / item number. Test setup only, to make variants of the test files.
+    # / Copies a dfsu file, optionally replacing its custom block values and
+    # / the quantity of static items by number.
     # / </summary>
     def RewriteDfsu(
         self, sourcefilename, filename, customBlockValues=None, staticQuantities=None
@@ -601,12 +562,9 @@ class DfsuFileTests(unittest.TestCase):
         file.Close()
 
     # / <summary>
-    # / Creates a data type 2001 file with one spectral axis, laid out as MIKE
-    # / IO's pt_freq_spectra.dfsu: dimension 1, a line of elements with one
-    # / node more than elements, the 9 static items of section 4.4, then
-    # / static item 10 with the given quantity and axis values, optionally a
-    # / copy of it as static item 11, and one dynamic item with one time
-    # / step. Test setup only.
+    # / Creates a legacy single-axis Spectral0D file (dimension 1, one node
+    # / more than elements) with the axis as static item 10, optionally
+    # / repeated as item 11.
     # / </summary>
     def CreateSingleAxisSpectral0D(
         self,
@@ -676,8 +634,7 @@ class DfsuFileTests(unittest.TestCase):
         file.Close()
 
     # / <summary>
-    # / Checks the "MIKE_FM" custom block of a data type 2001 file. Opened as a
-    # / generic dfs file, so it does not depend on how DfsuFile interprets it.
+    # / Checks the custom block values, read as a generic dfs file.
     # / </summary>
     def SubmeshCustomBlockTester(self, filename, expectedValues):
         dfsFile = DfsFileFactory.DfsGenericOpen(filename)

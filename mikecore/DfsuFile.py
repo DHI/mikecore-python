@@ -49,27 +49,16 @@ class DfsuFile:
     You can read, write and append item-timesteps to the file.
     The geometry can be altered, by moving the nodes, but the element connectivity can not be changed.
 
-    The "MIKE_FM" custom block of a dfsu file is described in section 4.3 of
-    the dfsu file specification. For data type 2001, the values from spec
-    value 5 on are read as:
+    The "MIKE_FM" custom block (dfsu file specification, section 4.3) of a
+    data type 2001 file is read as:
 
-    1. 5 values or fewer: a file from before MIKE 2027. Spec value 5, if
-       present, is the number of sigma layers. With 4 values, the number of
-       sigma layers equals the number of layers. There is no submesh type.
-    2. Exactly 6 values in a legacy Spectral0D (rose-plot) file: spec values
-       5 and 6 are the number of frequencies and directions. There is no
-       submesh type. This layout is a convention from before MIKE 2027 that
-       the specification does not document. An axis is present when its
-       spec value is greater than 0, and at least one axis is present. Such
-       a file has the 9 static items of section 4.4 and one more per present
-       axis: the frequencies in hertz, then the directions in radians or
-       degrees, with lengths equal to spec values 5 and 6. A file with both
-       axes has 11 static items, a file with frequencies only or directions
-       only has 10.
-    3. Otherwise, 6 values or more: the layout from MIKE 2027. Spec value 5 is
-       the number of sigma layers and spec value 6 is the submesh type. Values
-       from 7 on are ignored. Section 4.3 lists at most 6 values; handling
-       more follows the format owner's intent to add values for new features.
+    1. 5 values or fewer (before MIKE 2027): value 5, if present, is the
+       number of sigma layers, otherwise it equals the number of layers.
+    2. Exactly 6 values in a legacy Spectral0D file: values 5 and 6 are the
+       number of frequencies and directions. This undocumented layout has one
+       static item per axis after the 9 of section 4.4.
+    3. Otherwise (MIKE 2027 and later): value 5 is the number of sigma layers,
+       value 6 the submesh type. Values from 7 on are ignored.
 
     Other data types are read by their own fixed layouts.
     """
@@ -165,11 +154,8 @@ class DfsuFile:
             self.NumberOfDirections = customBlock[5]
         elif self.FileInfo.DataType == 2001 and customBlock.Count >= 6:
             if build:
-                # The static items are not written yet, so use the submesh
-                # type DfsuBuilder passes. DfsuBuilder can not write Spectral0D
-                # files yet, so it writes 6 values only with a submesh type,
-                # and a file it builds is never a legacy Spectral0D file.
-                # PR 76, which adds Spectral0D writing, must revisit this.
+                # Static items are not written yet. DfsuBuilder writes 6
+                # values only with a submesh type, never for Spectral0D.
                 if subMeshType is None:
                     raise Exception(
                         "DfsuBuilder wrote 6 custom block values without a submesh type"
@@ -181,7 +167,7 @@ class DfsuFile:
                 self.NumberOfFrequencies = customBlock[4]
                 self.NumberOfDirections = customBlock[5]
             else:
-                # Standard layout from MIKE 2027, values from 7 on are ignored
+                # MIKE 2027 layout
                 self.NumberOfSigmaLayers = customBlock[4]
                 self.__subMeshType = int(customBlock[5])
 
@@ -237,8 +223,7 @@ class DfsuFile:
             # "Frequency"     , double
             # "Direction"     , double
 
-            # Read by number, the file pointer may have been moved by
-            # __IsLegacySpectral0D
+            # Read by number, __IsLegacySpectral0D may have moved the file pointer
             self.__nodeIdItem = self.dfsFile.ReadStaticItem(1)
             CheckForNull(self.__nodeIdItem)
             self.NodeIds = self.__nodeIdItem.Data
@@ -325,17 +310,11 @@ class DfsuFile:
 
     def __IsLegacySpectral0D(self, dfsFile, customBlock):
         """
-        Check if a 2001 file with 6 or more custom block values is a legacy
-        Spectral0D (rose-plot) file, written before MIKE 2027.
-
-        The legacy Spectral0D layout is a convention that the file
-        specification does not document. Its "MIKE_FM" custom block has
-        exactly 6 values, [..., NumberOfFrequencies, NumberOfDirections]. An
-        axis is present when its number is greater than 0, and at least one
-        axis is present. After the 9 static items of section 4.4 it has one
-        static item per present axis and no more: the frequencies in hertz,
-        then the directions in radians or degrees. Single-axis files exist,
-        e.g. MIKE IO's pt_freq_spectra.dfsu has frequencies only.
+        Check if a 2001 file is a legacy Spectral0D (rose-plot) file: exactly
+        6 custom block values, [..., NumberOfFrequencies, NumberOfDirections],
+        at least one of them above 0, and after the 9 static items of section
+        4.4 exactly one static item per such axis: frequencies in hertz, then
+        directions in radians or degrees.
         """
         if customBlock.Count != 6:
             return False
@@ -345,8 +324,6 @@ class DfsuFile:
         if numberOfFrequencies <= 0 and numberOfDirections <= 0:
             return False
 
-        # Static items after the 9 of section 4.4: one per present axis,
-        # the frequencies first.
         itemNumber = 10
         if numberOfFrequencies > 0:
             frequency = dfsFile.ReadStaticItem(itemNumber)
@@ -371,7 +348,6 @@ class DfsuFile:
             ):
                 return False
 
-        # No static items after the spectral axes
         return dfsFile.ReadStaticItem(itemNumber) is None
 
     def Dispose(self):
@@ -567,12 +543,8 @@ class DfsuFile:
     @property
     def SubMeshType(self) -> int | None:
         """
-        Submesh type, spec value 6 of the "MIKE_FM" custom block of a data
-        type 2001 file from MIKE 2027: 1 for a local refinement submesh, 0
-        otherwise. None if the file has no submesh type.
-
-        A plain truth test is false for submesh type 0, so compare with None
-        to check whether the file has a submesh type.
+        Submesh type: 1 for a local refinement submesh, 0 otherwise, None if
+        the file has none. Compare with None, as type 0 is falsy.
         """
         return self.__subMeshType
 

@@ -134,21 +134,17 @@ class DfsuBuilder:
 
     def SetSubMeshType(self, subMeshType: int | np.integer | None):
         """
-        Set the submesh type, written as spec value 6 of the "MIKE_FM" custom
-        block, see section 4.3 of the dfsu file specification: 1 for a local
-        refinement submesh, 0 otherwise. The mesh is not checked against it.
+        Set the submesh type: 1 for a local refinement submesh, 0 otherwise.
+        The mesh is not checked against it.
 
-        With None, the default, the custom block has 5 values, the layout from
-        before MIKE 2027. With 0 or 1 it has 6 values, the layout from MIKE
-        2027. mikecore releases before submesh type support cannot open a file
-        with a submesh type, unless spec values 5 and 6 are both 0, which is
-        only a 2D file with submesh type 0. Versions of MIKE before 2027 were
-        not tested with such files.
+        None (default) writes the pre-2027 5-value custom block; 0 or 1 writes
+        the MIKE 2027 6-value block. Older mikecore releases can open such a
+        file only if it is 2D with type 0. MIKE before 2027 is untested.
 
-        Raises ValueError for a value other than None, 0 or 1, and an
-        exception for spectral dfsu file types.
+        Raises ValueError for values other than None, 0 or 1, and an exception
+        for spectral file types.
         """
-        # bool is a subclass of int, but True is not a submesh type
+        # True is an int, but not a submesh type
         isInteger = isinstance(subMeshType, (int, np.integer)) and not isinstance(
             subMeshType, bool
         )
@@ -529,8 +525,7 @@ class DfsuBuilder:
             )
         dfsBuilder.DeleteValueFloat = np.float32(1e-35)
 
-        # Set up custom block. From MIKE 2027, a 2001 file may have a 6th
-        # value, the submesh type
+        # Set up custom block, with the submesh type as an optional 6th value
         subMeshTypeValues = [] if self.__subMeshType is None else [self.__subMeshType]
         if self.__dfsuFileType == DfsuFileType.Dfsu2D:
             dfsBuilder.AddCreateCustomBlock(
