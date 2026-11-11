@@ -16,6 +16,12 @@ from mikecore.DfsuFile import (
 from mikecore.eum import eumUnit, eumQuantity, eumItem
 from mikecore.Projections import MapProjection
 
+spectralDfsuFileTypes = (
+    DfsuFileType.DfsuSpectral0D,
+    DfsuFileType.DfsuSpectral1D,
+    DfsuFileType.DfsuSpectral2D,
+)
+
 
 # / <summary>
 # / Builder for creating a dfsu file.
@@ -126,7 +132,7 @@ class DfsuBuilder:
         else:
             raise Exception("dfsuFileType")
 
-    def SetSubMeshType(self, subMeshType: int | None):
+    def SetSubMeshType(self, subMeshType: int | np.integer | None):
         """
         Set the submesh type, written as spec value 6 of the "MIKE_FM" custom
         block, see section 4.3 of the dfsu file specification: 1 for a local
@@ -142,19 +148,18 @@ class DfsuBuilder:
         Raises ValueError for a value other than None, 0 or 1, and an
         exception for spectral dfsu file types.
         """
-        if subMeshType is not None and (
-            isinstance(subMeshType, bool)
-            or not isinstance(subMeshType, (int, np.integer))
-            or subMeshType not in (0, 1)
-        ):
-            raise ValueError(f"Submesh type must be None, 0 or 1, not {subMeshType!r}")
-        if self.__dfsuFileType in (
-            DfsuFileType.DfsuSpectral0D,
-            DfsuFileType.DfsuSpectral1D,
-            DfsuFileType.DfsuSpectral2D,
-        ):
+        # bool is a subclass of int, but True is not a submesh type
+        isInteger = isinstance(subMeshType, (int, np.integer)) and not isinstance(
+            subMeshType, bool
+        )
+        if self.__dfsuFileType in spectralDfsuFileTypes:
             raise Exception("Can not set submesh type on a spectral dfsu file")
-        self.__subMeshType = None if subMeshType is None else int(subMeshType)
+        elif subMeshType is None:
+            self.__subMeshType = None
+        elif isInteger and subMeshType in (0, 1):
+            self.__subMeshType = int(subMeshType)
+        else:
+            raise ValueError(f"Submesh type must be None, 0 or 1, not {subMeshType!r}")
 
     def SetFrequencies(self, frequencies):
         self.__frequencies = frequencies
@@ -431,11 +436,7 @@ class DfsuBuilder:
                 errors.append(
                     "The minimum number of layers is smaller than the number of sigma layers. Element table is invalid"
                 )
-        elif self.__dfsuFileType in (
-            DfsuFileType.DfsuSpectral0D,
-            DfsuFileType.DfsuSpectral1D,
-            DfsuFileType.DfsuSpectral2D,
-        ):
+        elif self.__dfsuFileType in spectralDfsuFileTypes:
             # TODO do we need to check frequency or directions?
             pass
         else:
@@ -528,11 +529,16 @@ class DfsuBuilder:
             )
         dfsBuilder.DeleteValueFloat = np.float32(1e-35)
 
-        # Set up custom block
+        # Set up custom block. From MIKE 2027, a 2001 file may have a 6th
+        # value, the submesh type
+        subMeshTypeValues = [] if self.__subMeshType is None else [self.__subMeshType]
         if self.__dfsuFileType == DfsuFileType.Dfsu2D:
             dfsBuilder.AddCreateCustomBlock(
                 "MIKE_FM",
-                np.array([nodes.x.size, len(connectivity), 2, 0, 0], np.int32),
+                np.array(
+                    [nodes.x.size, len(connectivity), 2, 0, 0, *subMeshTypeValues],
+                    np.int32,
+                ),
             )
         elif self.__dfsuFileType == DfsuFileType.DfsuVerticalColumn:
             maxNumberOfLayers = len(connectivity)
@@ -545,6 +551,7 @@ class DfsuBuilder:
                         1,
                         maxNumberOfLayers,
                         self.__numberOfSigmaLayers,
+                        *subMeshTypeValues,
                     ],
                     np.int32,
                 ),
@@ -560,6 +567,7 @@ class DfsuBuilder:
                         2,
                         maxNumberOfLayers,
                         self.__numberOfSigmaLayers,
+                        *subMeshTypeValues,
                     ],
                     np.int32,
                 ),
@@ -577,6 +585,7 @@ class DfsuBuilder:
                         2,
                         maxNumberOfLayers,
                         self.__numberOfSigmaLayers,
+                        *subMeshTypeValues,
                     ],
                     np.int32,
                 ),
@@ -592,6 +601,7 @@ class DfsuBuilder:
                         3,
                         maxNumberOfLayers,
                         self.__numberOfSigmaLayers,
+                        *subMeshTypeValues,
                     ],
                     np.int32,
                 ),
@@ -609,6 +619,7 @@ class DfsuBuilder:
                         3,
                         maxNumberOfLayers,
                         self.__numberOfSigmaLayers,
+                        *subMeshTypeValues,
                     ],
                     np.int32,
                 ),
@@ -645,14 +656,6 @@ class DfsuBuilder:
             )
         else:
             raise Exception()
-
-        # From MIKE 2027, spec value 6 of a 2001 file is the submesh type.
-        # Replace the 5 value custom block with a 6 value one.
-        if self.__subMeshType is not None:
-            values = dfsBuilder.FileInfo.CustomBlocks.pop().Values
-            dfsBuilder.AddCreateCustomBlock(
-                "MIKE_FM", np.append(values, np.int32(self.__subMeshType))
-            )
 
         # For the files with a vertical dimension, the first dynamic item is the Z-coordinate
         if (

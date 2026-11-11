@@ -9,23 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `DfsuFile.SubMeshType` gives the submesh type of a dfsu file from MIKE 2027:
-  1 for a local refinement submesh, 0 otherwise, and `None` for a file without
-  a submesh type. Compare it with `None`, as a plain truth test is false for
-  submesh type 0 ([#54](https://github.com/DHI/mikecore-python/issues/54)).
-- `DfsuBuilder.SetSubMeshType(None | 0 | 1)` writes a submesh type, in the
-  layout from MIKE 2027. By default no submesh type is written, so older
-  mikecore releases can still open the file. They cannot open a file with a
-  submesh type, except a 2D file with submesh type 0.
+- `DfsuFile.SubMeshType` tells whether a dfsu file from MIKE 2027 has a
+  local refinement submesh: 1 if it has, 0 if not, and `None` for a file
+  without a submesh type. Compare it with `None`, as a plain truth test is
+  false for submesh type 0
+  ([#54](https://github.com/DHI/mikecore-python/issues/54)).
+- `DfsuBuilder.SetSubMeshType(None | 0 | 1)` writes a dfsu file with a
+  submesh type, as MIKE 2027 does. Without it, older mikecore releases can
+  still open the file. With it, they can only open a 2D file with submesh
+  type 0.
 
 ### Fixed
 
 - `DfsuFile` opens dfsu files from MIKE 2027 with a submesh type, such as 3D
-  files and locally refined meshes. It raised "not a valid dfsu file" for
-  them, or read a 2D file with submesh type 0 only by chance. A file with
-  more custom block values than MIKE 2027 writes also reads correctly.
-  Legacy Spectral0D (rose-plot) files still read as `DfsuSpectral0D`, with
-  their direction static item in radians or degrees
+  files and locally refined meshes, which raised "not a valid dfsu file".
+  Files from later MIKE versions with more custom block values also open.
+  Legacy Spectral0D (rose-plot) files still open as `DfsuSpectral0D`
   ([#54](https://github.com/DHI/mikecore-python/issues/54)).
 
 - Items read from a dfs file have the reference coordinates and orientation

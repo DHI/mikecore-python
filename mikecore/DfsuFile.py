@@ -54,11 +54,15 @@ class DfsuFile:
     value 5 on are read as:
 
     1. 5 values or fewer: a file from before MIKE 2027. Spec value 5, if
-       present, is the number of sigma layers. There is no submesh type.
+       present, is the number of sigma layers. With 4 values, the number of
+       sigma layers equals the number of layers. There is no submesh type.
     2. Exactly 6 values in a legacy Spectral0D (rose-plot) file: spec values
        5 and 6 are the number of frequencies and directions. There is no
        submesh type. This layout is a convention from before MIKE 2027 that
-       the specification does not document, see __IsLegacySpectral0D.
+       the specification does not document. Such a file has exactly 11
+       static items: static item 10 holds the frequencies in hertz and
+       static item 11 the directions in radians or degrees, and their
+       lengths equal spec values 5 and 6.
     3. Otherwise, 6 values or more: the layout from MIKE 2027. Spec value 5 is
        the number of sigma layers and spec value 6 is the submesh type. Values
        from 7 on are ignored. Section 4.3 lists at most 6 values; handling
@@ -158,9 +162,16 @@ class DfsuFile:
             self.NumberOfDirections = customBlock[5]
         elif self.FileInfo.DataType == 2001 and customBlock.Count >= 6:
             if build:
-                # DfsuBuilder passes the submesh type it wrote. Use it instead
-                # of reading the static items, which are not written yet.
-                isLegacySpectral0D = subMeshType is None
+                # The static items are not written yet, so use the submesh
+                # type DfsuBuilder passes. DfsuBuilder can not write Spectral0D
+                # files yet, so it writes 6 values only with a submesh type,
+                # and a file it builds is never a legacy Spectral0D file.
+                # PR 76, which adds Spectral0D writing, must revisit this.
+                if subMeshType is None:
+                    raise Exception(
+                        "DfsuBuilder wrote 6 custom block values without a submesh type"
+                    )
+                isLegacySpectral0D = False
             else:
                 isLegacySpectral0D = self.__IsLegacySpectral0D(customBlock)
             if isLegacySpectral0D:
