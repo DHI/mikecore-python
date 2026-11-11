@@ -649,6 +649,9 @@ class eumItem(IntEnum):
     eumIFluorideF = 110362
     eumITotalAlkanlinity = 110363
     eumIChemicalOxygenDemandCOD = 110364
+    eumIFreqIntegWaveActionDensity = 110365
+    eumIDirecIntegWaveActionDensity = 110366
+    eumIFreqIntegWaveEnergyDensityRate = 110367
 
 
 # Predefined enums of EUM units.
@@ -1050,6 +1053,10 @@ class eumUnit(IntEnum):
     eumUft2PerRad = 5215
     eumUft2PerDegree = 5216
     eumUft2Sec = 5217
+    eumUm2Sec2 = 5218
+    eumUft2Sec2 = 5219
+    eumUm2SecRad = 5220
+    eumUft2SecRad = 5221
     eumUmilliGramPerL2OneHalfPerDay = 5300
     eumUmilliGramPerL2OneHalfPerHour = 5301
     eumUNewtonPerSqrMeter = 5400

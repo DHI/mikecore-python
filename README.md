@@ -49,8 +49,8 @@ All commands are run from the project root.
 
 ### Another library in the same process also loads MIKE Core
 
-mikecore loads its bundled MIKE Core libraries (23.0.3) by default, even with
-MIKE installed. With another library in the process that loads MIKE Core
+mikecore loads its bundled MIKE Core libraries by default, even with MIKE
+installed. With another library in the process that loads MIKE Core
 (a MIKE engine, for example):
 
 - **Linux:** the two keep separate libraries, unless the other library is

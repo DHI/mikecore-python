@@ -23,8 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ones, at your own risk (see README).
 - A required `source` attribute in `buildUtil/packages.config` picks where the
   build downloads the native NuGet packages from: `nuget.org`, or
-  `github-mirror` for a mirror on this repository's releases. It's
-  `nuget.org` for now, so the wheel is unchanged.
+  `github-mirror` for a mirror on this repository's releases.
+- `eumItem` and `eumUnit` entries for the 2026 EUM table: the items
+  `eumIFreqIntegWaveActionDensity`, `eumIDirecIntegWaveActionDensity` and
+  `eumIFreqIntegWaveEnergyDensityRate`, and the units `eumUm2Sec2`,
+  `eumUft2Sec2`, `eumUm2SecRad` and `eumUft2SecRad`.
 
 ### Changed
 
@@ -32,8 +35,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   example `libeum-mikecore-python.so`, so they don't collide with a MIKE
   installation's (see
   [ADR 0002](docs/adr/0002-isolate-bundled-native-libraries.md)). Code that
-  loads them by name needs the new names. The Windows DLLs keep their names
-  and DHI's signatures.
+  loads them by name needs the new names. The Windows DLLs keep their names.
+- **Possibly breaking:** the bundled native libraries are the 2026 GOLD
+  versions: DHI.DFS, DHI.PFS, DHI.EUM, DHI.DHIfl and DHI.Projections 24.1.2,
+  and DHI.MikeCore.Linux.ubuntu22 24.0.2 (previously all 23.0.3). They're
+  downloaded from the GitHub mirror on this repository's releases until
+  nuget.org publishes them. The bundled Windows DLLs are unsigned for now,
+  which policies such as WDAC or AppLocker may block.
 - **Possibly breaking:** importing mikecore no longer adds its library folder
   to `PATH` or `LD_LIBRARY_PATH`. Child processes, such as an engine started
   with `subprocess`, no longer inherit it.
