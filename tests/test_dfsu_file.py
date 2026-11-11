@@ -241,7 +241,6 @@ class DfsuFileTests(unittest.TestCase):
         Assert.AreEqual(4, dfsFile.NumberOfElements)
         Assert.AreEqual(0, dfsFile.NumberOfLayers)
         Assert.AreEqual(0, dfsFile.NumberOfSigmaLayers)
-        Assert.IsTrue(dfsFile.IsSubMesh)
         Assert.AreEqual(0, dfsFile.SubMeshType)
         Assert.AreEqual(0, dfsFile.NumberOfFrequencies)
         Assert.AreEqual(0, dfsFile.NumberOfDirections)
@@ -269,9 +268,7 @@ class DfsuFileTests(unittest.TestCase):
         Assert.AreEqual(oldFile.NumberOfElements, newFile.NumberOfElements)
         Assert.AreEqual(oldFile.NumberOfLayers, newFile.NumberOfLayers)
         Assert.AreEqual(oldFile.NumberOfSigmaLayers, newFile.NumberOfSigmaLayers)
-        Assert.IsFalse(oldFile.IsSubMesh)
-        Assert.AreEqual(-1, oldFile.SubMeshType)
-        Assert.IsTrue(newFile.IsSubMesh)
+        Assert.IsNull(oldFile.SubMeshType)
         Assert.AreEqual(0, newFile.SubMeshType)
         Assert.AreEqual(oldFile.NumberOfFrequencies, newFile.NumberOfFrequencies)
         Assert.AreEqual(oldFile.NumberOfDirections, newFile.NumberOfDirections)
@@ -299,7 +296,6 @@ class DfsuFileTests(unittest.TestCase):
         Assert.AreEqual(DfsuFileType.Dfsu2D, dfsFile.DfsuFileType)
         Assert.AreEqual(31, dfsFile.NumberOfNodes)
         Assert.AreEqual(40, dfsFile.NumberOfElements)
-        Assert.IsTrue(dfsFile.IsSubMesh)
         Assert.AreEqual(1, dfsFile.SubMeshType)
         Assert.AreEqual(0, dfsFile.NumberOfFrequencies)
         Assert.AreEqual(0, dfsFile.NumberOfDirections)
@@ -322,13 +318,33 @@ class DfsuFileTests(unittest.TestCase):
         Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType)
         Assert.AreEqual(416, dfsFile.NumberOfNodes)
         Assert.AreEqual(400, dfsFile.NumberOfElements)
-        Assert.IsFalse(dfsFile.IsSubMesh)
-        Assert.AreEqual(-1, dfsFile.SubMeshType)
+        Assert.IsNull(dfsFile.SubMeshType)
         Assert.AreEqual(25, dfsFile.NumberOfFrequencies)
         Assert.AreEqual(16, dfsFile.NumberOfDirections)
         Assert.AreEqual(25, len(dfsFile.Frequencies))
         Assert.AreEqual(16, len(dfsFile.Directions))
         Assert.AreEqual(400, dfsFile.ReadItemTimeStep(1, 0).Data.size)
+        dfsFile.Close()
+
+    # / <summary>
+    # / Reading a legacy Spectral0D file with its direction static item in
+    # / degrees. The unit of the direction item does not decide the layout.
+    # / </summary>
+    def test_ReadLegacySpectral0DDegreesTest(self):
+        filename = "testdata/testtmp/test_DfsuSpectral0D_CustomBlock6_Degrees.dfsu"
+        self.RewriteDfsu(
+            "testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu",
+            filename,
+            staticQuantities={
+                11: eumQuantity(eumItem.eumIWaveDirection, eumUnit.eumUdegree)
+            },
+        )
+        dfsFile = DfsuFile.Open(filename)
+        Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType)
+        Assert.IsNull(dfsFile.SubMeshType)
+        Assert.AreEqual(25, dfsFile.NumberOfFrequencies)
+        Assert.AreEqual(16, dfsFile.NumberOfDirections)
+        Assert.AreEqual(16, np.size(dfsFile.Directions))
         dfsFile.Close()
 
     # / <summary>
@@ -338,15 +354,15 @@ class DfsuFileTests(unittest.TestCase):
     # / </summary>
     def test_AppendSubmeshTest(self):
         os.makedirs("testdata/testtmp", exist_ok=True)
-        for source, isSubMesh in (
-            ("testdata/submesh/Dfsu2D_CustomBlock6_Submesh1_LocallyRefined.dfsu", True),
-            ("testdata/submesh/Dfsu3DSigmaZ_CustomBlock6_Submesh0.dfsu", True),
-            ("testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu", False),
+        for source, subMeshType in (
+            ("testdata/submesh/Dfsu2D_CustomBlock6_Submesh1_LocallyRefined.dfsu", 1),
+            ("testdata/submesh/Dfsu3DSigmaZ_CustomBlock6_Submesh0.dfsu", 0),
+            ("testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu", None),
         ):
             filename = "testdata/testtmp/test_append_" + os.path.basename(source)
             testUtil.copy_file(source, filename)
             dfsFile = DfsuFile.OpenAppend(filename)
-            Assert.AreEqual(isSubMesh, dfsFile.IsSubMesh)
+            Assert.AreEqual(subMeshType, dfsFile.SubMeshType)
             numberOfTimeSteps = dfsFile.NumberOfTimeSteps
             for itemInfo in dfsFile.ItemInfo:
                 dfsFile.WriteItemTimeStepNext(
@@ -355,12 +371,87 @@ class DfsuFileTests(unittest.TestCase):
             dfsFile.Close()
             dfsFile = DfsuFile.Open(filename)
             Assert.AreEqual(numberOfTimeSteps + 1, dfsFile.NumberOfTimeSteps)
-            Assert.AreEqual(isSubMesh, dfsFile.IsSubMesh)
+            Assert.AreEqual(subMeshType, dfsFile.SubMeshType)
             for itemNumber in range(1, len(dfsFile.ItemInfo) + 1):
                 assert_array_equal(
                     1, dfsFile.ReadItemTimeStep(itemNumber, numberOfTimeSteps).Data
                 )
             dfsFile.Close()
+
+    # / <summary>
+    # / Reading a 3D sigma-z dfsu file with a 7 value custom block. Section 4.3
+    # / of the file specification lists at most 6 values. The format owner
+    # / intends to add more values for future features, so a 2001 file with
+    # / more than 6 values reads with the standard layout from MIKE 2027.
+    # / </summary>
+    def test_Read3DCustomBlock7Test(self):
+        filename = "testdata/testtmp/test_Dfsu3DSigmaZ_CustomBlock7.dfsu"
+        self.RewriteDfsu(
+            "testdata/submesh/Dfsu3DSigmaZ_CustomBlock6_Submesh0.dfsu",
+            filename,
+            customBlockValues=[30, 8, 3, 3, 1, 0, 0],
+        )
+        self.SubmeshCustomBlockTester(filename, [30, 8, 3, 3, 1, 0, 0])
+        dfsFile = DfsuFile.Open(filename)
+        Assert.AreEqual(DfsuFileType.Dfsu3DSigmaZ, dfsFile.DfsuFileType)
+        Assert.AreEqual(30, dfsFile.NumberOfNodes)
+        Assert.AreEqual(8, dfsFile.NumberOfElements)
+        Assert.AreEqual(3, dfsFile.NumberOfLayers)
+        Assert.AreEqual(1, dfsFile.NumberOfSigmaLayers)
+        Assert.AreEqual(0, dfsFile.SubMeshType)
+        Assert.AreEqual(0, dfsFile.NumberOfFrequencies)
+        Assert.AreEqual(0, dfsFile.NumberOfDirections)
+        Assert.AreEqual(8, dfsFile.ReadItemTimeStep(2, 0).Data.size)
+        dfsFile.Close()
+
+    # / <summary>
+    # / Copies a dfsu file, optionally replacing the values of its "MIKE_FM"
+    # / custom block, and the quantity of some static items, given by static
+    # / item number. Test setup only, to make variants of the test files.
+    # / </summary>
+    def RewriteDfsu(
+        self, sourcefilename, filename, customBlockValues=None, staticQuantities=None
+    ):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        source = DfsFileFactory.DfsGenericOpen(sourcefilename)
+        fileInfo = source.FileInfo
+
+        builder = DfsBuilder.Create(
+            fileInfo.FileTitle, fileInfo.ApplicationTitle, fileInfo.ApplicationVersion
+        )
+        builder.SetDataType(fileInfo.DataType)
+        builder.SetGeographicalProjection(fileInfo.Projection)
+        timeAxis = fileInfo.TimeAxis
+        assert timeAxis is not None
+        builder.SetTemporalAxis(timeAxis)
+        builder.DeleteValueFloat = fileInfo.DeleteValueFloat
+        customBlock = fileInfo.CustomBlocks[0]
+        if customBlockValues is None:
+            builder.AddCustomBlock(customBlock)
+        else:
+            builder.AddCreateCustomBlock(
+                customBlock.Name, np.array(customBlockValues, np.int32)
+            )
+        for itemInfo in source.ItemInfo:
+            builder.AddDynamicItem(itemInfo)
+        builder.CreateFile(filename)
+
+        staticItemNumber = 1
+        staticItem = source.ReadStaticItemNext()
+        while staticItem is not None:
+            if staticQuantities and staticItemNumber in staticQuantities:
+                staticItem.Quantity = staticQuantities[staticItemNumber]
+            builder.AddStaticItem(staticItem)
+            staticItemNumber += 1
+            staticItem = source.ReadStaticItemNext()
+
+        file = builder.GetFile()
+        itemData = source.ReadItemTimeStepNext()
+        while itemData is not None:
+            file.WriteItemTimeStepNext(itemData.Time, itemData.Data)
+            itemData = source.ReadItemTimeStepNext()
+        source.Close()
+        file.Close()
 
     # / <summary>
     # / Checks the "MIKE_FM" custom block of a data type 2001 file. Opened as a

@@ -48,6 +48,23 @@ class DfsuFile:
     Use the DfsuBuilder to create a new dfsu file.
     You can read, write and append item-timesteps to the file.
     The geometry can be altered, by moving the nodes, but the element connectivity can not be changed.
+
+    The "MIKE_FM" custom block of a dfsu file is described in section 4.3 of
+    the dfsu file specification. For data type 2001, the values from spec
+    value 5 on are read as:
+
+    1. 5 values or fewer: a file from before MIKE 2027. Spec value 5, if
+       present, is the number of sigma layers. There is no submesh type.
+    2. Exactly 6 values in a legacy Spectral0D (rose-plot) file: spec values
+       5 and 6 are the number of frequencies and directions. There is no
+       submesh type. This layout is a convention from before MIKE 2027 that
+       the specification does not document, see __IsLegacySpectral0D.
+    3. Otherwise, 6 values or more: the layout from MIKE 2027. Spec value 5 is
+       the number of sigma layers and spec value 6 is the submesh type. Values
+       from 7 on are ignored. Section 4.3 lists at most 6 values; handling
+       more follows the format owner's intent to add values for new features.
+
+    Other data types are read by their own fixed layouts.
     """
 
     def __init__(self, dfsFile=None):
@@ -58,7 +75,7 @@ class DfsuFile:
         self.NumberOfSigmaLayers = -1
         self.NumberOfFrequencies = -1
         self.NumberOfDirections = -1
-        self.__subMeshType = -1
+        self.__subMeshType: int | None = None
 
         # Static item
         self.__nodeIdItem = None
@@ -95,7 +112,7 @@ class DfsuFile:
         if dfsFile is not None:
             self.__Init(dfsFile)
 
-    def __Init(self, dfsFile, build=False):
+    def __Init(self, dfsFile, build=False, subMeshType=None):
         """
         Wrap a dfs file in the DfsuFile object.
         It will throw an exception if file is not a dfsu file.
@@ -128,23 +145,31 @@ class DfsuFile:
 
         dimensions = customBlock[2]
         self.NumberOfLayers = customBlock[3]
-        # DfsuBuilder does not create files with a 6 value custom block
-        subMesh = not build and self.__IsSubMesh(customBlock)
-        self.__subMeshType = customBlock[5] if subMesh else -1
-
-        if customBlock.Count == 5 or subMesh:
+        if customBlock.Count == 5:
             self.NumberOfSigmaLayers = customBlock[4]
         else:
             self.NumberOfSigmaLayers = self.NumberOfLayers
+        self.NumberOfFrequencies = 0
+        self.NumberOfDirections = 0
+        self.__subMeshType = None
 
-        if self.FileInfo.DataType in (2002, 2003) or (
-            self.FileInfo.DataType == 2001 and (customBlock.Count == 6) and not subMesh
-        ):
+        if self.FileInfo.DataType in (2002, 2003):
             self.NumberOfFrequencies = customBlock[4]
             self.NumberOfDirections = customBlock[5]
-        else:
-            self.NumberOfFrequencies = 0
-            self.NumberOfDirections = 0
+        elif self.FileInfo.DataType == 2001 and customBlock.Count >= 6:
+            if build:
+                # DfsuBuilder passes the submesh type it wrote. Use it instead
+                # of reading the static items, which are not written yet.
+                isLegacySpectral0D = subMeshType is None
+            else:
+                isLegacySpectral0D = self.__IsLegacySpectral0D(customBlock)
+            if isLegacySpectral0D:
+                self.NumberOfFrequencies = customBlock[4]
+                self.NumberOfDirections = customBlock[5]
+            else:
+                # Standard layout from MIKE 2027, values from 7 on are ignored
+                self.NumberOfSigmaLayers = customBlock[4]
+                self.__subMeshType = int(customBlock[5])
 
         # Figuring out dfsu file type from custom block MIKE_FM
         if dimensions == 1:
@@ -198,7 +223,8 @@ class DfsuFile:
             # "Frequency"     , double
             # "Direction"     , double
 
-            # Read by number, the file pointer may have been moved by __IsSubMesh
+            # Read by number, the file pointer may have been moved by
+            # __IsLegacySpectral0D
             self.__nodeIdItem = self.dfsFile.ReadStaticItem(1)
             CheckForNull(self.__nodeIdItem)
             self.NodeIds = self.__nodeIdItem.Data
@@ -263,11 +289,11 @@ class DfsuFile:
                 k1 = k2
 
             # Spectral Dfsu
-            if self.NumberOfFrequencies:
+            if self.NumberOfFrequencies > 0:
                 frequency = self.dfsFile.ReadStaticItemNext()
                 CheckForNull(frequency)
                 self.Frequencies = frequency.Data
-            if self.NumberOfDirections:
+            if self.NumberOfDirections > 0:
                 direction = self.dfsFile.ReadStaticItemNext()
                 CheckForNull(direction)
                 self.Directions = direction.Data
@@ -283,56 +309,40 @@ class DfsuFile:
         if not build and self.dfsFile.FileMode == DfsFileMode.Append:
             self.dfsFile.FindTimeStep(self.NumberOfTimeSteps)
 
-    def __IsSubMesh(self, customBlock):
+    def __IsLegacySpectral0D(self, customBlock):
         """
-        Check if the "MIKE_FM" custom block is a submesh custom block.
+        Check if a 2001 file with 6 or more custom block values is a legacy
+        Spectral0D (rose-plot) file, written before MIKE 2027.
 
-        From version 2027, a 2001 file may have a 6 value custom block,
-        [..., NumberOfSigmaLayers, SubMesh], and 9 static items.
-
-        Legacy spectral 2001 files are not in the dfsu file specification,
-        which only has spectral data in data types 2002 and 2003. Previously,
-        most 2001 files had a 5 value custom block and 9 static items, except
-        for some spectral files with a 6 value custom block,
-        [..., NumberOfFrequencies, NumberOfDirections], and 11 static items:
-        static item 10 is the wave frequency in hertz and static item 11 is the
-        wave direction in radians. A legacy spectral file is identified by
-        exactly these 11 static items, matching the number of frequencies and
-        directions in the custom block. Any other 6 value custom block is a
-        submesh custom block.
+        The legacy Spectral0D layout is a convention that the file
+        specification does not document. Its "MIKE_FM" custom block has
+        exactly 6 values, [..., NumberOfFrequencies, NumberOfDirections], and
+        it has 11 static items: the 9 static items of section 4.4, then item
+        10 with the frequencies in hertz and item 11 with the directions in
+        radians or degrees.
         """
-        # Only a 2001 file with a 6 value custom block can be a submesh
-        if self.FileInfo.DataType != 2001 or customBlock.Count != 6:
+        if customBlock.Count != 6:
             return False
 
-        # A legacy spectral file has both frequencies and directions
-        numberOfFrequencies = customBlock[4]
-        numberOfDirections = customBlock[5]
-        if numberOfFrequencies <= 0 or numberOfDirections <= 0:
-            return True
-
-        # Missing or mismatching frequency item means not spectral, so it is a submesh
         frequency = self.dfsFile.ReadStaticItem(10)
-        if (
-            frequency is None
-            or frequency.Quantity.Item != eumItem.eumIWaveFrequency
-            or frequency.Quantity.Unit != eumUnit.eumUhertz
-            or frequency.ElementCount != numberOfFrequencies
-        ):
-            return True
-        # Missing or mismatching direction item means not spectral, so it is a submesh
         direction = self.dfsFile.ReadStaticItem(11)
         if (
-            direction is None
-            or direction.Quantity.Item != eumItem.eumIWaveDirection
-            or direction.Quantity.Unit != eumUnit.eumUradian
-            or direction.ElementCount != numberOfDirections
+            frequency is None
+            or direction is None
+            or self.dfsFile.ReadStaticItemNext() is not None
         ):
-            return True
-        # More than 11 static items means not spectral, so it is a submesh.
-        # Otherwise frequency and direction items match, so it is a legacy
-        # spectral file, not a submesh
-        return self.dfsFile.ReadStaticItemNext() is not None
+            return False
+
+        return (
+            frequency.Quantity.Item
+            in (eumItem.eumIWaveFrequency, eumItem.eumIFrequency)
+            and frequency.Quantity.Unit == eumUnit.eumUhertz
+            and frequency.ElementCount == customBlock[4]
+            and direction.Quantity.Item
+            in (eumItem.eumIWaveDirection, eumItem.eumIDirection)
+            and direction.Quantity.Unit in (eumUnit.eumUradian, eumUnit.eumUdegree)
+            and direction.ElementCount == customBlock[5]
+        )
 
     def Dispose(self):
         """
@@ -416,6 +426,7 @@ class DfsuFile:
         zUnit,
         freqItem,
         dirItem,
+        subMeshType=None,
     ):
 
         self.dfsFile = dfsFile
@@ -436,7 +447,7 @@ class DfsuFile:
         self.ZUnit = zUnit
         self.__freqItem = freqItem
         self.__dirItem = dirItem
-        self.__Init(dfsFile, build=True)
+        self.__Init(dfsFile, build=True, subMeshType=subMeshType)
 
     def __GetFileName(self):
         return self.FileInfo.FileName
@@ -525,18 +536,14 @@ class DfsuFile:
         return (self.NumberOfFrequencies > 0) or (self.NumberOfDirections > 0)
 
     @property
-    def IsSubMesh(self):
+    def SubMeshType(self) -> int | None:
         """
-        True if the "MIKE_FM" custom block is a submesh custom block, as
-        written from version 2027, whatever the submesh type.
-        """
-        return self.__subMeshType >= 0
+        Submesh type, spec value 6 of the "MIKE_FM" custom block of a data
+        type 2001 file from MIKE 2027: 1 for a local refinement submesh, 0
+        otherwise. None if the file has no submesh type.
 
-    @property
-    def SubMeshType(self):
-        """
-        Submesh type from the submesh custom block, 1 for a local refinement
-        submesh, 0 otherwise. -1 if the file has no submesh custom block.
+        A plain truth test is false for submesh type 0, so compare with None
+        to check whether the file has a submesh type.
         """
         return self.__subMeshType
 
