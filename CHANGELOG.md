@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   build downloads the native NuGet packages from: `nuget.org`, or
   `github-mirror` for a mirror on this repository's releases. It's
   `nuget.org` for now, so the wheel is unchanged.
+- `eumItem` and `eumUnit` entries for the 2026 EUM table: the items
+  `eumIFreqIntegWaveActionDensity`, `eumIDirecIntegWaveActionDensity` and
+  `eumIFreqIntegWaveEnergyDensityRate`, and the units `eumUm2Sec2`,
+  `eumUft2Sec2`, `eumUm2SecRad` and `eumUft2SecRad`.
 
 ### Changed
 
