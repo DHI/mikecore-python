@@ -18,6 +18,26 @@ class MeshNodes(NamedTuple):
     code: np.ndarray
 
 
+def _ToInt32Ids(ids, name):
+    """Ids as the int32 array mesh and dfsu files store, rejecting ids that do not fit.
+
+    None, for the default ids, is returned as is. Shared by MeshBuilder and
+    DfsuBuilder; name starts the error message.
+    """
+    if ids is None:
+        return None
+    ids = np.asarray(ids)
+    if ids.ndim != 1:
+        raise ValueError(f"{name} ids must be a 1-D array, got {ids.ndim}-D")
+    # Rejects booleans, floats and Python ints too big for any numpy integer
+    if not np.issubdtype(ids.dtype, np.integer):
+        raise ValueError(f"{name} ids must be int32 integers, got {ids.dtype}")
+    int32 = np.iinfo(np.int32)
+    if np.any((ids < int32.min) | (ids > int32.max)):
+        raise ValueError(f"{name} ids must be integers that fit in int32")
+    return ids.astype(np.int32)
+
+
 class MeshBuilder:
     def __init__(self):
         self.__projectionString: str | None = None
@@ -26,7 +46,7 @@ class MeshBuilder:
         self.__nodeIds: np.ndarray | None = None
         self.__nodes: MeshNodes | None = None
 
-        self.__elementIds: Sequence[int] | np.ndarray | None = None
+        self.__elementIds: np.ndarray | None = None
         self.__connectivity: Sequence | np.ndarray | None = None
 
     def SetProjection(self, projection):
@@ -54,7 +74,7 @@ class MeshBuilder:
         except Exception as err:
             raise TypeError("y must be array of float") from err
         try:
-            z = np.array(z, dtype=np.float32)
+            z = np.array(z, dtype=np.float64)
         except Exception as err:
             raise TypeError("z must be array of float") from err
         try:
@@ -100,8 +120,11 @@ class MeshBuilder:
 
     def SetElementIds(self, elementIds):
         """Set the element id's. Optional. If not set, default values are used (1,2,3,...)"""
-        if (self.__connectivity is not None) and (
-            len(self.__connectivity) != len(elementIds)
+        elementIds = _ToInt32Ids(elementIds, "Element")
+        if (
+            elementIds is not None
+            and self.__connectivity is not None
+            and len(self.__connectivity) != len(elementIds)
         ):
             raise ValueError("Number of element id's does not match number of elements")
         self.__elementIds = elementIds
@@ -149,13 +172,13 @@ class MeshBuilder:
         if self.__eumQuantity is None:
             self.__eumQuantity = eumQuantity(eumItem.eumIBathymetry, eumUnit.eumUmeter)
 
-        # Creating default node id's, if empty
+        # Creating default node id's, if empty, as int32 like MeshFile.ReadMesh
         if self.__nodeIds is None:
-            self.__nodeIds = np.arange(len(nodes.x)) + 1
+            self.__nodeIds = np.arange(1, len(nodes.x) + 1, dtype=np.int32)
 
         # Creating default element id's, if empty
         if self.__elementIds is None:
-            self.__elementIds = np.arange(len(connectivity)) + 1
+            self.__elementIds = np.arange(1, len(connectivity) + 1, dtype=np.int32)
 
         # Creating additional element information
         elementType = np.zeros(len(connectivity), dtype=np.int32)

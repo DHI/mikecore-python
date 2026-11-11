@@ -610,6 +610,10 @@ class DfsAbstractItemBuilder(Generic[ItemInfoT]):
     ItemInfo: ItemInfoT
 
     def __init__(self):
+        self._Reset()
+
+    def _Reset(self):
+        """Start a new, empty item. Each subclass also sets a new ItemInfo."""
         self.isSetNameQuantityDataType = False
         self.isSetSpatialAxis = False
 
@@ -663,8 +667,8 @@ class DfsDynamicItemBuilder(DfsAbstractItemBuilder[DfsDynamicItemInfo]):
     written to file, i.e., length of strings can be changed.
     """
 
-    def __init__(self):
-        super().__init__()
+    def _Reset(self):
+        super()._Reset()
         self.isSetDataValueType = False
         self.ItemInfo = DfsDynamicItemInfo()
 
@@ -690,10 +694,10 @@ class DfsDynamicItemBuilder(DfsAbstractItemBuilder[DfsDynamicItemInfo]):
             msgs = DfsBuilder.ErrorMessage(errors)
             raise Exception(msgs)
 
-        # Create and store a clone, such that item-builder can be reused when creating more than one item
-        # Otherwise updates to the new item-builder would just update the same item.
+        # Hand over the item and start empty, so reusing the builder
+        # cannot change the item returned here.
         res = self.ItemInfo
-        self.ItemInfo = DfsDynamicItemInfo()
+        self._Reset()
         return res
 
 
@@ -712,14 +716,14 @@ class DfsStaticItemBuilder(DfsAbstractItemBuilder[DfsStaticItem]):
     can be added to the <see cref="DfsBuilder.
     """
 
-    def __init__(self):
-        super().__init__()
+    def _Reset(self):
+        super()._Reset()
         self.isSetData = False
         self.ItemInfo = DfsStaticItem()
         self.SetDefaults()
 
     def SetData(self, data):
-
+        """Keeps a reference to data; changes to the array before CreateFile change the item."""
         self.ItemInfo.Data = data
         self.isSetData = True
 
@@ -747,4 +751,8 @@ class DfsStaticItemBuilder(DfsAbstractItemBuilder[DfsStaticItem]):
             msgs = DfsBuilder.ErrorMessage(errors)
             raise Exception(msgs)
 
-        return self.ItemInfo
+        # Hand over the item and start empty, so reusing the builder
+        # cannot change the item returned here.
+        res = self.ItemInfo
+        self._Reset()
+        return res

@@ -3,7 +3,7 @@ from collections.abc import Sequence
 import numpy as np
 from mikecore.DfsFile import DfsProjection, DfsTemporalAxis
 from mikecore.MeshFile import MeshFile
-from mikecore.MeshBuilder import MeshNodes
+from mikecore.MeshBuilder import MeshNodes, _ToInt32Ids
 from mikecore.DfsFactory import DfsFactory
 from mikecore.DfsBuilder import DfsBuilder
 from mikecore.DfsuFile import (
@@ -74,8 +74,8 @@ class DfsuBuilder:
         self.__dynamicItemData = []
 
         # spectral
-        self.__frequencies: Sequence[float] | np.ndarray | None = None
-        self.__directions: Sequence[float] | np.ndarray | None = None
+        self.__frequencies: np.ndarray | None = None
+        self.__directions: np.ndarray | None = None
 
         self.__dfsuFileType = dfsuFileType
         if dfsuFileType == DfsuFileType.Dfsu2D:
@@ -126,10 +126,15 @@ class DfsuBuilder:
             raise Exception("dfsuFileType")
 
     def SetFrequencies(self, frequencies):
-        self.__frequencies = frequencies
+        # As an array, since the static item writer needs one
+        self.__frequencies = (
+            None if frequencies is None else np.asarray(frequencies, dtype=np.float64)
+        )
 
     def SetDirections(self, directions):
-        self.__directions = directions
+        self.__directions = (
+            None if directions is None else np.asarray(directions, dtype=np.float64)
+        )
 
     # / <summary>
     # / Set a non-standard temporal axis for the dfsu file. WARNING: The dfsu file will not be valid in all contexts.
@@ -223,10 +228,12 @@ class DfsuBuilder:
 
     def SetNodeIds(self, nodeIds):
         """Set the node id's. Optional. If not set, default values are used (1,2,3,...)"""
-        if nodeIds is None:
-            self.__nodeIds = None
-            return
-        if self.__nodes is not None and self.__nodes.x.size != nodeIds.size:
+        nodeIds = _ToInt32Ids(nodeIds, "Node")
+        if (
+            nodeIds is not None
+            and self.__nodes is not None
+            and self.__nodes.x.size != nodeIds.size
+        ):
             raise Exception(
                 "Number of node id's does not match number of nodes", "nodeIds"
             )
@@ -270,12 +277,16 @@ class DfsuBuilder:
 
     def SetElementIds(self, elementIds):
         """Set the element id's. Optional. If not set, default values are used (1,2,3,...)"""
-        if (self.__connectivity is not None) and (
-            len(self.__connectivity) != elementIds.size
+        elementIds = _ToInt32Ids(elementIds, "Element")
+        if (
+            elementIds is not None
+            and self.__connectivity is not None
+            and len(self.__connectivity) != elementIds.size
         ):
             raise Exception(
                 "Number of element id's does not match number of elements", "elementIds"
             )
+        self.__elementIds = elementIds
 
     def SetFromMeshFile(self, meshFile: MeshFile):
         """Set projection, nodes and elements from mesh file.
@@ -295,11 +306,11 @@ class DfsuBuilder:
             raise ValueError("Mesh file has no projection, nodes or quantity")
         self.__dfsProjection = DfsProjection.Create(wktString)
 
-        self.__nodeIds = meshFile.NodeIds
+        self.__nodeIds = _ToInt32Ids(meshFile.NodeIds, "Node")
         self.__nodes = MeshNodes(x, y, z.astype(dtype=np.float32), code)
         self.__zUnit = quantity.Unit
 
-        self.__elementIds = meshFile.ElementIds
+        self.__elementIds = _ToInt32Ids(meshFile.ElementIds, "Element")
         self.__connectivity = meshFile.ElementTable
 
     def AddDynamicItem(self, itemName: str, quantity):
@@ -400,8 +411,26 @@ class DfsuBuilder:
                 errors.append(
                     "The minimum number of layers is smaller than the number of sigma layers. Element table is invalid"
                 )
+        elif self.__dfsuFileType == DfsuFileType.DfsuSpectral0D:
+            # The mesh is the frequency-direction (rose-plot) geometry, one element
+            # per frequency and direction, as DfsuFile reads it back
+            if self.__frequencies is None and self.__directions is None:
+                errors.append(
+                    "Frequencies or directions must be set for a spectral 0D file"
+                )
+            else:
+                numberOfSpectralValues = 1
+                if self.__frequencies is not None:
+                    numberOfSpectralValues *= len(self.__frequencies)
+                if self.__directions is not None:
+                    numberOfSpectralValues *= len(self.__directions)
+                if len(connectivity) != numberOfSpectralValues:
+                    errors.append(
+                        f"Number of elements ({len(connectivity)}) must equal the "
+                        "number of frequencies times the number of directions "
+                        f"({numberOfSpectralValues}) for a spectral 0D file"
+                    )
         elif self.__dfsuFileType in (
-            DfsuFileType.DfsuSpectral0D,
             DfsuFileType.DfsuSpectral1D,
             DfsuFileType.DfsuSpectral2D,
         ):
@@ -612,8 +641,29 @@ class DfsuBuilder:
                     np.int32,
                 ),
             )
+        elif self.__dfsuFileType == DfsuFileType.DfsuSpectral0D:
+            # 2 dimensions for a frequency-direction mesh, 1 for frequencies or directions
+            dimensions = (
+                2
+                if self.__frequencies is not None and self.__directions is not None
+                else 1
+            )
+            dfsBuilder.AddCreateCustomBlock(
+                "MIKE_FM",
+                np.array(
+                    [
+                        nodes.x.size,
+                        len(connectivity),
+                        dimensions,
+                        0,
+                        numberOfFrequencies,
+                        numberOfDirections,
+                    ],
+                    np.int32,
+                ),
+            )
         else:
-            raise Exception()
+            raise Exception(f"Dfsu file type {self.__dfsuFileType} not supported")
 
         # For the files with a vertical dimension, the first dynamic item is the Z-coordinate
         if (

@@ -21,7 +21,20 @@ class Dfs123File(DfsFile):
     def ReadItemTimeStepNext(
         self, itemData: DfsItemData | None = None, reshape: bool = False
     ) -> DfsItemData | None:
-        res = super().ReadItemTimeStepNext(itemData)
+        return self.__Reshaped(super().ReadItemTimeStepNext(itemData), reshape)
+
+    def ReadItemTimeStep(
+        self,
+        itemNumber: int | DfsItemData,
+        timestepIndex: int,
+        reshape: bool = False,
+    ) -> DfsItemData | None:
+        return self.__Reshaped(
+            super().ReadItemTimeStep(itemNumber, timestepIndex), reshape
+        )
+
+    def __Reshaped(self, res: DfsItemData | None, reshape: bool) -> DfsItemData | None:
+        # Reshaping an array that already has the axis shape leaves it unchanged
         if res is not None and (self.reshape or reshape):
             res.Data = res.Data.reshape(self.SpatialAxis.Shape, order="F")
         return res

@@ -67,27 +67,34 @@ def test_Dfs0ToAscii_writes_calendar_times(tmp_path):
     ]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Suspected bug: Dfs0ToAscii adds itemData.Time to the start as seconds "
-        "(its own TODO says the time unit is not always seconds), but "
-        "ReadItemTimeStepNext returns times in the time axis unit. With a "
-        "10 minute step the second row is stamped 00:00:10. Correct: convert "
-        "with the time axis's ToSeconds, giving 00:10:00."
-    ),
+# timedelta is the oracle for each time unit; a non-equidistant axis stores
+# each timestep's own time
+@pytest.mark.parametrize(
+    "timeUnit, timedeltaUnit",
+    [
+        (eumUnit.eumUmillisec, "milliseconds"),
+        (eumUnit.eumUsec, "seconds"),
+        (eumUnit.eumUminute, "minutes"),
+        (eumUnit.eumUhour, "hours"),
+        (eumUnit.eumUday, "days"),
+    ],
 )
-def test_Dfs0ToAscii_writes_calendar_times_in_minutes(tmp_path):
-    dfs0FileName = str(tmp_path / "minutes.dfs0")
+@pytest.mark.parametrize("equidistant", [True, False])
+def test_Dfs0ToAscii_writes_calendar_times_in_the_time_unit(
+    tmp_path, timeUnit, timedeltaUnit, equidistant
+):
+    dfs0FileName = str(tmp_path / "times.dfs0")
+    start = datetime.datetime(2020, 1, 1)
+    times = [0, 10, 20] if equidistant else [0, 10, 25]
     factory = DfsFactory()
     builder = DfsBuilder.Create("title", "application", 1)
     builder.SetDataType(0)
     builder.SetGeographicalProjection(factory.CreateProjectionUndefined())
-    builder.SetTemporalAxis(
-        factory.CreateTemporalEqCalendarAxis(
-            eumUnit.eumUminute, datetime.datetime(2020, 1, 1), 0, 10
-        )
-    )
+    if equidistant:
+        timeAxis = factory.CreateTemporalEqCalendarAxis(timeUnit, start, 0, 10)
+    else:
+        timeAxis = factory.CreateTemporalNonEqCalendarAxis(timeUnit, start)
+    builder.SetTemporalAxis(timeAxis)
     item = builder.CreateDynamicItemBuilder()
     item.Set(
         "Value",
@@ -99,17 +106,17 @@ def test_Dfs0ToAscii_writes_calendar_times_in_minutes(tmp_path):
     builder.AddDynamicItem(item.GetDynamicItemInfo())
     builder.CreateFile(dfs0FileName)
     dfs0 = builder.GetFile()
-    for value in (1.0, 2.0):
-        dfs0.WriteItemTimeStepNext(0, np.array([value], dtype=np.float32))
+    for time in times:
+        dfs0.WriteItemTimeStepNext(time, np.array([1.0], dtype=np.float32))
     dfs0.Close()
-    txtFileName = str(tmp_path / "minutes.txt")
+    txtFileName = str(tmp_path / "times.txt")
 
     Dfs0ToAscii(dfs0FileName, txtFileName)
 
-    lines = _data_lines(txtFileName)
-    assert [["2020-01-01", "00:00:00.000"], ["2020-01-01", "00:10:00.000"]] == [
-        line.split()[:2] for line in lines
-    ]
+    expected = [start + datetime.timedelta(**{timedeltaUnit: time}) for time in times]
+    assert [
+        [t.strftime("%Y-%m-%d"), t.strftime("%H:%M:%S.%f")[:-3]] for t in expected
+    ] == [line.split()[:2] for line in _data_lines(txtFileName)]
 
 
 def test_Dfs0ToAscii_writes_relative_times(tmp_path):

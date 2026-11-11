@@ -943,24 +943,44 @@ class DfsFile:
         """
         Read the number <paramref name="staticItemNo"/> static item from the file.
 
+        To read every static item, use `ReadStaticItemNext`, which returns None
+        after the last one.
+
         :param staticItemNo: Number of static item in the file to read. First static item has number 1
-        :returns: The static item number <paramref name="staticItemNo"/>, null if there are not that many static items.
+        :returns: The static item number <paramref name="staticItemNo"/>.
+        :raises ValueError: If <paramref name="staticItemNo"/> is below 1 or past the last static item.
         """
         self.__CheckIfOpen()
         if self.fpState == DfsFilePointerState.CreatingItems:
             raise Exception("Can not read static items when file is being created.")
+        if staticItemNo < 1:
+            raise ValueError(
+                f"Static item number must be 1 or more, got {staticItemNo}"
+            )
+        pastTheEnd = ValueError(
+            f"Static item number {staticItemNo} is past the last static item"
+        )
+        # dfsFindItemStatic takes an int32, and a larger number is past the last item
+        if staticItemNo > np.iinfo(np.int32).max:
+            raise pastTheEnd
 
         if (
             self.fpState != DfsFilePointerState.StaticItem
             or self.fpItemNumber != staticItemNo
         ):
-            DfsDLL.Wrapper.dfsFindItemStatic(
+            rc = DfsDLL.Wrapper.dfsFindItemStatic(
                 self.headPointer, self.filePointer, staticItemNo
             )
             self.fpState = DfsFilePointerState.StaticItem
             self.fpItemNumber = staticItemNo
             self.fpTimeStepIndex = -1
-        return self.ReadStaticItemNext()
+            if rc != 0:
+                raise pastTheEnd
+        # dfsFindItemStatic also succeeds one past the last item
+        staticItem = self.ReadStaticItemNext()
+        if staticItem is None:
+            raise pastTheEnd
+        return staticItem
 
     def WriteStaticItemData(self, staticItem, data: np.ndarray):
         """
@@ -1006,7 +1026,7 @@ class DfsFile:
         self.fpItemNumber += 1
 
     def ReadItemTimeStepNext(
-        self, itemData: DfsItemData | None = None, reshape: bool = False
+        self, itemData: DfsItemData | None = None
     ) -> DfsItemData | None:
         """
         Reads the next dynamic item-timestep. First time called it returns the first
@@ -1026,7 +1046,6 @@ class DfsFile:
         since it iterates exactly as the data is stored on the disk.
 
         :param itemData DfsItemData: DfsItemData for item to store timestep values in, for reuse of memory.
-        :param reshape bool: Reshape data array to dimension of data, 2D or 3D depending on spatial axis.
         :returns DfsIemData: The next dynamic item-timestep, None if no more items are present.
         """
         self.__CheckIfOpen()
@@ -1071,7 +1090,6 @@ class DfsFile:
         self,
         itemNumber: int | DfsItemData,
         timestepIndex: int,
-        reshape: bool = False,
     ) -> DfsItemData | None:
         """
         Reads the dynamic item-timestep as specified from the file. It throws an
@@ -1080,7 +1098,6 @@ class DfsFile:
 
         :param itemNumber Union[int,DfsItemData]: Item number (1-based), or DfsItemData for item
         :param timestepIndex int: Time step index (0-based)
-        :param reshape bool: Reshape data array to dimension of data, 2D or 3D depending on spatial axis.
         :return DfsItemData: The dynamic item-timestep as specified
         """
         self.__CheckIfOpen()
@@ -1115,7 +1132,7 @@ class DfsFile:
 
         # Position file pointer
         self.__FpFindItemTimeStep(itemNumber, timestepIndex)
-        return self.ReadItemTimeStepNext(itemData, reshape)
+        return self.ReadItemTimeStepNext(itemData)
 
     def __GetTime(self, time, timestepIndex):
         # TODO: This assumes time in seconds?

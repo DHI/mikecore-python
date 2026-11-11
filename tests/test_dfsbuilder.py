@@ -337,36 +337,35 @@ def test_associated_static_item_number_is_checked(tmp_path):
         builder.CreateFile(str(tmp_path / "invalid.dfs0"))
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Suspected bug: GetDynamicItemInfo replaces ItemInfo with a blank "
-        "DfsDynamicItemInfo but leaves the builder's 'is set' flags True. A reused "
-        "builder then passes Validate and returns an item with an empty name, no "
-        "quantity and no ValueType, which fails later when added to a file. Its "
-        "comment says it means to store a clone so the builder can be reused. "
-        "Correct: the second item keeps the name, quantity and value type set "
-        "before the first GetDynamicItemInfo call."
-    ),
-)
-def test_dynamic_item_builder_can_be_reused():
+def test_dynamic_item_builder_must_be_set_again_after_GetDynamicItemInfo():
     factory = DfsFactory()
-    quantity = eumQuantity(eumItem.eumIWaterLevel, eumUnit.eumUmeter)
     item = DfsBuilder.Create().CreateDynamicItemBuilder()
-    item.Set("Value", quantity, DfsSimpleType.Float)
+    item.Set(
+        "Value",
+        eumQuantity(eumItem.eumIWaterLevel, eumUnit.eumUmeter),
+        DfsSimpleType.Float,
+    )
     item.SetValueType(DataValueType.Instantaneous)
     item.SetAxis(factory.CreateAxisEqD0())
-    first = item.GetDynamicItemInfo()
+    item.GetDynamicItemInfo()
 
-    item.SetAxis(factory.CreateAxisEqD0())
-    second = item.GetDynamicItemInfo()
+    with pytest.raises(Exception, match="Name, Quantity and DataType has not been set"):
+        item.GetDynamicItemInfo()
 
-    assert first is not second
-    assert "Value" == second.Name
-    assert second.Quantity is not None
-    assert eumItem.eumIWaterLevel == second.Quantity.Item
-    assert eumUnit.eumUmeter == second.Quantity.Unit
-    assert DataValueType.Instantaneous == second.ValueType
+
+def test_static_item_builder_must_be_set_again_after_GetStaticItem():
+    staticItem = DfsStaticItemBuilder()
+    staticItem.Set(
+        "Item",
+        eumQuantity(eumItem.eumIItemUndefined, eumUnit.eumUUnitUndefined),
+        DfsSimpleType.Float,
+    )
+    staticItem.SetAxis(DfsFactory().CreateAxisEqD1(eumUnit.eumUmeter, 2, 0, 1))
+    staticItem.SetData(np.array([1.0, 2.0], dtype=np.float32))
+    staticItem.GetStaticItem()
+
+    with pytest.raises(Exception, match="Data has not been set"):
+        staticItem.GetStaticItem()
 
 
 def test_reference_coordinates_and_orientation_are_read_back(tmp_path):

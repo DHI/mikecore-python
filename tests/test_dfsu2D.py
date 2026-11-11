@@ -581,13 +581,8 @@ class FileOresundHDDfsu:
     def StaticItemTester(dfsFile):
         staticItems = []
 
-        staticItemNumber = 1
-        while True:
-            varstaticItem = dfsFile.ReadStaticItem(staticItemNumber)
-            if varstaticItem is None:
-                break
+        while (varstaticItem := dfsFile.ReadStaticItemNext()) is not None:
             staticItems.append(varstaticItem)
-            staticItemNumber += 1
 
         Assert.IsNotNull(staticItems)
         Assert.AreEqual(9, len(staticItems))
@@ -905,13 +900,8 @@ class FileOdenseHD2DDfsu:
     def StaticItemTester(dfsFile):
         staticItems = []
 
-        staticItemNumber = 1
-        while True:
-            varstaticItem = dfsFile.ReadStaticItem(staticItemNumber)
-            if varstaticItem is None:
-                break
+        while (varstaticItem := dfsFile.ReadStaticItemNext()) is not None:
             staticItems.append(varstaticItem)
-            staticItemNumber += 1
 
         Assert.IsNotNull(staticItems)
         Assert.AreEqual(9, len(staticItems))

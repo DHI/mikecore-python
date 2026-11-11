@@ -9,13 +9,8 @@ class Test_dfs_static_item(unittest.TestCase):
         dfsFile = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfsu")
 
         staticItems = []
-        staticItemNumber = 1
-        while True:
-            varstaticItem = dfsFile.ReadStaticItem(staticItemNumber)
-            if varstaticItem is None:
-                break
+        while (varstaticItem := dfsFile.ReadStaticItemNext()) is not None:
             staticItems.append(varstaticItem)
-            staticItemNumber += 1
 
         assert staticItems != None
         assert 9 == len(staticItems)

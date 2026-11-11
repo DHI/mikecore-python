@@ -117,33 +117,68 @@ def test_read_static_item_after_read_static_item_next():
     assert "Node id" == item.Name
 
 
-def test_read_static_item_past_the_last_item():
+# OresundHD.dfsu has 9 static items. dfsFindItemStatic succeeds for 10 and
+# fails from 11, so both are checked.
+@pytest.mark.parametrize("staticItemNo", [10, 11, 100])
+def test_read_static_item_past_the_last_item(staticItemNo):
     dfs = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfsu")
 
-    item = dfs.ReadStaticItem(10)
-    dfs.Close()
+    try:
+        with pytest.raises(ValueError, match="past the last static item"):
+            dfs.ReadStaticItem(staticItemNo)
+        first = dfs.ReadStaticItem(1)
+    finally:
+        dfs.Close()
 
-    assert item is None
+    assert first is not None
+    assert "Node id" == first.Name
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Suspected bug: ReadStaticItem does not check the item number and ignores "
-        "the return code of dfsFindItemStatic, so ReadStaticItem(0) returns the "
-        "first static item ('Node id') with ItemNumber 0. Static item numbers start "
-        "at 1. Correct: reject numbers below 1 with a ValueError, as "
-        "__DynamicItemInfoReadAndCreate does for dynamic items."
-    ),
-)
-def test_read_static_item_zero():
+# Numbers that do not fit in the native int32 are past the last item too
+@pytest.mark.parametrize("staticItemNo", [2**31 - 1, 2**31, 2**32 + 1, 2**64])
+def test_read_static_item_past_int32(staticItemNo):
+    dfs = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfsu")
+
+    try:
+        with pytest.raises(ValueError, match="past the last static item"):
+            dfs.ReadStaticItem(staticItemNo)
+        first = dfs.ReadStaticItem(1)
+    finally:
+        dfs.Close()
+
+    assert first is not None
+    assert "Node id" == first.Name
+
+
+@pytest.mark.parametrize("staticItemNo", [0, -1])
+def test_read_static_item_below_one(staticItemNo):
     dfs = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfsu")
 
     try:
         with pytest.raises(ValueError):
-            dfs.ReadStaticItem(0)
+            dfs.ReadStaticItem(staticItemNo)
     finally:
         dfs.Close()
+
+
+# ReadStaticItemNext is the oracle for which item each number from 1 up gives
+def test_read_static_item_reads_every_item_by_number():
+    dfs = DfsFileFactory.DfsGenericOpen("testdata/OresundHD.dfsu")
+    expected = []
+    while (item := dfs.ReadStaticItemNext()) is not None:
+        expected.append(item.Name)
+
+    # Backwards, so each read has to find its item rather than take the next
+    names = {}
+    for n in range(len(expected), 0, -1):
+        item = dfs.ReadStaticItem(n)
+        assert item is not None
+        assert n == item.ItemNumber
+        names[n] = item.Name
+    dfs.Close()
+
+    assert 9 == len(expected)
+    assert expected == [names[n] for n in range(1, len(expected) + 1)]
 
 
 def test_item_quantity_descriptions():
