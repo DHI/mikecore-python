@@ -319,7 +319,8 @@ class DfsuFileTests(unittest.TestCase):
         Assert.IsNull(dfsFile.SubMeshType)
         Assert.AreEqual(25, dfsFile.NumberOfFrequencies)
         Assert.AreEqual(16, dfsFile.NumberOfDirections)
-        Assert.AreEqual(16, np.size(dfsFile.Directions))
+        assert dfsFile.Directions is not None
+        Assert.AreEqual(16, len(dfsFile.Directions))
         dfsFile.Close()
 
     # / <summary>
@@ -340,8 +341,10 @@ class DfsuFileTests(unittest.TestCase):
         Assert.IsNull(dfsFile.SubMeshType)
         Assert.AreEqual(25, dfsFile.NumberOfFrequencies)
         Assert.AreEqual(16, dfsFile.NumberOfDirections)
-        Assert.AreEqual(25, np.size(dfsFile.Frequencies))
-        Assert.AreEqual(16, np.size(dfsFile.Directions))
+        assert dfsFile.Frequencies is not None
+        Assert.AreEqual(25, len(dfsFile.Frequencies))
+        assert dfsFile.Directions is not None
+        Assert.AreEqual(16, len(dfsFile.Directions))
         dfsFile.Close()
 
     # / <summary>
