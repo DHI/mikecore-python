@@ -173,7 +173,7 @@ class DfsuFile:
                     )
                 isLegacySpectral0D = False
             else:
-                isLegacySpectral0D = self.__IsLegacySpectral0D(customBlock)
+                isLegacySpectral0D = self.__IsLegacySpectral0D(dfsFile, customBlock)
             if isLegacySpectral0D:
                 self.NumberOfFrequencies = customBlock[4]
                 self.NumberOfDirections = customBlock[5]
@@ -320,7 +320,7 @@ class DfsuFile:
         if not build and self.dfsFile.FileMode == DfsFileMode.Append:
             self.dfsFile.FindTimeStep(self.NumberOfTimeSteps)
 
-    def __IsLegacySpectral0D(self, customBlock):
+    def __IsLegacySpectral0D(self, dfsFile, customBlock):
         """
         Check if a 2001 file with 6 or more custom block values is a legacy
         Spectral0D (rose-plot) file, written before MIKE 2027.
@@ -335,12 +335,12 @@ class DfsuFile:
         if customBlock.Count != 6:
             return False
 
-        frequency = self.dfsFile.ReadStaticItem(10)
-        direction = self.dfsFile.ReadStaticItem(11)
+        frequency = dfsFile.ReadStaticItem(10)
+        direction = dfsFile.ReadStaticItem(11)
         if (
             frequency is None
             or direction is None
-            or self.dfsFile.ReadStaticItemNext() is not None
+            or dfsFile.ReadStaticItemNext() is not None
         ):
             return False
 
@@ -413,10 +413,6 @@ class DfsuFile:
         dfs.Open(fileName, DfsFileMode.Append)
         return DfsuFile(dfs)
 
-        """
-      Internal factory method, used by the DfsuBuilder
-      """
-
     def DfsuFileBuild(
         self,
         dfsFile,
@@ -439,6 +435,9 @@ class DfsuFile:
         dirItem,
         subMeshType=None,
     ):
+        """
+        Internal factory method, used by the DfsuBuilder
+        """
 
         self.dfsFile = dfsFile
         self.__nodeIdItem = nodeIdItem

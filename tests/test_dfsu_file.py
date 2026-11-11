@@ -321,6 +321,8 @@ class DfsuFileTests(unittest.TestCase):
         Assert.IsNull(dfsFile.SubMeshType)
         Assert.AreEqual(25, dfsFile.NumberOfFrequencies)
         Assert.AreEqual(16, dfsFile.NumberOfDirections)
+        assert dfsFile.Frequencies is not None
+        assert dfsFile.Directions is not None
         Assert.AreEqual(25, len(dfsFile.Frequencies))
         Assert.AreEqual(16, len(dfsFile.Directions))
         Assert.AreEqual(400, dfsFile.ReadItemTimeStep(1, 0).Data.size)
