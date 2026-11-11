@@ -8,6 +8,7 @@ from mikecore.DfsBuilder import (
     DfsStaticItemBuilder,
 )
 from mikecore.DfsFactory import DfsFactory
+from mikecore.DfsFile import SpaceAxisType
 from mikecore.DfsFileFactory import DfsFileFactory
 from mikecore.eum import eumUnit, eumQuantity, eumItem
 
@@ -241,6 +242,58 @@ def test_validate_ignores_encode_key_of_dfs0(tmp_path):
 
     assert item is not None
     assert item.Data.tolist() == [7]
+
+
+@pytest.mark.parametrize(
+    "create, axisType, axisUnit, size",
+    [
+        (
+            lambda f: f.CreateAxisDummy(5),
+            SpaceAxisType.EqD1,
+            eumUnit.eumUUnitUndefined,
+            5,
+        ),
+        (lambda f: f.CreateAxisEqD0(), SpaceAxisType.EqD0, eumUnit.eumUmeter, 1),
+        (
+            lambda f: f.CreateAxisEqD1(eumUnit.eumUfeet, 5, 0, 1),
+            SpaceAxisType.EqD1,
+            eumUnit.eumUfeet,
+            5,
+        ),
+        (
+            lambda f: f.CreateAxisEqD2(eumUnit.eumUkilometer, 4, 0, 1, 3, 0, 1),
+            SpaceAxisType.EqD2,
+            eumUnit.eumUkilometer,
+            12,
+        ),
+        (
+            lambda f: f.CreateAxisEqD3(eumUnit.eumUmeter, 4, 0, 1, 3, 0, 1, 2, 0, 1),
+            SpaceAxisType.EqD3,
+            eumUnit.eumUmeter,
+            24,
+        ),
+    ],
+    ids=["Dummy", "EqD0", "EqD1", "EqD2", "EqD3"],
+)
+def test_factory_axis_is_written_and_read_back(
+    tmp_path, create, axisType, axisUnit, size
+):
+    builder = compressed_builder_for(create(DfsFactory()))
+    filename = str(tmp_path / "axis.dfs")
+    builder.CreateFile(filename)
+    dfs = builder.GetFile()
+    dfs.WriteItemTimeStepNext(0, np.arange(size, dtype=np.float32))
+    dfs.Close()
+
+    dfs = DfsFileFactory.DfsGenericOpen(filename)
+    axis = dfs.ItemInfo[0].SpatialAxis
+    item = dfs.ReadItemTimeStepNext()
+    dfs.Close()
+
+    assert axisType == axis.AxisType
+    assert axisUnit == axis.AxisUnit
+    assert item is not None
+    assert item.Data.tolist() == list(range(size))
 
 
 def test_static_item_builder_reports_missing_data_and_axis():
