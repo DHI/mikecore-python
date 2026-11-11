@@ -398,3 +398,88 @@ def test_spectral_0d_file_has_one_spectrum(tmp_path):
     assert_array_equal(directions, dfsu.Directions)
     assert len(frequencies) * len(directions) == dfsu.ItemInfo[0].ElementCount
     dfsu.Close()
+
+
+def _builder_3d_sigma_z():
+    # Small 3D sigma-z mesh with 3 layers, 1 of them sigma layers
+    source = DfsuFile.Open("testdata/submesh/Dfsu3DSigmaZ_CustomBlock5.dfsu")
+    builder = _builder(DfsuFileType.Dfsu3DSigmaZ)
+    builder.SetNodes(source.X, source.Y, source.Z, source.Code)
+    builder.SetElements(source.ElementTable)
+    builder.SetNumberOfSigmaLayers(source.NumberOfSigmaLayers)
+    source.Close()
+    return builder
+
+
+def _builder_2d():
+    builder = _builder()
+    builder.SetNodes(X, Y, Z, CODE)
+    builder.SetElements(ELEMENTS)
+    return builder
+
+
+@pytest.mark.parametrize(
+    "createBuilder, customBlock",
+    [(_builder_2d, [4, 2, 2, 0, 0]), (_builder_3d_sigma_z, [30, 8, 3, 3, 1])],
+)
+@pytest.mark.parametrize(
+    "subMeshType, subMeshTypeValues", [(None, []), (0, [0]), (1, [1])]
+)
+def test_submesh_type_is_written(
+    tmp_path, createBuilder, customBlock, subMeshType, subMeshTypeValues
+):
+    filename = str(tmp_path / "submesh.dfsu")
+    builder = createBuilder()
+    builder.SetSubMeshType(subMeshType)
+    created = builder.CreateFile(filename)
+    createdType = created.DfsuFileType
+    createdSubMeshType = created.SubMeshType
+    created.Close()
+
+    # Opened as a generic dfs file, so it does not depend on DfsuFile
+    dfs = DfsFileFactory.DfsGenericOpen(filename)
+    assert_array_equal(
+        customBlock + subMeshTypeValues, dfs.FileInfo.CustomBlocks[0].Values
+    )
+    dfs.Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert subMeshType == dfsu.SubMeshType
+    assert subMeshType == createdSubMeshType
+    assert dfsu.DfsuFileType is createdType
+    assert customBlock[4] == dfsu.NumberOfSigmaLayers
+    dfsu.Close()
+
+
+def test_submesh_type_can_be_reset_to_none(tmp_path):
+    filename = str(tmp_path / "submesh_none.dfsu")
+    builder = _builder_2d()
+    builder.SetSubMeshType(1)
+    builder.SetSubMeshType(None)
+    builder.CreateFile(filename).Close()
+
+    dfsu = DfsuFile.Open(filename)
+    assert dfsu.SubMeshType is None
+    assert 5 == dfsu.FileInfo.CustomBlocks[0].Count
+    dfsu.Close()
+
+
+@pytest.mark.parametrize("subMeshType", [-1, 2, True, 0.0, "1"])
+def test_submesh_type_must_be_none_0_or_1(subMeshType):
+    builder = _builder()
+    with pytest.raises(ValueError):
+        builder.SetSubMeshType(subMeshType)
+
+
+@pytest.mark.parametrize(
+    "fileType",
+    [
+        DfsuFileType.DfsuSpectral0D,
+        DfsuFileType.DfsuSpectral1D,
+        DfsuFileType.DfsuSpectral2D,
+    ],
+)
+def test_submesh_type_can_not_be_set_on_spectral_files(fileType):
+    builder = _builder(fileType)
+    with pytest.raises(Exception, match="submesh type"):
+        builder.SetSubMeshType(0)
