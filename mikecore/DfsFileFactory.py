@@ -71,7 +71,7 @@ class DfsFileFactory:
         return DfsuFile(dfsFile)
 
     @staticmethod
-    def DfsuFileOpenAppend(filename, parameters):
+    def DfsuFileOpenAppend(filename, parameters=None):
         dfsFile = DfsFileFactory.DfsGenericOpenAppend(filename, parameters)
         return DfsuFile(dfsFile)
 
