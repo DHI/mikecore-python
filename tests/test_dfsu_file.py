@@ -348,6 +348,49 @@ class DfsuFileTests(unittest.TestCase):
         dfsFile.Close()
 
     # / <summary>
+    # / Reading a legacy Spectral0D file whose frequency and direction static
+    # / items have the generic EUM item types, not the wave item types.
+    # / </summary>
+    def test_ReadLegacySpectral0DGenericItemTypesTest(self):
+        filename = "testdata/testtmp/test_DfsuSpectral0D_CustomBlock6_Generic.dfsu"
+        self.RewriteDfsu(
+            "testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu",
+            filename,
+            staticQuantities={
+                10: eumQuantity(eumItem.eumIFrequency, eumUnit.eumUhertz),
+                11: eumQuantity(eumItem.eumIDirection, eumUnit.eumUradian),
+            },
+        )
+        dfsFile = DfsuFile.Open(filename)
+        Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType)
+        Assert.IsNull(dfsFile.SubMeshType)
+        Assert.AreEqual(25, dfsFile.NumberOfFrequencies)
+        Assert.AreEqual(16, dfsFile.NumberOfDirections)
+        Assert.AreEqual(25, np.size(dfsFile.Frequencies))
+        Assert.AreEqual(16, np.size(dfsFile.Directions))
+        dfsFile.Close()
+
+    # / <summary>
+    # / Reading a legacy Spectral0D file with a 7 value custom block. The
+    # / legacy Spectral0D exception holds only for exactly 6 values, so the
+    # / file reads with the standard layout from MIKE 2027.
+    # / </summary>
+    def test_ReadLegacySpectral0DCustomBlock7Test(self):
+        filename = "testdata/testtmp/test_DfsuSpectral0D_CustomBlock7.dfsu"
+        self.RewriteDfsu(
+            "testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu",
+            filename,
+            customBlockValues=[416, 400, 2, 0, 25, 16, 0],
+        )
+        dfsFile = DfsuFile.Open(filename)
+        Assert.AreEqual(DfsuFileType.Dfsu2D, dfsFile.DfsuFileType)
+        Assert.AreEqual(25, dfsFile.NumberOfSigmaLayers)
+        Assert.AreEqual(16, dfsFile.SubMeshType)
+        Assert.AreEqual(0, dfsFile.NumberOfFrequencies)
+        Assert.AreEqual(0, dfsFile.NumberOfDirections)
+        dfsFile.Close()
+
+    # / <summary>
     # / Appending a time step to files with a 6 value custom block. Opening
     # / the legacy spectral file for appending reads its frequency and
     # / direction static items before moving to the end of the file.
