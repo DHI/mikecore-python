@@ -24,7 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DfsuFile` opens dfsu files from MIKE 2027 with a submesh type, such as 3D
   files and locally refined meshes, which raised "not a valid dfsu file".
   Files from later MIKE versions with more custom block values also open.
-  Legacy Spectral0D (rose-plot) files still open as `DfsuSpectral0D`
+  Legacy Spectral0D (rose-plot) files still open as `DfsuSpectral0D`,
+  including files with frequencies only or directions only
   ([#54](https://github.com/DHI/mikecore-python/issues/54)).
 
 - Items read from a dfs file have the reference coordinates and orientation

@@ -393,16 +393,118 @@ class DfsuFileTests(unittest.TestCase):
         dfsFile.Close()
 
     # / <summary>
+    # / Reading a legacy Spectral0D file with frequencies only. Such files
+    # / exist in the wild, e.g. MIKE IO's pt_freq_spectra.dfsu, with custom
+    # / block [26, 25, 1, 0, 25, 0] and 10 static items.
+    # / </summary>
+    def test_ReadLegacySpectral0DFrequencyOnlyTest(self):
+        filename = "testdata/testtmp/test_DfsuSpectral0D_FrequencyOnly.dfsu"
+        self.CreateSingleAxisSpectral0D(
+            filename,
+            [6, 5, 1, 0, 5, 0],
+            eumQuantity(eumItem.eumIWaveFrequency, eumUnit.eumUhertz),
+            [0.05, 0.06, 0.07, 0.08, 0.09],
+        )
+        dfsFile = DfsuFile.Open(filename)
+        Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType)
+        Assert.AreEqual(6, dfsFile.NumberOfNodes)
+        Assert.AreEqual(5, dfsFile.NumberOfElements)
+        Assert.IsNull(dfsFile.SubMeshType)
+        Assert.AreEqual(5, dfsFile.NumberOfFrequencies)
+        Assert.AreEqual(0, dfsFile.NumberOfDirections)
+        assert dfsFile.Frequencies is not None
+        np.testing.assert_allclose(
+            dfsFile.Frequencies, [0.05, 0.06, 0.07, 0.08, 0.09], rtol=1e-6
+        )
+        Assert.IsNull(dfsFile.Directions)
+        Assert.AreEqual(5, dfsFile.ReadItemTimeStep(1, 0).Data.size)
+        dfsFile.Close()
+
+    # / <summary>
+    # / Reading a legacy Spectral0D file with directions only.
+    # / </summary>
+    def test_ReadLegacySpectral0DDirectionOnlyTest(self):
+        filename = "testdata/testtmp/test_DfsuSpectral0D_DirectionOnly.dfsu"
+        self.CreateSingleAxisSpectral0D(
+            filename,
+            [5, 4, 1, 0, 0, 4],
+            eumQuantity(eumItem.eumIWaveDirection, eumUnit.eumUdegree),
+            [0, 90, 180, 270],
+        )
+        dfsFile = DfsuFile.Open(filename)
+        Assert.AreEqual(DfsuFileType.DfsuSpectral0D, dfsFile.DfsuFileType)
+        Assert.AreEqual(5, dfsFile.NumberOfNodes)
+        Assert.AreEqual(4, dfsFile.NumberOfElements)
+        Assert.IsNull(dfsFile.SubMeshType)
+        Assert.AreEqual(0, dfsFile.NumberOfFrequencies)
+        Assert.AreEqual(4, dfsFile.NumberOfDirections)
+        Assert.IsNull(dfsFile.Frequencies)
+        assert_array_equal([0, 90, 180, 270], dfsFile.Directions)
+        Assert.AreEqual(4, dfsFile.ReadItemTimeStep(1, 0).Data.size)
+        dfsFile.Close()
+
+    # / <summary>
+    # / Reading a 6 value file with spec value 5 set and one extra static
+    # / item that is not a frequency. It is not the legacy Spectral0D
+    # / exception, so it reads with the standard layout from MIKE 2027.
+    # / </summary>
+    def test_ReadSingleAxisNotFrequencyTest(self):
+        filename = "testdata/testtmp/test_Dfsu1D_CustomBlock6_NotFrequency.dfsu"
+        self.CreateSingleAxisSpectral0D(
+            filename,
+            [6, 5, 1, 0, 5, 0],
+            eumQuantity(eumItem.eumIWaterLevel, eumUnit.eumUmeter),
+            [1, 2, 3, 4, 5],
+        )
+        dfsFile = DfsuFile.Open(filename)
+        Assert.AreEqual(DfsuFileType.Dfsu1D, dfsFile.DfsuFileType)
+        Assert.AreEqual(5, dfsFile.NumberOfSigmaLayers)
+        Assert.AreEqual(0, dfsFile.SubMeshType)
+        Assert.AreEqual(0, dfsFile.NumberOfFrequencies)
+        Assert.AreEqual(0, dfsFile.NumberOfDirections)
+        Assert.IsNull(dfsFile.Frequencies)
+        dfsFile.Close()
+
+    # / <summary>
+    # / Reading a 6 value file with frequencies only and one static item more
+    # / than the legacy Spectral0D layout has. It reads with the standard
+    # / layout from MIKE 2027.
+    # / </summary>
+    def test_ReadSingleAxisExtraStaticItemTest(self):
+        filename = "testdata/testtmp/test_Dfsu1D_CustomBlock6_ExtraStaticItem.dfsu"
+        self.CreateSingleAxisSpectral0D(
+            filename,
+            [6, 5, 1, 0, 5, 0],
+            eumQuantity(eumItem.eumIWaveFrequency, eumUnit.eumUhertz),
+            [0.05, 0.06, 0.07, 0.08, 0.09],
+            extraStaticItem=True,
+        )
+        dfsFile = DfsuFile.Open(filename)
+        Assert.AreEqual(DfsuFileType.Dfsu1D, dfsFile.DfsuFileType)
+        Assert.AreEqual(5, dfsFile.NumberOfSigmaLayers)
+        Assert.AreEqual(0, dfsFile.SubMeshType)
+        Assert.AreEqual(0, dfsFile.NumberOfFrequencies)
+        dfsFile.Close()
+
+    # / <summary>
     # / Appending a time step to files with a 6 value custom block. Opening
-    # / the legacy spectral file for appending reads its frequency and
-    # / direction static items before moving to the end of the file.
+    # / a legacy spectral file for appending reads its frequency and
+    # / direction static items before moving to the end of the file. This
+    # / includes a legacy file with frequencies only.
     # / </summary>
     def test_AppendSubmeshTest(self):
-        os.makedirs("testdata/testtmp", exist_ok=True)
+        frequencyOnly = "testdata/testtmp/test_DfsuSpectral0D_FrequencyOnly_Source.dfsu"
+        self.CreateSingleAxisSpectral0D(
+            frequencyOnly,
+            [6, 5, 1, 0, 5, 0],
+            eumQuantity(eumItem.eumIWaveFrequency, eumUnit.eumUhertz),
+            [0.05, 0.06, 0.07, 0.08, 0.09],
+        )
         for source, subMeshType in (
             ("testdata/submesh/Dfsu2D_CustomBlock6_Submesh1_LocallyRefined.dfsu", 1),
             ("testdata/submesh/Dfsu3DSigmaZ_CustomBlock6_Submesh0.dfsu", 0),
             ("testdata/submesh/DfsuSpectral0D_CustomBlock6_Legacy.dfsu", None),
+            (frequencyOnly, None),
         ):
             filename = "testdata/testtmp/test_append_" + os.path.basename(source)
             testUtil.copy_file(source, filename)
@@ -496,6 +598,81 @@ class DfsuFileTests(unittest.TestCase):
             file.WriteItemTimeStepNext(itemData.Time, itemData.Data)
             itemData = source.ReadItemTimeStepNext()
         source.Close()
+        file.Close()
+
+    # / <summary>
+    # / Creates a data type 2001 file with one spectral axis, laid out as MIKE
+    # / IO's pt_freq_spectra.dfsu: dimension 1, a line of elements with one
+    # / node more than elements, the 9 static items of section 4.4, then
+    # / static item 10 with the given quantity and axis values, optionally a
+    # / copy of it as static item 11, and one dynamic item with one time
+    # / step. Test setup only.
+    # / </summary>
+    def CreateSingleAxisSpectral0D(
+        self,
+        filename,
+        customBlockValues,
+        axisQuantity,
+        axisValues,
+        extraStaticItem=False,
+    ):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        numberOfElements = len(axisValues)
+        numberOfNodes = numberOfElements + 1
+        factory = DfsFactory()
+        builder = DfsBuilder.Create("Single axis Spectral0D", "MIKE Core Python", 1)
+        builder.SetDataType(2001)
+        builder.SetGeographicalProjection(factory.CreateProjection("LONG/LAT"))
+        builder.SetTemporalAxis(factory.CreateTemporalEqTimeAxis(eumUnit.eumUsec, 0, 1))
+        builder.AddCreateCustomBlock("MIKE_FM", np.array(customBlockValues, np.int32))
+        builder.AddCreateDynamicItem(
+            "Water level",
+            eumQuantity(eumItem.eumIWaterLevel, eumUnit.eumUmeter),
+            spatialAxis=factory.CreateAxisEqD1(
+                eumUnit.eumUmeter, numberOfElements, 0, 1
+            ),
+        )
+        builder.CreateFile(filename)
+
+        intCode = eumQuantity(eumItem.eumIIntegerCode, eumUnit.eumUintCode)
+        xyQuantity = eumQuantity(eumItem.eumILatLong, eumUnit.eumUdegree)
+        nodeIds = np.arange(1, numberOfNodes + 1, dtype=np.int32)
+        elementIds = np.arange(1, numberOfElements + 1, dtype=np.int32)
+        builder.AddCreateStaticItem("Node id", intCode, nodeIds)
+        builder.AddCreateStaticItem(
+            "X-coord", xyQuantity, np.arange(numberOfNodes, dtype=np.float64)
+        )
+        builder.AddCreateStaticItem(
+            "Y-coord", xyQuantity, np.zeros(numberOfNodes, np.float64)
+        )
+        builder.AddCreateStaticItem(
+            "Z-coord",
+            eumQuantity(eumItem.eumIItemGeometry3D, eumUnit.eumUmeter),
+            np.full(numberOfNodes, -10, np.float32),
+        )
+        builder.AddCreateStaticItem("Code", intCode, np.zeros(numberOfNodes, np.int32))
+        builder.AddCreateStaticItem("Element id", intCode, elementIds)
+        builder.AddCreateStaticItem(
+            "Element type", intCode, np.full(numberOfElements, 11, np.int32)
+        )
+        builder.AddCreateStaticItem(
+            "No of nodes", intCode, np.full(numberOfElements, 2, np.int32)
+        )
+        builder.AddCreateStaticItem(
+            "Connectivity",
+            intCode,
+            np.column_stack([elementIds, elementIds + 1]).ravel().astype(np.int32),
+        )
+        builder.AddCreateStaticItem(
+            "Axis", axisQuantity, np.array(axisValues, np.float32)
+        )
+        if extraStaticItem:
+            builder.AddCreateStaticItem(
+                "Extra", axisQuantity, np.array(axisValues, np.float32)
+            )
+
+        file = builder.GetFile()
+        file.WriteItemTimeStepNext(0, np.ones(numberOfElements, np.float32))
         file.Close()
 
     # / <summary>

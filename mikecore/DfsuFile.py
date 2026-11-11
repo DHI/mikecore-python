@@ -59,10 +59,13 @@ class DfsuFile:
     2. Exactly 6 values in a legacy Spectral0D (rose-plot) file: spec values
        5 and 6 are the number of frequencies and directions. There is no
        submesh type. This layout is a convention from before MIKE 2027 that
-       the specification does not document. Such a file has exactly 11
-       static items: static item 10 holds the frequencies in hertz and
-       static item 11 the directions in radians or degrees, and their
-       lengths equal spec values 5 and 6.
+       the specification does not document. An axis is present when its
+       spec value is greater than 0, and at least one axis is present. Such
+       a file has the 9 static items of section 4.4 and one more per present
+       axis: the frequencies in hertz, then the directions in radians or
+       degrees, with lengths equal to spec values 5 and 6. A file with both
+       axes has 11 static items, a file with frequencies only or directions
+       only has 10.
     3. Otherwise, 6 values or more: the layout from MIKE 2027. Spec value 5 is
        the number of sigma layers and spec value 6 is the submesh type. Values
        from 7 on are ignored. Section 4.3 lists at most 6 values; handling
@@ -327,33 +330,49 @@ class DfsuFile:
 
         The legacy Spectral0D layout is a convention that the file
         specification does not document. Its "MIKE_FM" custom block has
-        exactly 6 values, [..., NumberOfFrequencies, NumberOfDirections], and
-        it has 11 static items: the 9 static items of section 4.4, then item
-        10 with the frequencies in hertz and item 11 with the directions in
-        radians or degrees.
+        exactly 6 values, [..., NumberOfFrequencies, NumberOfDirections]. An
+        axis is present when its number is greater than 0, and at least one
+        axis is present. After the 9 static items of section 4.4 it has one
+        static item per present axis and no more: the frequencies in hertz,
+        then the directions in radians or degrees. Single-axis files exist,
+        e.g. MIKE IO's pt_freq_spectra.dfsu has frequencies only.
         """
         if customBlock.Count != 6:
             return False
 
-        frequency = dfsFile.ReadStaticItem(10)
-        direction = dfsFile.ReadStaticItem(11)
-        if (
-            frequency is None
-            or direction is None
-            or dfsFile.ReadStaticItemNext() is not None
-        ):
+        numberOfFrequencies = customBlock[4]
+        numberOfDirections = customBlock[5]
+        if numberOfFrequencies <= 0 and numberOfDirections <= 0:
             return False
 
-        return (
-            frequency.Quantity.Item
-            in (eumItem.eumIWaveFrequency, eumItem.eumIFrequency)
-            and frequency.Quantity.Unit == eumUnit.eumUhertz
-            and frequency.ElementCount == customBlock[4]
-            and direction.Quantity.Item
-            in (eumItem.eumIWaveDirection, eumItem.eumIDirection)
-            and direction.Quantity.Unit in (eumUnit.eumUradian, eumUnit.eumUdegree)
-            and direction.ElementCount == customBlock[5]
-        )
+        # Static items after the 9 of section 4.4: one per present axis,
+        # the frequencies first.
+        itemNumber = 10
+        if numberOfFrequencies > 0:
+            frequency = dfsFile.ReadStaticItem(itemNumber)
+            itemNumber += 1
+            if not (
+                frequency is not None
+                and frequency.Quantity.Item
+                in (eumItem.eumIWaveFrequency, eumItem.eumIFrequency)
+                and frequency.Quantity.Unit == eumUnit.eumUhertz
+                and frequency.ElementCount == numberOfFrequencies
+            ):
+                return False
+        if numberOfDirections > 0:
+            direction = dfsFile.ReadStaticItem(itemNumber)
+            itemNumber += 1
+            if not (
+                direction is not None
+                and direction.Quantity.Item
+                in (eumItem.eumIWaveDirection, eumItem.eumIDirection)
+                and direction.Quantity.Unit in (eumUnit.eumUradian, eumUnit.eumUdegree)
+                and direction.ElementCount == numberOfDirections
+            ):
+                return False
+
+        # No static items after the spectral axes
+        return dfsFile.ReadStaticItem(itemNumber) is None
 
     def Dispose(self):
         """
