@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `MIKECORE_PYTHON_BIN`: set it to a MIKE installation's `bin` folder to have
   mikecore use that installation's native libraries instead of its bundled
   ones, at your own risk (see README).
+- A required `source` attribute in `buildUtil/packages.config` picks where the
+  build downloads the native NuGet packages from: `nuget.org`, or
+  `github-mirror` for a mirror on this repository's releases. It's
+  `nuget.org` for now, so the wheel is unchanged.
 
 ### Changed
 

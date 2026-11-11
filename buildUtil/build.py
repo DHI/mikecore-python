@@ -13,15 +13,25 @@ import struct
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
 
+# Picked by the source attribute in packages.config.
+FEEDS = {
+    "nuget.org": "https://api.nuget.org/v3-flatcontainer/{id_lower}/{version_lower}/{id_lower}.{version_lower}.nupkg",
+    "github-mirror": "https://github.com/DHI/mikecore-python/releases/download/nuget-packages-2026/{id}.{version}.nupkg",
+}
+
+
 def download_nuget_package(
-    package_id: str, version: str, output_dir: str | Path
+    package_id: str, version: str, output_dir: str | Path, feed: str
 ) -> None:
     """
     Download a NuGet package (.nupkg) to output_dir.
     """
-    package_id_lower: str = package_id.lower()
-    version_lower: str = version.lower()
-    url: str = f"https://api.nuget.org/v3-flatcontainer/{package_id_lower}/{version_lower}/{package_id_lower}.{version_lower}.nupkg"
+    url: str = FEEDS[feed].format(
+        id=package_id,
+        version=version,
+        id_lower=package_id.lower(),
+        version_lower=version.lower(),
+    )
     output_dir = Path(output_dir)
     nupkg_path: Path = output_dir / f"{package_id}.{version}.nupkg"
     extract_path: Path = output_dir / f"{package_id}"
@@ -67,13 +77,19 @@ def copy_native_libs_to_bin(packages_dir: str | Path, bin_dir: str | Path) -> No
                 shutil.copy2(lib, dest)
 
 
-def read_packages_config(filepath: str | Path) -> list[tuple[str, str]]:
+def read_packages_config(filepath: str | Path) -> tuple[str, list[tuple[str, str]]]:
     """
-    Reads NuGet packages.config and returns a list of (id, version) tuples.
+    Reads NuGet packages.config and returns its feed and a list of
+    (id, version) tuples.
     """
     tree = ET.parse(filepath)
     root = tree.getroot()
-    return [
+    feed = root.get("source")
+    if feed not in FEEDS:
+        raise RuntimeError(
+            f"{filepath}: source must be one of {', '.join(FEEDS)}, got {feed!r}"
+        )
+    return feed, [
         (pkg.attrib["id"], pkg.attrib["version"]) for pkg in root.findall("package")
     ]
 
@@ -154,9 +170,10 @@ def print_elf(lib: Path, flag: str) -> list[str]:
 
 def setup():
     """Setup function to download NuGet packages and copy native libraries into bin folder."""
-    packages = read_packages_config("buildUtil/packages.config")
+    feed, packages = read_packages_config("buildUtil/packages.config")
+    print(f"Downloading NuGet packages from {feed}")
     for name, version in packages:
-        download_nuget_package(name, version, output_dir="packages")
+        download_nuget_package(name, version, output_dir="packages", feed=feed)
     copy_native_libs_to_bin("packages", "mikecore/bin")
 
     check_signed("mikecore/bin/windows")
