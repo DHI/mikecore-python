@@ -12,6 +12,9 @@ jobs:
   build:
     # Builds a single py3-none-any wheel bundling both Windows and Linux binaries.
     # Must run on Linux: the build hook only patches the .so files there.
+    # nuget-packages-* releases only host the NuGet mirror. tag_name is null on
+    # workflow_dispatch, which startsWith treats as ''.
+    if: ${{ !startsWith(github.event.release.tag_name, 'nuget-packages-') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -49,6 +52,7 @@ jobs:
 
   publish:
     needs: build
+    if: ${{ !startsWith(github.event.release.tag_name, 'nuget-packages-') }}
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
