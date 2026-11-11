@@ -16,6 +16,12 @@ from mikecore.DfsuFile import (
 from mikecore.eum import eumUnit, eumQuantity, eumItem
 from mikecore.Projections import MapProjection
 
+spectralDfsuFileTypes = (
+    DfsuFileType.DfsuSpectral0D,
+    DfsuFileType.DfsuSpectral1D,
+    DfsuFileType.DfsuSpectral2D,
+)
+
 
 # / <summary>
 # / Builder for creating a dfsu file.
@@ -48,6 +54,7 @@ class DfsuBuilder:
 
         self.__dfsuFileType = dfsuFileType
         self.__numberOfSigmaLayers = -1
+        self.__subMeshType: int | None = None
 
         # Projection variables
         self.__dfsProjection: DfsProjection | None = None
@@ -124,6 +131,31 @@ class DfsuBuilder:
             self.__isSetNumberOfSigmaLayers = True
         else:
             raise Exception("dfsuFileType")
+
+    def SetSubMeshType(self, subMeshType: int | np.integer | None):
+        """
+        Set the submesh type: 1 for a local refinement submesh, 0 otherwise.
+        The mesh is not checked against it.
+
+        None (default) writes the pre-2027 5-value custom block; 0 or 1 writes
+        the MIKE 2027 6-value block. Older mikecore releases can open such a
+        file only if it is 2D with type 0. MIKE before 2027 is untested.
+
+        Raises ValueError for values other than None, 0 or 1, and an exception
+        for spectral file types.
+        """
+        # True is an int, but not a submesh type
+        isInteger = isinstance(subMeshType, (int, np.integer)) and not isinstance(
+            subMeshType, bool
+        )
+        if self.__dfsuFileType in spectralDfsuFileTypes:
+            raise Exception("Can not set submesh type on a spectral dfsu file")
+        elif subMeshType is None:
+            self.__subMeshType = None
+        elif isInteger and subMeshType in (0, 1):
+            self.__subMeshType = int(subMeshType)
+        else:
+            raise ValueError(f"Submesh type must be None, 0 or 1, not {subMeshType!r}")
 
     def SetFrequencies(self, frequencies):
         self.__frequencies = frequencies
@@ -400,11 +432,7 @@ class DfsuBuilder:
                 errors.append(
                     "The minimum number of layers is smaller than the number of sigma layers. Element table is invalid"
                 )
-        elif self.__dfsuFileType in (
-            DfsuFileType.DfsuSpectral0D,
-            DfsuFileType.DfsuSpectral1D,
-            DfsuFileType.DfsuSpectral2D,
-        ):
+        elif self.__dfsuFileType in spectralDfsuFileTypes:
             # TODO do we need to check frequency or directions?
             pass
         else:
@@ -497,11 +525,15 @@ class DfsuBuilder:
             )
         dfsBuilder.DeleteValueFloat = np.float32(1e-35)
 
-        # Set up custom block
+        # Set up custom block, with the submesh type as an optional 6th value
+        subMeshTypeValues = [] if self.__subMeshType is None else [self.__subMeshType]
         if self.__dfsuFileType == DfsuFileType.Dfsu2D:
             dfsBuilder.AddCreateCustomBlock(
                 "MIKE_FM",
-                np.array([nodes.x.size, len(connectivity), 2, 0, 0], np.int32),
+                np.array(
+                    [nodes.x.size, len(connectivity), 2, 0, 0, *subMeshTypeValues],
+                    np.int32,
+                ),
             )
         elif self.__dfsuFileType == DfsuFileType.DfsuVerticalColumn:
             maxNumberOfLayers = len(connectivity)
@@ -514,6 +546,7 @@ class DfsuBuilder:
                         1,
                         maxNumberOfLayers,
                         self.__numberOfSigmaLayers,
+                        *subMeshTypeValues,
                     ],
                     np.int32,
                 ),
@@ -529,6 +562,7 @@ class DfsuBuilder:
                         2,
                         maxNumberOfLayers,
                         self.__numberOfSigmaLayers,
+                        *subMeshTypeValues,
                     ],
                     np.int32,
                 ),
@@ -546,6 +580,7 @@ class DfsuBuilder:
                         2,
                         maxNumberOfLayers,
                         self.__numberOfSigmaLayers,
+                        *subMeshTypeValues,
                     ],
                     np.int32,
                 ),
@@ -561,6 +596,7 @@ class DfsuBuilder:
                         3,
                         maxNumberOfLayers,
                         self.__numberOfSigmaLayers,
+                        *subMeshTypeValues,
                     ],
                     np.int32,
                 ),
@@ -578,6 +614,7 @@ class DfsuBuilder:
                         3,
                         maxNumberOfLayers,
                         self.__numberOfSigmaLayers,
+                        *subMeshTypeValues,
                     ],
                     np.int32,
                 ),
@@ -782,6 +819,7 @@ class DfsuBuilder:
             self.__zUnit,
             frequencyItem,
             directionItem,
+            self.__subMeshType,
         )
 
         return dfsuFile

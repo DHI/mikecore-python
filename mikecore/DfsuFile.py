@@ -48,6 +48,19 @@ class DfsuFile:
     Use the DfsuBuilder to create a new dfsu file.
     You can read, write and append item-timesteps to the file.
     The geometry can be altered, by moving the nodes, but the element connectivity can not be changed.
+
+    The "MIKE_FM" custom block (dfsu file specification, section 4.3) of a
+    data type 2001 file is read as:
+
+    1. 5 values or fewer (before MIKE 2027): value 5, if present, is the
+       number of sigma layers, otherwise it equals the number of layers.
+    2. Exactly 6 values in a legacy Spectral0D file: values 5 and 6 are the
+       number of frequencies and directions. This undocumented layout has one
+       static item per axis after the 9 of section 4.4.
+    3. Otherwise (MIKE 2027 and later): value 5 is the number of sigma layers,
+       value 6 the submesh type. Values from 7 on are ignored.
+
+    Other data types are read by their own fixed layouts.
     """
 
     def __init__(self, dfsFile=None):
@@ -58,6 +71,7 @@ class DfsuFile:
         self.NumberOfSigmaLayers = -1
         self.NumberOfFrequencies = -1
         self.NumberOfDirections = -1
+        self.__subMeshType: int | None = None
 
         # Static item
         self.__nodeIdItem = None
@@ -94,7 +108,7 @@ class DfsuFile:
         if dfsFile is not None:
             self.__Init(dfsFile)
 
-    def __Init(self, dfsFile, build=False):
+    def __Init(self, dfsFile, build=False, subMeshType=None):
         """
         Wrap a dfs file in the DfsuFile object.
         It will throw an exception if file is not a dfsu file.
@@ -131,15 +145,31 @@ class DfsuFile:
             self.NumberOfSigmaLayers = customBlock[4]
         else:
             self.NumberOfSigmaLayers = self.NumberOfLayers
+        self.NumberOfFrequencies = 0
+        self.NumberOfDirections = 0
+        self.__subMeshType = None
 
-        if self.FileInfo.DataType in (2002, 2003) or (
-            self.FileInfo.DataType == 2001 and (customBlock.Count == 6)
-        ):
+        if self.FileInfo.DataType in (2002, 2003):
             self.NumberOfFrequencies = customBlock[4]
             self.NumberOfDirections = customBlock[5]
-        else:
-            self.NumberOfFrequencies = 0
-            self.NumberOfDirections = 0
+        elif self.FileInfo.DataType == 2001 and customBlock.Count >= 6:
+            if build:
+                # Static items are not written yet. DfsuBuilder writes 6
+                # values only with a submesh type, never for Spectral0D.
+                if subMeshType is None:
+                    raise Exception(
+                        "DfsuBuilder wrote 6 custom block values without a submesh type"
+                    )
+                isLegacySpectral0D = False
+            else:
+                isLegacySpectral0D = self.__IsLegacySpectral0D(dfsFile, customBlock)
+            if isLegacySpectral0D:
+                self.NumberOfFrequencies = customBlock[4]
+                self.NumberOfDirections = customBlock[5]
+            else:
+                # MIKE 2027 layout
+                self.NumberOfSigmaLayers = customBlock[4]
+                self.__subMeshType = int(customBlock[5])
 
         # Figuring out dfsu file type from custom block MIKE_FM
         if dimensions == 1:
@@ -193,7 +223,8 @@ class DfsuFile:
             # "Frequency"     , double
             # "Direction"     , double
 
-            self.__nodeIdItem = self.dfsFile.ReadStaticItemNext()
+            # Read by number, __IsLegacySpectral0D may have moved the file pointer
+            self.__nodeIdItem = self.dfsFile.ReadStaticItem(1)
             CheckForNull(self.__nodeIdItem)
             self.NodeIds = self.__nodeIdItem.Data
 
@@ -257,11 +288,11 @@ class DfsuFile:
                 k1 = k2
 
             # Spectral Dfsu
-            if self.NumberOfFrequencies:
+            if self.NumberOfFrequencies > 0:
                 frequency = self.dfsFile.ReadStaticItemNext()
                 CheckForNull(frequency)
                 self.Frequencies = frequency.Data
-            if self.NumberOfDirections:
+            if self.NumberOfDirections > 0:
                 direction = self.dfsFile.ReadStaticItemNext()
                 CheckForNull(direction)
                 self.Directions = direction.Data
@@ -276,6 +307,48 @@ class DfsuFile:
         # It was moved elsewhere when reading static data...
         if not build and self.dfsFile.FileMode == DfsFileMode.Append:
             self.dfsFile.FindTimeStep(self.NumberOfTimeSteps)
+
+    def __IsLegacySpectral0D(self, dfsFile, customBlock):
+        """
+        Check if a 2001 file is a legacy Spectral0D (rose-plot) file: exactly
+        6 custom block values, [..., NumberOfFrequencies, NumberOfDirections],
+        at least one of them above 0, and after the 9 static items of section
+        4.4 exactly one static item per such axis: frequencies in hertz, then
+        directions in radians or degrees.
+        """
+        if customBlock.Count != 6:
+            return False
+
+        numberOfFrequencies = customBlock[4]
+        numberOfDirections = customBlock[5]
+        if numberOfFrequencies <= 0 and numberOfDirections <= 0:
+            return False
+
+        itemNumber = 10
+        if numberOfFrequencies > 0:
+            frequency = dfsFile.ReadStaticItem(itemNumber)
+            itemNumber += 1
+            if not (
+                frequency is not None
+                and frequency.Quantity.Item
+                in (eumItem.eumIWaveFrequency, eumItem.eumIFrequency)
+                and frequency.Quantity.Unit == eumUnit.eumUhertz
+                and frequency.ElementCount == numberOfFrequencies
+            ):
+                return False
+        if numberOfDirections > 0:
+            direction = dfsFile.ReadStaticItem(itemNumber)
+            itemNumber += 1
+            if not (
+                direction is not None
+                and direction.Quantity.Item
+                in (eumItem.eumIWaveDirection, eumItem.eumIDirection)
+                and direction.Quantity.Unit in (eumUnit.eumUradian, eumUnit.eumUdegree)
+                and direction.ElementCount == numberOfDirections
+            ):
+                return False
+
+        return dfsFile.ReadStaticItem(itemNumber) is None
 
     def Dispose(self):
         """
@@ -335,10 +408,6 @@ class DfsuFile:
         dfs.Open(fileName, DfsFileMode.Append)
         return DfsuFile(dfs)
 
-        """
-      Internal factory method, used by the DfsuBuilder
-      """
-
     def DfsuFileBuild(
         self,
         dfsFile,
@@ -359,7 +428,11 @@ class DfsuFile:
         zUnit,
         freqItem,
         dirItem,
+        subMeshType=None,
     ):
+        """
+        Internal factory method, used by the DfsuBuilder
+        """
 
         self.dfsFile = dfsFile
         self.__nodeIdItem = nodeIdItem
@@ -379,7 +452,7 @@ class DfsuFile:
         self.ZUnit = zUnit
         self.__freqItem = freqItem
         self.__dirItem = dirItem
-        self.__Init(dfsFile, build=True)
+        self.__Init(dfsFile, build=True, subMeshType=subMeshType)
 
     def __GetFileName(self):
         return self.FileInfo.FileName
@@ -466,6 +539,14 @@ class DfsuFile:
     @property
     def IsSpectral(self):
         return (self.NumberOfFrequencies > 0) or (self.NumberOfDirections > 0)
+
+    @property
+    def SubMeshType(self) -> int | None:
+        """
+        Submesh type: 1 for a local refinement submesh, 0 otherwise, None if
+        the file has none. Compare with None, as type 0 is falsy.
+        """
+        return self.__subMeshType
 
     @staticmethod
     def CreateEmptyItemDatas(dfsFile: DfsFile):

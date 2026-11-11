@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `DfsuFile.SubMeshType` tells whether a dfsu file from MIKE 2027 has a
+  local refinement submesh: 1 if it has, 0 if not, and `None` for a file
+  without a submesh type. Compare it with `None`, as a plain truth test is
+  false for submesh type 0
+  ([#54](https://github.com/DHI/mikecore-python/issues/54)).
+- `DfsuBuilder.SetSubMeshType(None | 0 | 1)` writes a dfsu file with a
+  submesh type, as MIKE 2027 does. Without it, older mikecore releases can
+  still open the file. With it, they can only open a 2D file with submesh
+  type 0.
 - `MIKECORE_PYTHON_BIN`: set it to a MIKE installation's `bin` folder to have
   mikecore use that installation's native libraries instead of its bundled
   ones, at your own risk (see README).
@@ -33,6 +42,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `DfsuFile` opens dfsu files from MIKE 2027 with a submesh type, such as 3D
+  files and locally refined meshes, which raised "not a valid dfsu file".
+  Files from later MIKE versions with more custom block values also open.
+  Legacy Spectral0D (rose-plot) files still open as `DfsuSpectral0D`,
+  including files with frequencies only or directions only
+  ([#54](https://github.com/DHI/mikecore-python/issues/54)).
 - A failed open of a dfs file shorter than 4 bytes, such as an empty file, no
   longer leaves the file open. Each such open used up a file handle, so after
   about 500 of them no file could be opened (Error code 2003)
