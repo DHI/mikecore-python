@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A failed open of a dfs file shorter than 4 bytes, such as an empty file, no
+  longer leaves the file open. Each such open used up a file handle, so after
+  about 500 of them no file could be opened (Error code 2003)
+  ([#85](https://github.com/DHI/mikecore-python/issues/85)).
 - `import mikecore` works with a MIKE installation's `bin` on
   `LD_LIBRARY_PATH`, for example after sourcing `mikevars.sh`. It failed with
   `undefined symbol: _Z13fnGetLanguagev`, because the bundled libraries

@@ -1,4 +1,6 @@
 import ctypes
+import os
+import sys
 
 import pytest
 
@@ -153,3 +155,30 @@ def test_item_quantity_descriptions():
 
     assert ["Water Level", "Water Depth"] == [q.ItemDescription for q in quantities]
     assert ["meter", "meter"] == [q.UnitDescription for q in quantities]
+
+
+def open_file_count():
+    return len(os.listdir("/proc/self/fd"))
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="counts /proc/self/fd")
+@pytest.mark.parametrize("size, error_code", [(0, 2001), (3, 2001), (4, 2014)])
+@pytest.mark.parametrize(
+    "open_file",
+    [
+        DfsFileFactory.DfsGenericOpen,
+        DfsFileFactory.DfsGenericOpenEdit,
+        DfsFileFactory.DfsGenericOpenAppend,
+    ],
+)
+def test_failed_open_of_short_file_leaves_no_file_open(
+    tmp_path, size, error_code, open_file
+):
+    filename = tmp_path / "short.dfs0"
+    filename.write_bytes(b"x" * size)
+    before = open_file_count()
+
+    with pytest.raises(Exception, match=rf"\(Error code {error_code}\)"):
+        open_file(str(filename))
+
+    assert open_file_count() == before

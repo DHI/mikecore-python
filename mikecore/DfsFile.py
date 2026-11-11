@@ -5,7 +5,7 @@ import ctypes
 import locale
 import numpy as np
 from mikecore.eum import *
-from mikecore.DfsDLL import DfsDLL
+from mikecore.DfsDLL import DfsDLL, DfsError
 from mikecore.eum import eumQuantity
 
 
@@ -809,6 +809,13 @@ class DfsFile:
         ):
             raise Exception(
                 "File is readonly and can not be opened for editing: " + filename
+            )
+
+        # The native library leaves the file open when it can not read the
+        # first 4-byte tag, so refuse such a file with the same error.
+        if os.path.getsize(filename) < 4:
+            raise Exception(
+                f"Could not load file {filename} (Error code {DfsError.F_ERR_READ})"
             )
 
         if parameters is None:
