@@ -50,6 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- On Linux, mikecore no longer needs `libnsl2` installed, which Ubuntu 24.04
+  doesn't install by default. The bundled Xerces library was linked against it
+  without using it
+  ([#59](https://github.com/DHI/mikecore-python/issues/59)).
 - `DfsuFile` opens dfsu files from MIKE 2027 with a submesh type, such as 3D
   files and locally refined meshes, which raised "not a valid dfsu file".
   Files from later MIKE versions with more custom block values also open.

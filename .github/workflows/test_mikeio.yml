@@ -40,12 +40,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install libnsl2 (Linux only)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libnsl2
-
       - name: Install MIKE IO
         working-directory: mikeio
         run: uv sync --group test --no-dev

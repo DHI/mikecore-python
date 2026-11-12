@@ -25,11 +25,6 @@ jobs:
         with:
           version: "0.7.21"
 
-      - name: Install libnsl2
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libnsl2
-
       - name: Build package
         run: uv build --wheel
 

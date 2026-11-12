@@ -1,3 +1,4 @@
+import ctypes
 import os
 import shutil
 import subprocess
@@ -47,9 +48,21 @@ def installation_bin(tmp_path: Path) -> Path:
     natives = list(PACKAGES.glob(f"*/runtimes/{RUNTIME}/native"))
     if not natives:
         pytest.skip("needs the NuGet packages that building a checkout downloads")
+    if os.name != "nt" and not loadable("libnsl.so.2"):
+        # The bundled copy has this dependency removed (#59); an
+        # installation's Xerces still has it.
+        pytest.skip("the installation's Xerces needs libnsl2")
     for native in natives:
         shutil.copytree(native, tmp_path, dirs_exist_ok=True)
     return tmp_path
+
+
+def loadable(library: str) -> bool:
+    try:
+        ctypes.CDLL(library)
+    except OSError:
+        return False
+    return True
 
 
 def test_installation_libraries_read_like_the_bundled_ones(installation_bin):
