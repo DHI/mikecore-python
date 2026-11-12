@@ -98,6 +98,10 @@ def read_packages_config(filepath: str | Path) -> tuple[str, list[tuple[str, str
 # patching their imports would invalidate DHI's signature (ADR 0002).
 LIB_TAG = "-mikecore-python"
 
+# Linked but unused: Xerces imports no symbols from libnsl, and Ubuntu 24.04
+# doesn't install it by default (#59).
+UNUSED_NEEDED = ["libnsl.so.2"]
+
 
 def tagged(name: str) -> str:
     """libintlc.so.5 -> libintlc-mikecore-python.so.5"""
@@ -105,8 +109,9 @@ def tagged(name: str) -> str:
 
 
 def isolate_linux_libs(bin_folder: str | Path):
-    """Unique names (#45), and DT_RPATH rather than DT_RUNPATH so
-    LD_LIBRARY_PATH can't override $ORIGIN."""
+    """Unique names (#45), DT_RPATH rather than DT_RUNPATH so
+    LD_LIBRARY_PATH can't override $ORIGIN, and no unused system
+    dependencies (#59)."""
     patchelf_path = shutil.which("patchelf")
     libs = list(Path(bin_folder).glob("*.so*"))
     renames = {so.name: tagged(so.name) for so in libs}
@@ -123,6 +128,8 @@ def isolate_linux_libs(bin_folder: str | Path):
         ]
         for old, new in renames.items():
             args += ["--replace-needed", old, new]
+        for name in UNUSED_NEEDED:
+            args += ["--remove-needed", name]
         subprocess.run(args + [str(so.absolute())], check=True)
         so.replace(so.with_name(new_name))
 
