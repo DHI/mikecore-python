@@ -31,6 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- mikecore supports Python 3.11 to 3.15. Python 3.10 and older, which have
+  reached end of life, are no longer supported (see
+  [ADR 0001](docs/adr/0001-python-version-support.md)).
 - The bundled Linux libraries are renamed with a `-mikecore-python` tag, for
   example `libeum-mikecore-python.so`, so they don't collide with a MIKE
   installation's (see
