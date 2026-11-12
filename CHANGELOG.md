@@ -31,6 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- mikecore supports Python 3.11 to 3.15. Python 3.10 and older, which have
+  reached end of life, are no longer supported (see
+  [ADR 0001](docs/adr/0001-python-version-support.md)).
 - The bundled Linux libraries are renamed with a `-mikecore-python` tag, for
   example `libeum-mikecore-python.so`, so they don't collide with a MIKE
   installation's (see
@@ -155,4 +158,126 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reading an item's value type raises the DFS error when the native library
   reports one, instead of returning `DataValueType.Instantaneous`.
 
-[Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.3.a1...HEAD
+## [0.2.2] - 2024-08-21
+
+### Fixed
+
+- The package declares a valid required Python version, `>=3.5`. Earlier
+  releases declared `>=3.5<`, which is not a valid version specifier
+  ([#29](https://github.com/DHI/mikecore-python/issues/29)).
+
+## [0.2.1] - 2022-06-02
+
+### Changed
+
+- Opening a dfsu file is faster, because its element table is built with
+  less work per element
+  ([#20](https://github.com/DHI/mikecore-python/issues/20)).
+- On Linux, importing mikecore appends its library folder to an existing
+  `LD_LIBRARY_PATH` instead of replacing it.
+
+## [0.2.0] - 2022-01-28
+
+### Added
+
+- `eumItem` and `eumUnit` entries from the MIKE 2022 EUM table: the items
+  `eumIThermalConductivity`, `eumIDirectionalVariance` and
+  `eumISpecificDissipationRate`, and the units `eumUradiansquared`,
+  `eumUWattPerMeterPerDegreeCelsius` and `eumUWattPerFeetPerDegreeFahrenheit`
+  ([#19](https://github.com/DHI/mikecore-python/issues/19)).
+
+### Changed
+
+- The bundled native libraries are the MIKE Core Release 2022 versions
+  (20.0) on Windows and Linux, previously Release 2021 (19.x)
+  ([#19](https://github.com/DHI/mikecore-python/issues/19)).
+- `DfsFile.ReadDfs0DataDouble` and `WriteDfs0DataDouble` use the native DFS
+  library on Linux as well as Windows. `ReadDfs0DataDouble` adds the time
+  axis start time offset to the times of an equidistant time axis
+  ([#19](https://github.com/DHI/mikecore-python/issues/19)).
+
+### Removed
+
+- The separate `MIKECoreCUtil.dll` is no longer bundled on Windows. The DFS
+  library itself now provides the bulk dfs0 read and write
+  ([#19](https://github.com/DHI/mikecore-python/issues/19)).
+
+## [0.1.4] - 2021-12-01
+
+### Added
+
+- `DfsuFile` reads dfsu spectral files: point spectra (`DfsuSpectral0D`),
+  line spectra (`DfsuSpectral1D`) and area spectra (`DfsuSpectral2D`), with
+  their `Frequencies` and `Directions`, `NumberOfFrequencies`,
+  `NumberOfDirections` and `IsSpectral`. A 1D dfsu file without layers is
+  `Dfsu1D`
+  ([#17](https://github.com/DHI/mikecore-python/issues/17)).
+
+### Changed
+
+- The numeric values of `DfsuFileType` members changed to make room for
+  `Dfsu1D` (1) and the spectral types. Code that compares the type with
+  its member names is unaffected
+  ([#17](https://github.com/DHI/mikecore-python/issues/17)).
+
+## [0.1.3] - 2021-11-08
+
+### Fixed
+
+- Reading and writing the encoding key of a compressed dfs file, which most
+  dfs3 files are, works
+  ([#14](https://github.com/DHI/mikecore-python/issues/14)).
+- `MeshFile` reads a mesh with both triangles and quadrilaterals correctly.
+  Triangles were read as quadrilaterals referring to a non-existent node 0
+  ([#16](https://github.com/DHI/mikecore-python/issues/16)).
+
+## [0.1.2] - 2021-08-25
+
+### Added
+
+- `DfsFile.ReadDfs0DataDouble` and `DfsFile.WriteDfs0DataDouble` read and
+  write all times and item values of a dfs0 file as one array, with the
+  times in the first column. `ReadDfs0DataDouble` can read selected items
+  only. `WriteDfs0DataDouble` returns 0 on success
+  ([#9](https://github.com/DHI/mikecore-python/issues/9),
+  [#12](https://github.com/DHI/mikecore-python/issues/12)).
+- `DfsTemporalAxis.ToSeconds` and `ToRelativeTime` convert between the time
+  axis unit and seconds.
+
+### Changed
+
+- Setting a temporal axis property, such as `StartDateTime` or `TimeStep`, on
+  a file opened for editing updates the file header
+  ([#10](https://github.com/DHI/mikecore-python/issues/10)).
+- In a file opened for editing, a custom block's `Values` changed in place
+  are written to the file.
+- One wheel holds the native libraries for both Windows and Linux.
+
+### Removed
+
+- `Dfs0Util`. Use `DfsFile.ReadDfs0DataDouble` instead.
+
+### Fixed
+
+- `TimeStepInSeconds` works for time units other than seconds instead of
+  raising.
+
+## [0.1.0] - 2021-05-26
+
+### Added
+
+- Initial release: Python access to the MIKE Core libraries, with an API
+  close to the MIKE Core .NET API. It reads and writes dfs0, dfs1, dfs2,
+  dfs3 and dfsu files (`DfsFile`, `DfsBuilder`, `DfsuFile`, `DfsuBuilder`),
+  reads and writes mesh files (`MeshFile`, `MeshBuilder`), and gives access
+  to EUM (`eum`) and map projections (`Projections`). It bundles the MIKE
+  Core Release 2021 native libraries for 64-bit Python on Windows and Linux.
+
+[Unreleased]: https://github.com/DHI/mikecore-python/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/DHI/mikecore-python/compare/bbac3753d40a42c9840edea6ddcadd8512aeb883...v0.2.2
+[0.2.1]: https://github.com/DHI/mikecore-python/compare/04c36b1ee3dc6c81905d75ff8c39d7b8a8411bd7...bbac3753d40a42c9840edea6ddcadd8512aeb883
+[0.2.0]: https://github.com/DHI/mikecore-python/compare/a5e1b129315950c63b1efd91465f5e71ea97e091...04c36b1ee3dc6c81905d75ff8c39d7b8a8411bd7
+[0.1.4]: https://github.com/DHI/mikecore-python/compare/fff099e2190dacb1a2906ad82c2094afa521b4f5...a5e1b129315950c63b1efd91465f5e71ea97e091
+[0.1.3]: https://github.com/DHI/mikecore-python/compare/fc74acd85fa186f51816c0ce42d258487161e346...fff099e2190dacb1a2906ad82c2094afa521b4f5
+[0.1.2]: https://github.com/DHI/mikecore-python/compare/v0.1.0...fc74acd85fa186f51816c0ce42d258487161e346
+[0.1.0]: https://github.com/DHI/mikecore-python/releases/tag/v0.1.0

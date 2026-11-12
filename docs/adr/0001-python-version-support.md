@@ -26,6 +26,7 @@ As of this decision:
 | 3.12    | 2028-10     |
 | 3.13    | 2029-10     |
 | 3.14    | 2030-10     |
+| 3.15    | 2031-10     |
 
 numpy, our only runtime dependency, already supports only recent Python
 versions (see [SPEC 0](https://scientific-python.org/specs/spec-0000/)). So users
