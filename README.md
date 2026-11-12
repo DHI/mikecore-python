@@ -60,8 +60,9 @@ installed. With another library in the process that loads MIKE Core
 
 To share one set instead, set `MIKECORE_PYTHON_BIN` to the installation's `bin`
 folder (on Windows, the 64-bit `bin\x64`) before mikecore is first imported. On
-Linux, you may also need that folder on `LD_LIBRARY_PATH`. mikecore is only
-tested with its bundled libraries.
+Linux, you may also need that folder on `LD_LIBRARY_PATH`, and on Ubuntu 24.04
+the installation's libraries may need `sudo apt install libnsl2`. mikecore is
+only tested with its bundled libraries.
 
 Either way, mikecore's EUM items and units match the bundled version. With
 MIKE Core from a newer version, EUM lookups can raise `ValueError`
